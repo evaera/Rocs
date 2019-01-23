@@ -1,0 +1,14 @@
+{
+  "name": "Rocs",
+  "servePort": 8000,
+  "partitions": {
+    "Rocs": {
+      "path": "lib",
+      "target": "ReplicatedStorage.Rocs"
+    },
+    "testez": {
+      "path": "vendor/testez/lib",
+      "target": "TestService.TestEZ"
+    }
+  }
+}
