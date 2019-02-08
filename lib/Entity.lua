@@ -1,9 +1,12 @@
 local t = require(script.Parent.t)
+local Util = require(script.Parent.Util)
 
 local Entity = {}
 Entity.__index = Entity
 
 function Entity.new(rocs, instance, scope)
+	assert(scope ~= "base", 'Entity scope cannot be "base"')
+
 	return setmetatable({
 		rocs = rocs;
 		instance = instance;
@@ -25,7 +28,7 @@ end
 
 function Entity:addComponent(componentResolvable, data)
 	return self.rocs:_addComponent(
-		self:_getComponentOpValues(componentResolvable, nil, data)
+		self:_getComponentOpValues(componentResolvable, nil, data or {})
 	)
 end
 
@@ -37,7 +40,7 @@ end
 
 function Entity:addBaseComponent(componentResolvable, data)
 	return self.rocs:_addComponent(
-		self:_getComponentOpValues(componentResolvable, "base", data)
+		self:_getComponentOpValues(componentResolvable, "base", data or {})
 	)
 end
 
