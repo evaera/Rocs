@@ -236,7 +236,8 @@ function Rocs:_removeComponent(instance, staticComponentAggregate, scope)
 
 	aggregate.components[scope] = nil
 
-	if next(aggregate.components) == nil then
+	local shouldDestroy = next(aggregate.components) == nil
+	if shouldDestroy then
 		self:_deconstructComponentAggregate(aggregate, staticComponentAggregate)
 	end
 
@@ -245,7 +246,7 @@ function Rocs:_removeComponent(instance, staticComponentAggregate, scope)
 		staticComponentAggregate
 	)
 
-	if aggregate.destroy then
+	if shouldDestroy and aggregate.destroy then
 		aggregate:destroy()
 	end
 end
