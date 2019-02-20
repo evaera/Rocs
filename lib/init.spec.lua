@@ -1,9 +1,18 @@
 return function()
 	local Rocs = require(script.Parent)
 
+	local testCmpInitCount = 0
+	local testCmpDestroyCount = 0
 	local testCmp = {
 		name = "Test";
-		initialize = function() print'initcmp' end;
+		initialize = function(self)
+			expect(self).to.be.ok()
+			testCmpInitCount = testCmpInitCount + 1
+		end;
+		destroy = function(self)
+			expect(self).to.be.ok()
+			testCmpDestroyCount = testCmpDestroyCount + 1
+		end;
 		defaults = {
 			[Rocs.metadata("Replicated")] = true
 		};
@@ -21,7 +30,9 @@ return function()
 		it("should apply components", function()
 			local ent = rocs:getEntity(workspace, "foo")
 
+			expect(testCmpInitCount).to.equal(0)
 			ent:addComponent(testCmp, { one = 1 })
+			expect(testCmpInitCount).to.equal(1)
 			ent:addBaseComponent("Test", { two = 2 })
 
 			local cmpAg = rocs._entities[workspace] and rocs._entities[workspace][testCmp]
@@ -40,6 +51,10 @@ return function()
 			expect(cmpAg:get("two")).to.equal(2)
 
 			expect(tostring(cmpAg)).to.equal("ComponentAggregate(Test)")
+
+			ent:removeComponent(testCmp)
+			ent:removeBaseComponent(testCmp)
+			expect(testCmpDestroyCount).to.equal(1)
 		end)
 	end)
 
@@ -60,10 +75,12 @@ return function()
 
 				initialize = function(self)
 					initializeCount = initializeCount + 1
+					expect(self).to.be.ok()
 				end;
 
 				destroy = function(self)
 					destroyCount = destroyCount + 1
+					expect(self).to.be.ok()
 				end;
 
 				[dep] = {
