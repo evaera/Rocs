@@ -1,6 +1,3 @@
-local t = require(script.Parent.t)
-local Util = require(script.Parent.Util)
-
 local Entity = {}
 Entity.__index = Entity
 
