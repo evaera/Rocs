@@ -8,6 +8,9 @@ Still in development
 - Remove duplication of componentAggregate, staticComponentAggregate, just use metatable
 - Metadata check and register
 - Defaults
+- Checks
+- Tags
+    - Default data
 - Make it so on Heartbeat etc. cannot yield
 - Filter to check type that component is allowed on
 - Ensure non-table data works
