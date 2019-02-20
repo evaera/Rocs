@@ -3,7 +3,7 @@ return function()
 
 	local testCmp = {
 		name = "Test";
-		initialize = function() print'init' end;
+		initialize = function() print'initcmp' end;
 		defaults = {
 			[Rocs.metadata("Replicated")] = true
 		};
@@ -53,8 +53,18 @@ return function()
 			local addedCount = 0
 			local updatedCount = 0
 			local removedCount = 0
+			local initializeCount = 0
+			local destroyCount = 0
 			rocs:registerSystem({
 				name = "test";
+
+				initialize = function(self)
+					initializeCount = initializeCount + 1
+				end;
+
+				destroy = function(self)
+					destroyCount = destroyCount + 1
+				end;
 
 				[dep] = {
 					onAdded = function(self, entity, map)
@@ -85,9 +95,13 @@ return function()
 			})
 			local ent = rocs:getEntity(workspace, "foo")
 
+			expect(initializeCount).to.equal(0)
 			ent:addBaseComponent("Test", { one = 1})
+			expect(initializeCount).to.equal(1)
 
+			expect(destroyCount).to.equal(0)
 			ent:removeBaseComponent("Test")
+			expect(destroyCount).to.equal(1)
 
 			expect(addedCount).to.equal(1)
 			expect(updatedCount).to.equal(1)

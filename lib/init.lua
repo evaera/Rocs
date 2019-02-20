@@ -62,6 +62,8 @@ end
 function Rocs:registerSystem(systemDefinition)
 	assert(I.SystemDefinition(systemDefinition))
 
+	systemDefinition.__index = systemDefinition.__index or systemDefinition
+
 	systemDefinition.new = systemDefinition.new or function()
 		return setmetatable({}, systemDefinition)
 	end
@@ -97,7 +99,7 @@ end
 function Rocs:registerComponent(componentDefinition)
 	assert(I.ComponentDefinition(componentDefinition))
 
-	componentDefinition._address = tostring(componentDefinition)
+	componentDefinition._address = tostring(componentDefinition) --! No
 	componentDefinition.__tostring = Util.makeToString("ComponentAggregate")
 	componentDefinition.__index = componentDefinition.__index or componentDefinition
 
@@ -137,7 +139,7 @@ function Rocs:_constructSystem(staticSystem)
 	system._consumers = 0
 
 	if system.initialize then
-		system.initialize()
+		system:initialize()
 	end
 
 	return system
