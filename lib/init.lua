@@ -11,18 +11,18 @@ local LIFECYCLE_REMOVED = "onRemoved"
 local LIFECYCLE_UPDATED = "onUpdated"
 local ALL_COMPONENTS = {}
 
-local function makeComponentPropertySetter(rocs, staticComponentAggregate)
+local function makeComponentPropertySetter(rocs, staticAggregate)
 	return function (self, key, value)
-		local currentValue = rocs:_getComponent(self.instance, staticComponentAggregate, "base")
+		local currentValue = rocs:_getComponent(self.instance, staticAggregate, "base")
 
 		currentValue[key] = value
-		rocs:_addComponent(self.instance, staticComponentAggregate, "base", currentValue)
+		rocs:_addComponent(self.instance, staticAggregate, "base", currentValue)
 	end
 end
 
-local function makeComponentSetter(rocs, staticComponentAggregate)
+local function makeComponentSetter(rocs, staticAggregate)
 	return function (self, key, value)
-		rocs:_addComponent(self.instance, staticComponentAggregate, "base", value)
+		rocs:_addComponent(self.instance, staticAggregate, "base", value)
 	end
 end
 
@@ -77,9 +77,9 @@ function Rocs:registerSystem(systemDefinition)
 				table.insert(self._dependencies[ALL_COMPONENTS], dependency)
 			else
 				for _, componentResolvable in ipairs(key._dependencies) do
-					local staticComponentAggregate = self:_getStaticComponentAggregate(componentResolvable)
+					local staticAggregate = self:_getstaticAggregate(componentResolvable)
 
-					table.insert(self._dependencies[staticComponentAggregate], dependency)
+					table.insert(self._dependencies[staticAggregate], dependency)
 				end
 			end
 		end
@@ -100,7 +100,7 @@ function Rocs:registerComponent(componentDefinition)
 	assert(I.ComponentDefinition(componentDefinition))
 
 	componentDefinition._address = tostring(componentDefinition) --! No
-	componentDefinition.__tostring = Util.makeToString("ComponentAggregate")
+	componentDefinition.__tostring = Util.makeToString("aggregate")
 	componentDefinition.__index = componentDefinition.__index or componentDefinition
 
 	componentDefinition.__index.get = componentGetProperty
@@ -124,7 +124,7 @@ function Rocs:getEntity(instance, scope)
 	return Entity.new(self, instance, scope)
 end
 
-function Rocs:_getStaticComponentAggregate(componentResolvable)
+function Rocs:_getstaticAggregate(componentResolvable)
 	return self._components[componentResolvable] or error(("Cannot resolve component %s"):format(componentResolvable))
 end
 
@@ -179,11 +179,11 @@ function Rocs:_reduceSystemConsumers(staticSystem)
 	end
 end
 
-function Rocs:_constructComponentAggregate(staticComponentAggregate, instance)
-	local aggregate = staticComponentAggregate.new()
+function Rocs:_constructAggregate(staticAggregate, instance)
+	local aggregate = staticAggregate.new()
 
 	assert(
-		getmetatable(aggregate) == staticComponentAggregate,
+		getmetatable(aggregate) == staticAggregate,
 		"Metatable of constructed component aggregate must be static component aggregate"
 	)
 
@@ -197,55 +197,53 @@ function Rocs:_constructComponentAggregate(staticComponentAggregate, instance)
 	return aggregate
 end
 
-function Rocs:_deconstructComponentAggregate(componentAggregate, staticComponentAggregate)
+function Rocs:_deconstructAggregate(aggregate)
 	-- destroy is called in removeComponent for correct timing
 
-	self._entities[componentAggregate.instance][staticComponentAggregate] = nil
+	self._entities[aggregate.instance][getmetatable(aggregate)] = nil
 
-	if next(self._entities[componentAggregate.instance]) == nil then
-		self._entities[componentAggregate.instance] = nil
+	if next(self._entities[aggregate.instance]) == nil then
+		self._entities[aggregate.instance] = nil
 	end
 end
 
-function Rocs:_addComponent(instance, staticComponentAggregate, scope, data)
+function Rocs:_addComponent(instance, staticAggregate, scope, data)
 	if self._entities[instance] == nil then
 		self._entities[instance] = {}
 	end
 
-	if self._entities[instance][staticComponentAggregate] == nil then
-		self._entities[instance][staticComponentAggregate] =
-			self:_constructComponentAggregate(staticComponentAggregate, instance)
+	if self._entities[instance][staticAggregate] == nil then
+		self._entities[instance][staticAggregate] =
+			self:_constructAggregate(staticAggregate, instance)
 	end
 
-	self._entities[instance][staticComponentAggregate].components[scope] = data
+	self._entities[instance][staticAggregate].components[scope] = data
 
 	self:_dispatchComponentChange(
-		self._entities[instance][staticComponentAggregate],
-		staticComponentAggregate,
+		self._entities[instance][staticAggregate],
 		data
 	)
 end
 
-function Rocs:_removeComponent(instance, staticComponentAggregate, scope)
+function Rocs:_removeComponent(instance, staticAggregate, scope)
 	if
 		self._entities[instance] == nil
-		or self._entities[instance][staticComponentAggregate] == nil
+		or self._entities[instance][staticAggregate] == nil
 	then
 		return
 	end
 
-	local aggregate = self._entities[instance][staticComponentAggregate]
+	local aggregate = self._entities[instance][staticAggregate]
 
 	aggregate.components[scope] = nil
 
 	local shouldDestroy = next(aggregate.components) == nil
 	if shouldDestroy then
-		self:_deconstructComponentAggregate(aggregate, staticComponentAggregate)
+		self:_deconstructAggregate(aggregate, staticAggregate)
 	end
 
 	self:_dispatchComponentChange(
-		aggregate,
-		staticComponentAggregate
+		aggregate
 	)
 
 	if shouldDestroy and aggregate.destroy then
@@ -253,49 +251,49 @@ function Rocs:_removeComponent(instance, staticComponentAggregate, scope)
 	end
 end
 
-function Rocs:_dispatchComponentChange(componentAggregate, staticComponentAggregate, data)
-	local lastData = componentAggregate.data
-	local newData = self:_reduceComponentAggregate(componentAggregate, staticComponentAggregate)
+function Rocs:_dispatchComponentChange(aggregate, data)
+	local lastData = aggregate.data
+	local newData = self:_reduceAggregate(aggregate)
 
-	componentAggregate.data = newData
+	aggregate.data = newData
 
 	if lastData == nil and newData ~= nil then
-		self:_dispatchLifecycle(componentAggregate, LIFECYCLE_ADDED)
+		self:_dispatchLifecycle(aggregate, LIFECYCLE_ADDED)
 	end
 
 	if newData == nil then
-		self:_dispatchLifecycle(componentAggregate, LIFECYCLE_REMOVED)
+		self:_dispatchLifecycle(aggregate, LIFECYCLE_REMOVED)
 	elseif newData ~= lastData then
-		self:_dispatchLifecycle(componentAggregate, LIFECYCLE_UPDATED)
+		self:_dispatchLifecycle(aggregate, LIFECYCLE_UPDATED)
 	end
 
-	for _, dependency in ipairs(self._dependencies[staticComponentAggregate]) do
-		dependency:tap(componentAggregate.instance)
+	for _, dependency in ipairs(self._dependencies[getmetatable(aggregate)]) do
+		dependency:tap(aggregate.instance)
 	end
 
 	for _, dependency in ipairs(self._dependencies[ALL_COMPONENTS]) do
-		dependency:tap(componentAggregate.instance)
+		dependency:tap(aggregate.instance)
 	end
 end
 
-function Rocs:_dispatchLifecycle(componentAggregate, stage)
-	if componentAggregate[stage] then
-		componentAggregate[stage](self:getEntity(componentAggregate.instance, componentAggregate._address))
+function Rocs:_dispatchLifecycle(aggregate, stage)
+	if aggregate[stage] then
+		aggregate[stage](self:getEntity(aggregate.instance, aggregate._address))
 	end
 end
 
-function Rocs:_getComponent(instance, staticComponentAggregate, scope)
+function Rocs:_getComponent(instance, staticAggregate, scope)
 	if
 		self._entities[instance] == nil
-		or self._entities[instance][staticComponentAggregate] == nil
+		or self._entities[instance][staticAggregate] == nil
 	then
 		return
 	end
 
-	return self._entities[instance][staticComponentAggregate].components[scope]
+	return self._entities[instance][staticAggregate].components[scope]
 end
 
-function Rocs:_getAllComponentAggregates(instance)
+function Rocs:_getAllAggregates(instance)
 	local aggregates = {}
 
 	if self._entities[instance] ~= nil then
@@ -307,22 +305,22 @@ function Rocs:_getAllComponentAggregates(instance)
 	return aggregates
 end
 
-function Rocs:_getComponentAggregate(instance, staticComponentAggregate)
+function Rocs:_getAggregate(instance, staticAggregate)
 	return
 		self._entities[instance]
-		and self._entities[instance][staticComponentAggregate]
+		and self._entities[instance][staticAggregate]
 end
 
-function Rocs:_reduceComponentAggregate(componentAggregate, staticComponentAggregate)
-	local values = { componentAggregate.components.base }
+function Rocs:_reduceAggregate(aggregate)
+	local values = { aggregate.components.base }
 
-	for name, component in pairs(componentAggregate.components) do
+	for name, component in pairs(aggregate.components) do
 		if name ~= "base" then
 			values[#values + 1] = component
 		end
 	end
 
-	return Util.runReducer(staticComponentAggregate, values, self._defaultReducer)
+	return Util.runReducer(getmetatable(aggregate), values, self._defaultReducer)
 end
 
 function Rocs.metadata(name)

@@ -10,15 +10,15 @@ function Util.assign(toObj, ...)
 	return toObj
 end
 
-function Util.runReducer(staticComponentAggregate, values, defaultReducer)
-	local reducedValue = (staticComponentAggregate.reducer or defaultReducer)(values)
+function Util.runReducer(staticAggregate, values, defaultReducer)
+	local reducedValue = (staticAggregate.reducer or defaultReducer)(values)
 
-	if staticComponentAggregate.check then
-		assert(staticComponentAggregate.check(reducedValue))
+	if staticAggregate.check then
+		assert(staticAggregate.check(reducedValue))
 	end
 
 	return setmetatable(reducedValue, {
-		__index = staticComponentAggregate.defaults
+		__index = staticAggregate.defaults
 	})
 end
 

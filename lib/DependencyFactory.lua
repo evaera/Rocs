@@ -63,9 +63,9 @@ function DependencyFactory:hasComponent(componentResolvable)
 	return DependencyStep.new(
 		self,
 		function(instance)
-			local staticComponentAggregate = self._rocs:_getStaticComponentAggregate(componentResolvable)
+			local staticAggregate = self._rocs:_getstaticAggregate(componentResolvable)
 
-			return {self._rocs:_getComponentAggregate(instance, staticComponentAggregate)}
+			return {self._rocs:_getAggregate(instance, staticAggregate)}
 		end,
 		{componentResolvable}
 	)
@@ -77,7 +77,7 @@ function DependencyFactory:hasMetadata(metadata)
 		function(instance)
 			local aggregates = {}
 
-			for _, aggregate in ipairs(self._rocs:_getAllComponentAggregates(instance)) do
+			for _, aggregate in ipairs(self._rocs:_getAllAggregates(instance)) do
 				if aggregate:get(metadata) ~= nil then
 					aggregates[#aggregates + 1] = aggregate
 				end

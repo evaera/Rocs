@@ -5,7 +5,6 @@ Still in development
 
 ## Todo
 - Write more tests
-- Remove duplication of componentAggregate, staticComponentAggregate, just use metatable
 - Metadata check and register
 - Checks
 - Tags

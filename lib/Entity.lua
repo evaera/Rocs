@@ -18,7 +18,7 @@ end
 function Entity:_getComponentOpValues(componentResolvable, scope, ...)
 	return
 		self.instance,
-		self.rocs:_getStaticComponentAggregate(componentResolvable),
+		self.rocs:_getstaticAggregate(componentResolvable),
 		scope or self.scope,
 		...
 end
@@ -48,7 +48,7 @@ function Entity:removeBaseComponent(componentResolvable)
 end
 
 function Entity:getComponent(componentResolvable)
-	return self.rocs:_getComponentAggregate(
+	return self.rocs:_getAggregate(
 		self:_getComponentOpValues(componentResolvable)
 	)
 end

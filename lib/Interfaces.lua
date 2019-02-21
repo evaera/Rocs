@@ -18,17 +18,17 @@ I.ComponentDefinition = t.intersection(I.InitDestroyable, I.Reducible, t.interfa
 	defaults = t.optional(t.map(t.string, t.any));
 }))
 
-I.StaticComponentAggregate = t.intersection(t.ComponentDefinition, t.interface({
+I.staticAggregate = t.intersection(t.ComponentDefinition, t.interface({
 	new = t.callback;
 }))
 
-I.ComponentAggregate = t.interface({
+I.aggregate = t.interface({
 	components = t.table;
 	data = t.table;
 	instance = t.Instance;
 })
 
-I.ComponentResolvable = t.union(t.string, t.StaticComponentAggregate)
+I.ComponentResolvable = t.union(t.string, t.staticAggregate)
 
 I.SystemDefinition = t.intersection(I.InitDestroyable, t.interface({
 	name = t.string;

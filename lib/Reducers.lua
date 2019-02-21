@@ -38,7 +38,7 @@ function Reducers.propertyReducer(propertyReducers, rocs)
 
 		for propName, propValues in pairs(properties) do
 			if rocs and rocs:isMetadata(propName) then
-				local traitComponent = rocs:_getStaticComponentAggregate(propName.name)
+				local traitComponent = rocs:_getstaticAggregate(propName.name)
 
 				reducedValue[propName] = Util.runReducer(traitComponent, propValues)
 			else

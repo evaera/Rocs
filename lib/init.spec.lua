@@ -52,7 +52,7 @@ return function()
 			expect(cmpAg:get("two")).to.equal(2)
 			expect(cmpAg:get("testDefault")).to.equal(5)
 
-			expect(tostring(cmpAg)).to.equal("ComponentAggregate(Test)")
+			expect(tostring(cmpAg)).to.equal("aggregate(Test)")
 
 			ent:removeComponent(testCmp)
 			ent:removeBaseComponent(testCmp)
