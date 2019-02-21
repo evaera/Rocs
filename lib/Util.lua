@@ -62,4 +62,30 @@ function Util.callCounter()
 	})
 end
 
+local function makeArrayEntityCheck(array)
+	return function(instance)
+		for _, className in ipairs(array) do
+			if instance.ClassName == className then
+				return true
+			end
+		end
+
+		return
+			false,
+			("Instance type %q is not allowed to have this component!")
+				:format(instance.ClassName)
+	end
+end
+function Util.runEntityCheck(staticAggregate, instance)
+	if staticAggregate.entityCheck == nil then
+		return true
+	end
+
+	if type(staticAggregate.entityCheck) == "table" then
+		staticAggregate.entityCheck = makeArrayEntityCheck(staticAggregate.entityCheck)
+	end
+
+	return staticAggregate.entityCheck(instance)
+end
+
 return Util

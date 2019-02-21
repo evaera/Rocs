@@ -8,7 +8,6 @@ Still in development
 - Tags
     - Default data
 - Make it so on Heartbeat etc. cannot yield
-- Filter to check type that component is allowed on
 - Ensure non-table data works
 - Ensure timing of life cycles is ideal
 - ShouldUpdate function?

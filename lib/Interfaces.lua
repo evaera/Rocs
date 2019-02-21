@@ -16,6 +16,7 @@ I.Reducible = t.interface({
 
 I.ComponentDefinition = t.intersection(I.InitDestroyable, I.Reducible, t.interface({
 	tag = t.optional(t.string);
+	entityCheck = t.optional(t.union(t.array(t.string), t.callback));
 }))
 
 I.StaticAggregate = t.intersection(t.ComponentDefinition, t.interface({

@@ -213,6 +213,8 @@ function Rocs:_deconstructAggregate(aggregate)
 end
 
 function Rocs:_addComponent(instance, staticAggregate, scope, data)
+	assert(Util.runEntityCheck(staticAggregate, instance))
+
 	if self._entities[instance] == nil then
 		self._entities[instance] = {}
 	end

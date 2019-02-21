@@ -26,7 +26,8 @@ local function makeTestCmp(rocs, callCounts)
 				value = reducers.last;
 			})
 		});
-		check = t.interface({})
+		check = t.interface({});
+		entityCheck = t.instance("Workspace");
 	}
 end
 
