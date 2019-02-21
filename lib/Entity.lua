@@ -1,3 +1,6 @@
+local I = require(script.Parent.Interfaces)
+local t = require(script.Parent.t)
+
 local Entity = {}
 Entity.__index = Entity
 
@@ -15,7 +18,12 @@ function Entity:__tostring()
 	return ("Entity(%s)"):format(tostring(self.instance))
 end
 
+local getComponentOpValuesCheck = t.tuple(
+	I.ComponentResolvable,
+	t.optional(t.string)
+)
 function Entity:_getComponentOpValues(componentResolvable, scope, ...)
+	assert(getComponentOpValuesCheck(componentResolvable, scope))
 	return
 		self.instance,
 		self.rocs:_getstaticAggregate(componentResolvable),
