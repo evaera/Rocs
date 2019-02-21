@@ -5,8 +5,6 @@ Still in development
 
 ## Todo
 - Write more tests
-- Metadata check and register
-- Checks
 - Tags
     - Default data
 - Make it so on Heartbeat etc. cannot yield

@@ -4,6 +4,7 @@ local Entity = require(script.Entity)
 local t = require(script.t)
 local DependencyFactory = require(script.DependencyFactory)
 local Dependency = require(script.Dependency)
+local MakeReducers = require(script.Reducers)
 
 local METADATA_IDENTIFIER = "__rocs_metadata__"
 local LIFECYCLE_ADDED = "onAdded"
@@ -26,9 +27,7 @@ local function makeComponentSetter(rocs, staticAggregate)
 	end
 end
 
-local Rocs = {
-	reducers = require(script.Reducers);
-}
+local Rocs = {}
 Rocs.__index = Rocs
 
 function Rocs.new()
@@ -47,7 +46,7 @@ function Rocs.new()
 	}, Rocs)
 
 	self.dependencies = DependencyFactory.new(self)
-	self._defaultReducer = self:propertyReducer({})
+	self.reducers = MakeReducers(self)
 
 	return self
 end
@@ -88,12 +87,18 @@ function Rocs:registerSystem(systemDefinition)
 	return systemDefinition
 end
 
-local function componentGetProperty(component, key)
-	if key == nil then
-		return component.data
-	else
-		return component.data[key]
+local function componentGetProperty(component, ...)
+	local object = component.data
+
+	for _, field in ipairs({...}) do
+		object = object[field]
+
+		if object == nil then
+			return
+		end
 	end
+
+	return object
 end
 
 function Rocs:registerComponent(componentDefinition)
@@ -320,24 +325,18 @@ function Rocs:_reduceAggregate(aggregate)
 		end
 	end
 
-	return Util.runReducer(getmetatable(aggregate), values, self._defaultReducer)
+	return Util.runReducer(getmetatable(aggregate), values, self.reducers.default)
 end
 
-function Rocs.metadata(name)
-	--? Maybe remove this if it causes timing issues
-	-- assert(self._metadata[name] ~= nil, "Invalid metadata type")
-
-	return METADATA_IDENTIFIER .. name
-end
-
-function Rocs:isMetadata(name)
+function Rocs:_getMetadata(name)
 	return
 		name:sub(1, #METADATA_IDENTIFIER) == METADATA_IDENTIFIER
 		and self._metadata[name:sub(#METADATA_IDENTIFIER + 1)]
+		or nil
 end
 
-function Rocs:propertyReducer(propertyReducers)
-	return Rocs.reducers.propertyReducer(propertyReducers, self)
+function Rocs.metadata(name)
+	return METADATA_IDENTIFIER .. name
 end
 
 return Rocs

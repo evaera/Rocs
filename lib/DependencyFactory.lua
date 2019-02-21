@@ -92,8 +92,8 @@ end
 function DependencyFactory:_resolveStep(step)
 	if DependencyFactory.isDependencyStep(step) then
 		return step
-	elseif self._rocs:isMetadata(step) then
-		return self:hasMetadata(step)
+	elseif self._rocs:_getMetadata(step) then
+		return self:_getMetadata(step)
 	elseif type(step) == "string" then
 		return self:hasComponent(step)
 	end
