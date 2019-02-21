@@ -28,6 +28,7 @@ local function makeTestCmp(rocs, callCounts)
 		});
 		check = t.interface({});
 		entityCheck = t.instance("Workspace");
+		tag = "Test";
 	}
 end
 

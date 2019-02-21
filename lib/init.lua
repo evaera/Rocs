@@ -1,3 +1,5 @@
+local CollectionService = game:GetService("CollectionService")
+
 local Util = require(script.Util)
 local I = require(script.Interfaces)
 local Entity = require(script.Entity)
@@ -37,6 +39,7 @@ function Rocs.new()
 		_systems = {};
 		_metadata = {};
 		_activeSystems = {};
+		_tags = {};
 		_dependencies = setmetatable({}, {
 			__index = function(self, k)
 				self[k] = {}
@@ -87,6 +90,33 @@ function Rocs:registerSystem(systemDefinition)
 	return systemDefinition
 end
 
+function Rocs:_listenForTag(tag, staticAggregate)
+	assert(self._tags[tag] == nil, ("Tag %q is already in use!"):format(tag))
+	self._tags[tag] = true
+
+	local function addFromTag(instance)
+		local data = {}
+		if
+			instance:FindFirstChild(staticAggregate.name)
+			and instance[staticAggregate.name].ClassName == "ModuleScript"
+		then
+			data = require(instance[staticAggregate.name])
+		end
+
+		self:_addComponent(instance, staticAggregate, "base", data)
+	end
+
+	local function removeFromTag(instance)
+		self:_removeComponent(instance, staticAggregate, "base")
+	end
+
+	CollectionService:GetInstanceRemovedSignal(tag):Connect(removeFromTag)
+	CollectionService:GetInstanceAddedSignal(tag):Connect(addFromTag)
+	for _, instance in ipairs(CollectionService:GetTagged(tag)) do
+		addFromTag(instance)
+	end
+end
+
 local function componentGetProperty(component, ...)
 	local object = component.data
 
@@ -118,6 +148,10 @@ function Rocs:registerComponent(componentDefinition)
 
 	self._components[componentDefinition.name] = componentDefinition
 	self._components[componentDefinition] = componentDefinition
+
+	if componentDefinition.tag then
+		self:_listenForTag(componentDefinition.tag, componentDefinition)
+	end
 
 	return componentDefinition
 end
