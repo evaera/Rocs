@@ -7,7 +7,6 @@ Still in development
 - Write more tests
 - Remove duplication of componentAggregate, staticComponentAggregate, just use metatable
 - Metadata check and register
-- Defaults
 - Checks
 - Tags
     - Default data

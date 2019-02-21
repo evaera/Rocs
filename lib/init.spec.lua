@@ -14,7 +14,8 @@ return function()
 			testCmpDestroyCount = testCmpDestroyCount + 1
 		end;
 		defaults = {
-			[Rocs.metadata("Replicated")] = true
+			[Rocs.metadata("Replicated")] = true;
+			testDefault = 5;
 		};
 		reducer = Rocs:propertyReducer({
 			nested = Rocs:propertyReducer({
@@ -49,6 +50,7 @@ return function()
 
 			expect(cmpAg:get("one")).to.equal(1)
 			expect(cmpAg:get("two")).to.equal(2)
+			expect(cmpAg:get("testDefault")).to.equal(5)
 
 			expect(tostring(cmpAg)).to.equal("ComponentAggregate(Test)")
 

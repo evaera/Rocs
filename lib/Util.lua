@@ -17,7 +17,9 @@ function Util.runReducer(staticComponentAggregate, values, defaultReducer)
 		assert(staticComponentAggregate.check(reducedValue))
 	end
 
-	return reducedValue
+	return setmetatable(reducedValue, {
+		__index = staticComponentAggregate.defaults
+	})
 end
 
 function Util.makeToString(staticName)
