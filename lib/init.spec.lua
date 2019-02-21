@@ -1,40 +1,70 @@
-return function()
-	local Rocs = require(script.Parent)
+local t = require(script.Parent.t)
+local Util = require(script.Parent.Util)
+local Rocs = require(script.Parent)
 
-	local testCmpInitCount = 0
-	local testCmpDestroyCount = 0
-	local testCmp = {
+local function makeTestCmp(rocs, callCounts)
+	callCounts = callCounts or Util.callCounter()
+
+	local reducers = rocs.reducers
+
+	return {
 		name = "Test";
 		initialize = function(self)
 			expect(self).to.be.ok()
-			testCmpInitCount = testCmpInitCount + 1
+			callCounts:call("testCmpInit")
 		end;
 		destroy = function(self)
 			expect(self).to.be.ok()
-			testCmpDestroyCount = testCmpDestroyCount + 1
+			callCounts:call("testCmpDestroy")
 		end;
 		defaults = {
 			[Rocs.metadata("Replicated")] = true;
 			testDefault = 5;
 		};
-		reducer = Rocs:propertyReducer({
-			nested = Rocs:propertyReducer({
-				value = Rocs.reducers.last;
+		reducer = reducers.propertyReducer({
+			nested = reducers.propertyReducer({
+				value = reducers.last;
 			})
-		})
+		});
+		check = t.interface({})
 	}
+end
 
+return function()
 	describe("Components", function()
 		local rocs = Rocs.new()
+		local callCounts = Util.callCounter()
+		local testCmp = makeTestCmp(rocs, callCounts)
 		rocs:registerComponent(testCmp)
+
+		local reducers = rocs.reducers
+		rocs:registerMetadata({
+			name = "MtTest";
+			reducer = reducers.propertyReducer({
+				num = reducers.add;
+			});
+			check = t.interface({
+				num = t.number;
+			})
+		})
 
 		it("should apply components", function()
 			local ent = rocs:getEntity(workspace, "foo")
 
-			expect(testCmpInitCount).to.equal(0)
-			ent:addComponent(testCmp, { one = 1 })
-			expect(testCmpInitCount).to.equal(1)
-			ent:addBaseComponent("Test", { two = 2 })
+			expect(callCounts.testCmpInit).to.equal(0)
+			ent:addComponent(testCmp, {
+				one = 1;
+				[Rocs.metadata("MtTest")] = {
+					num = 2;
+				}
+			})
+			expect(callCounts.testCmpInit).to.equal(1)
+			ent:addBaseComponent("Test", {
+				two = 2;
+				[Rocs.metadata("MtTest")] = {
+					num = 1;
+				}
+			})
 
 			local cmpAg = rocs._entities[workspace] and rocs._entities[workspace][testCmp]
 
@@ -52,36 +82,34 @@ return function()
 			expect(cmpAg:get("two")).to.equal(2)
 			expect(cmpAg:get("testDefault")).to.equal(5)
 
+			expect(cmpAg:get(Rocs.metadata("MtTest"), "num")).to.equal(3)
+
 			expect(tostring(cmpAg)).to.equal("aggregate(Test)")
 
 			ent:removeComponent(testCmp)
 			ent:removeBaseComponent(testCmp)
-			expect(testCmpDestroyCount).to.equal(1)
+			expect(callCounts.testCmpDestroy).to.equal(1)
 		end)
 	end)
 
 	describe("Systems", function()
 		local rocs = Rocs.new()
-		rocs:registerComponent(testCmp)
+		rocs:registerComponent(makeTestCmp(rocs))
 
 		it("should fire lifecycle methods", function()
 			local dep = rocs.dependencies:hasComponent("Test")
 
-			local addedCount = 0
-			local updatedCount = 0
-			local removedCount = 0
-			local initializeCount = 0
-			local destroyCount = 0
+			local counter = Util.callCounter()
 			rocs:registerSystem({
 				name = "test";
 
 				initialize = function(self)
-					initializeCount = initializeCount + 1
+					counter:call("initialize")
 					expect(self).to.be.ok()
 				end;
 
 				destroy = function(self)
-					destroyCount = destroyCount + 1
+					counter:call("destroy")
 					expect(self).to.be.ok()
 				end;
 
@@ -92,7 +120,7 @@ return function()
 						expect(map.Test).to.be.ok()
 						expect(map.Test:get("one")).to.equal(1)
 
-						addedCount = addedCount + 1
+						counter:call("added")
 					end;
 					onUpdated = function(self, entity, map)
 						expect(getmetatable(self).name).to.equal("test")
@@ -100,7 +128,7 @@ return function()
 						expect(map.Test).to.be.ok()
 						expect(map.Test:get("one")).to.equal(1)
 
-						updatedCount = updatedCount + 1
+						counter:call("updated")
 					end;
 					onRemoved = function(self, entity, map)
 						expect(getmetatable(self).name).to.equal("test")
@@ -108,23 +136,23 @@ return function()
 						expect(map.Test).to.be.ok()
 						expect(map.Test:get("one")).to.equal(nil)
 
-						removedCount = removedCount + 1
+						counter:call("removed")
 					end;
 				}
 			})
 			local ent = rocs:getEntity(workspace, "foo")
 
-			expect(initializeCount).to.equal(0)
+			expect(counter.initialize).to.equal(0)
 			ent:addBaseComponent("Test", { one = 1})
-			expect(initializeCount).to.equal(1)
+			expect(counter.initialize).to.equal(1)
 
-			expect(destroyCount).to.equal(0)
+			expect(counter.destroy).to.equal(0)
 			ent:removeBaseComponent("Test")
-			expect(destroyCount).to.equal(1)
+			expect(counter.destroy).to.equal(1)
 
-			expect(addedCount).to.equal(1)
-			expect(updatedCount).to.equal(1)
-			expect(removedCount).to.equal(1)
+			expect(counter.added).to.equal(1)
+			expect(counter.updated).to.equal(1)
+			expect(counter.removed).to.equal(1)
 		end)
 	end)
 end
