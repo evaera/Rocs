@@ -63,7 +63,7 @@ function DependencyFactory:hasComponent(componentResolvable)
 	return DependencyStep.new(
 		self,
 		function(instance)
-			local staticAggregate = self._rocs:_getstaticAggregate(componentResolvable)
+			local staticAggregate = self._rocs:_getStaticAggregate(componentResolvable)
 
 			return {self._rocs:_getAggregate(instance, staticAggregate)}
 		end,

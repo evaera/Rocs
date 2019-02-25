@@ -26,7 +26,7 @@ function Entity:_getComponentOpValues(componentResolvable, scope, ...)
 	assert(getComponentOpValuesCheck(componentResolvable, scope))
 	return
 		self.instance,
-		self.rocs:_getstaticAggregate(componentResolvable),
+		self.rocs:_getStaticAggregate(componentResolvable),
 		scope or self.scope,
 		...
 end

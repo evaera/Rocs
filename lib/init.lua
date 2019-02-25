@@ -79,7 +79,7 @@ function Rocs:registerSystem(systemDefinition)
 				table.insert(self._dependencies[ALL_COMPONENTS], dependency)
 			else
 				for _, componentResolvable in ipairs(key._dependencies) do
-					local staticAggregate = self:_getstaticAggregate(componentResolvable)
+					local staticAggregate = self:_getStaticAggregate(componentResolvable)
 
 					table.insert(self._dependencies[staticAggregate], dependency)
 				end
@@ -163,8 +163,8 @@ function Rocs:getEntity(instance, scope)
 	return Entity.new(self, instance, scope)
 end
 
-function Rocs:_getstaticAggregate(componentResolvable)
 	return self._components[componentResolvable] or error(("Cannot resolve component %s"):format(componentResolvable))
+function Rocs:_getStaticAggregate(componentResolvable)
 end
 
 function Rocs:_constructSystem(staticSystem)
