@@ -1,3 +1,5 @@
+local HttpService = game:GetService("HttpService")
+
 local I = require(script.Parent.Interfaces)
 local t = require(script.Parent.t)
 
@@ -58,6 +60,24 @@ end
 function Entity:getComponent(componentResolvable)
 	return self.rocs:_getAggregate(
 		self:_getComponentOpValues(componentResolvable)
+	)
+end
+
+function Entity:addLayer(layer, layerId, componentResolvable)
+	layerId = layerId or HttpService:GenerateGUID()
+
+	local layerComponent = self.rocs:_getLayerComponent(
+		layerId,
+		componentResolvable or self._layers.component
+	)
+
+	layer[self.rocs.metadata("_layer")] = layerId
+
+	self.rocs:_addComponent(
+		self.instance,
+		layerComponent,
+		self.scope,
+		layer
 	)
 end
 

@@ -1,5 +1,5 @@
 local Rocs = require(path.to.rocs.instance)
-local Deps = Rocs:getDependencyFactory()
+local Deps = Rocs.dependencies
 
 local dep = Deps:all(
 	"Health",
@@ -15,13 +15,13 @@ local HealthRegenSystem = {
 	name = "HealthRegen";
 
 	[dep] = {
-		onAdded = function(self, entity, components)
+		onAdded = function(self, e)
 
-		end
+		end;
 	};
 
 	[all] = {
-		onHeartbeat = function(self, entity, components)
+		onHeartbeat = function(self, e)
 
 		end
 	}

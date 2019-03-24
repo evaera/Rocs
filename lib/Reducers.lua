@@ -11,6 +11,22 @@ return function (rocs)
 			return values[1]
 	end
 
+	function Reducers.truthy(values)
+		for _, value in ipairs(values) do
+			if value then
+				return value
+			end
+		end
+	end
+
+	function Reducers.falsy(values)
+		for _, value in ipairs(values) do
+			if not value then
+				return value
+			end
+		end
+	end
+
 	function Reducers.add(values)
 		local reducedValue = 0
 
@@ -21,7 +37,7 @@ return function (rocs)
 		return reducedValue
 	end
 
-	function Reducers.propertyReducer(propertyReducers)
+	function Reducers.propertyReducer(propertyReducers, disableMetadata)
 		return function(values)
 			local properties = {}
 
@@ -38,7 +54,7 @@ return function (rocs)
 			local reducedValue = {}
 
 			for propName, propValues in pairs(properties) do
-				if rocs and rocs:_getMetadata(propName) then
+				if not disableMetadata and rocs and rocs:_getMetadata(propName) then
 					local reducible = rocs:_getMetadata(propName)
 
 					reducedValue[propName] = Util.runReducer(reducible, propValues)
@@ -52,6 +68,34 @@ return function (rocs)
 		end
 	end
 
+	function Reducers.propertyReducerAll(reducer, ...)
+		return Reducers.propertyReducer(setmetatable({}, {
+			__index = function()
+				return reducer
+			end
+		}), ...)
+	end
+
+	function Reducers.thisOr(reducer, defaultValue)
+		return function(values)
+			local result = reducer(values)
+
+			if result == nil then
+				return defaultValue
+			else
+				return result
+			end
+		end
+	end
+
+	local function makeOr(func)
+		return function (defaultValue)
+			return Reducers.thisOr(func, defaultValue)
+		end
+	end
+
+	Reducers.truthyOr = makeOr(Reducers.truthy)
+	Reducers.falsyOr = makeOr(Reducers.falsy)
 	Reducers.default = Reducers.propertyReducer({})
 
 	return Reducers

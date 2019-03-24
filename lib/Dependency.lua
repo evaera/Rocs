@@ -22,22 +22,25 @@ function EntityDependency.new(dependency, instance)
 	}, EntityDependency)
 end
 
-function EntityDependency:_dispatchLifecycle(aggregateMap, stage)
+function EntityDependency:_dispatchLifecycle(stage, aggregateMap, target)
 	if self._dependency._hooks[stage] then
 		self._dependency._hooks[stage](
 			self.system,
-			self._dependency._rocs:getEntity(
-				self.instance,
-				"system__" .. self._dependency._staticSystem.name
-			),
-			aggregateMap
+			{
+				entity = self._dependency._rocs:getEntity(
+					self.instance,
+					"system__" .. self._dependency._staticSystem.name
+				);
+				components = aggregateMap;
+				target = target;
+			}
 		)
 	end
 	self._lastAggregateMap = aggregateMap;
 end
 
-function EntityDependency:destroy()
-	self:_dispatchLifecycle(self._lastAggregateMap, LIFECYCLE_REMOVED)
+function EntityDependency:destroy(target)
+	self:_dispatchLifecycle(LIFECYCLE_REMOVED, self._lastAggregateMap, target)
 	self._dependency._rocs:_reduceSystemConsumers(self._dependency._staticSystem)
 end
 
@@ -55,19 +58,19 @@ function Dependency.new(rocs, system, step, hooks)
 	}, Dependency)
 end
 
-function Dependency:tap(instance)
+function Dependency:tap(instance, target)
 	local aggregateMap = self._step:evaluateMap(instance)
 
 	if aggregateMap and not self._entityDependencies[instance] then
 		self._entityDependencies[instance] = EntityDependency.new(self, instance)
-		self._entityDependencies[instance]:_dispatchLifecycle(aggregateMap, LIFECYCLE_ADDED)
+		self._entityDependencies[instance]:_dispatchLifecycle(LIFECYCLE_ADDED, aggregateMap, target)
 	elseif not aggregateMap and self._entityDependencies[instance] then
-		self._entityDependencies[instance]:destroy()
+		self._entityDependencies[instance]:destroy(target)
 		self._entityDependencies[instance] = nil
 	end
 
 	if aggregateMap then
-		self._entityDependencies[instance]:_dispatchLifecycle(aggregateMap, LIFECYCLE_UPDATED)
+		self._entityDependencies[instance]:_dispatchLifecycle(LIFECYCLE_UPDATED, aggregateMap, target)
 	end
 
 	self:_tapEvents()

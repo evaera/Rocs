@@ -17,7 +17,7 @@ function DependencyStep.combineDependencies(steps)
 
 	for i, dependencyStep in ipairs(steps) do
 		if dependencyStep._dependencies == true then
-			return true -- "poison" chain removing instance optimization
+			return true -- "poison" chain removing component optimization
 		end
 
 		dependencies[i] = dependencyStep._dependencies
@@ -33,7 +33,9 @@ end
 function DependencyStep:evaluateMap(...)
 	local aggregateArray = self:evaluate(...)
 
-	if aggregateArray == nil or #aggregateArray == 0 then
+	if aggregateArray == true then
+		return {}
+	elseif aggregateArray == nil or #aggregateArray == 0 then
 		return nil
 	end
 
@@ -68,6 +70,16 @@ function DependencyFactory:hasComponent(componentResolvable)
 			return {self._rocs:_getAggregate(instance, staticAggregate)}
 		end,
 		{componentResolvable}
+	)
+end
+
+function DependencyFactory:isEntity(goalEntity)
+	return DependencyStep.new(
+		self,
+		function(checkEntity)
+			return goalEntity == checkEntity or nil
+		end,
+		{goalEntity}
 	)
 end
 
@@ -108,9 +120,8 @@ function DependencyFactory:all(...)
 		function (instance)
 			local components = {}
 
-			for i, step in ipairs(steps) do
+			for _, step in ipairs(steps) do
 				step = self:_resolveStep(step)
-
 
 				local stepComponents = step:evaluate(instance)
 
@@ -118,7 +129,9 @@ function DependencyFactory:all(...)
 					return
 				end
 
-				components[i] = stepComponents
+				if type(stepComponents) == "table" then
+					components[#components + 1] = stepComponents
+				end
 			end
 
 			return Util.concat(unpack(components))
@@ -138,7 +151,7 @@ function DependencyFactory:any(...)
 
 				local stepComponents = step:evaluate(instance)
 
-				if stepComponents ~= nil then
+				if type(stepComponents) == "table" then
 					components[#components + 1] = stepComponents
 				end
 			end

@@ -12,6 +12,7 @@ local METADATA_IDENTIFIER = "__rocs_metadata__"
 local LIFECYCLE_ADDED = "onAdded"
 local LIFECYCLE_REMOVED = "onRemoved"
 local LIFECYCLE_UPDATED = "onUpdated"
+local ERROR_SPECIFY_LAYER_ID = "Unable to automatically determine layer ID, please specify."
 local ALL_COMPONENTS = {}
 
 local function makeComponentPropertySetter(rocs, staticAggregate)
@@ -40,6 +41,9 @@ function Rocs.new()
 		_metadata = {};
 		_activeSystems = {};
 		_tags = {};
+		_layerComponents = setmetatable({}, {
+			__mode = "kv";
+		});
 		_dependencies = setmetatable({}, {
 			__index = function(self, k)
 				self[k] = {}
@@ -156,15 +160,18 @@ function Rocs:registerComponent(componentDefinition)
 	return componentDefinition
 end
 
-local getEntityCheck = t.tuple(t.Instance, t.string)
+local getEntityCheck = t.tuple(t.union(t.Instance, t.table), t.string)
 function Rocs:getEntity(instance, scope)
 	assert(getEntityCheck(instance, scope))
 
 	return Entity.new(self, instance, scope)
 end
 
-	return self._components[componentResolvable] or error(("Cannot resolve component %s"):format(componentResolvable))
 function Rocs:_getStaticAggregate(componentResolvable)
+	return
+		self._components[componentResolvable]
+		or (type(componentResolvable) == "table" and componentResolvable)
+		or error(("Cannot resolve component %s"):format(componentResolvable))
 end
 
 function Rocs:_constructSystem(staticSystem)
@@ -308,12 +315,21 @@ function Rocs:_dispatchComponentChange(aggregate, data)
 		self:_dispatchLifecycle(aggregate, LIFECYCLE_UPDATED)
 	end
 
+	-- Component dependencies
 	for _, dependency in ipairs(self._dependencies[getmetatable(aggregate)]) do
-		dependency:tap(aggregate.instance)
+		dependency:tap(aggregate.instance, aggregate)
 	end
 
+	-- Entity dependencies
+	if rawget(self._dependencies, aggregate.instance) then
+		for _, dependency in ipairs(self._dependencies[aggregate.instance]) do
+			dependency:tap(aggregate.instance, aggregate)
+		end
+	end
+
+	-- "All" dependencies
 	for _, dependency in ipairs(self._dependencies[ALL_COMPONENTS]) do
-		dependency:tap(aggregate.instance)
+		dependency:tap(aggregate.instance, aggregate)
 	end
 end
 
@@ -369,6 +385,33 @@ function Rocs:_getMetadata(name)
 		name:sub(1, #METADATA_IDENTIFIER) == METADATA_IDENTIFIER
 		and self._metadata[name:sub(#METADATA_IDENTIFIER + 1)]
 		or nil
+end
+
+function Rocs:makeUniqueComponent(componentResolvable)
+	local staticAggregate = self:_getStaticAggregate(componentResolvable)
+
+	local component
+	component = setmetatable({
+		new = function (...)
+			return setmetatable(staticAggregate.new(...), component)
+		end;
+	}, staticAggregate)
+	component.__index = component
+
+	return component
+end
+
+function Rocs:_getLayerComponent(layerId, componentResolvable)
+	local staticAggregate = self:_getStaticAggregate(componentResolvable)
+
+	if self._layerComponents[layerId] == nil then
+		self._layerComponents[layerId] = self:makeUniqueComponent(staticAggregate)
+	else
+		assert(
+			staticAggregate == self._layerComponents[layerId],
+			"Layer component mismatched between addLayer calls"
+		)
+	end
 end
 
 function Rocs.metadata(name)

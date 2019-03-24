@@ -62,6 +62,16 @@ function Util.callCounter()
 	})
 end
 
+function Util.uniqueIdCounter(prefix)
+	prefix = prefix or ""
+	local count = 0
+
+	return function ()
+		count = count + 1
+		return prefix .. count
+	end
+end
+
 local function makeArrayEntityCheck(array)
 	return function(instance)
 		for _, className in ipairs(array) do
