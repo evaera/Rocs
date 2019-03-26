@@ -116,27 +116,27 @@ return function()
 				end;
 
 				[dep] = {
-					onAdded = function(self, entity, map)
+					onAdded = function(self, e)
 						expect(getmetatable(self).name).to.equal("test")
-						expect(entity.scope).to.equal("system__test")
-						expect(map.Test).to.be.ok()
-						expect(map.Test:get("one")).to.equal(1)
+						expect(e.entity.scope).to.equal("system__test")
+						expect(e.components.Test).to.be.ok()
+						expect(e.components.Test:get("one")).to.equal(1)
 
 						counter:call("added")
 					end;
-					onUpdated = function(self, entity, map)
+					onUpdated = function(self, e)
 						expect(getmetatable(self).name).to.equal("test")
-						expect(entity.scope).to.equal("system__test")
-						expect(map.Test).to.be.ok()
-						expect(map.Test:get("one")).to.equal(1)
+						expect(e.entity.scope).to.equal("system__test")
+						expect(e.components.Test).to.be.ok()
+						expect(e.components.Test:get("one")).to.equal(1)
 
 						counter:call("updated")
 					end;
-					onRemoved = function(self, entity, map)
+					onRemoved = function(self, e)
 						expect(getmetatable(self).name).to.equal("test")
-						expect(entity.scope).to.equal("system__test")
-						expect(map.Test).to.be.ok()
-						expect(map.Test:get("one")).to.equal(nil)
+						expect(e.entity.scope).to.equal("system__test")
+						expect(e.components.Test).to.be.ok()
+						expect(e.components.Test:get("one")).to.equal(nil)
 
 						counter:call("removed")
 					end;
@@ -155,6 +155,23 @@ return function()
 			expect(counter.added).to.equal(1)
 			expect(counter.updated).to.equal(1)
 			expect(counter.removed).to.equal(1)
+		end)
+	end)
+
+	describe("Layers", function()
+		local rocs = Rocs.new()
+		local callCounts = Util.callCounter()
+		local testCmp = makeTestCmp(rocs, callCounts)
+		rocs:registerComponent(testCmp)
+
+		it("should add and remove components", function()
+			local ent = rocs:getEntity(workspace, "rawr")
+
+			ent:addLayer({
+				workspace = {
+
+				}
+			})
 		end)
 	end)
 end

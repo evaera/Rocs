@@ -7,6 +7,7 @@ local t = require(script.t)
 local DependencyFactory = require(script.DependencyFactory)
 local Dependency = require(script.Dependency)
 local MakeReducers = require(script.Reducers)
+local MakeLayers = require(script.Layers)
 
 local METADATA_IDENTIFIER = "__rocs_metadata__"
 local LIFECYCLE_ADDED = "onAdded"
@@ -54,6 +55,10 @@ function Rocs.new()
 
 	self.dependencies = DependencyFactory.new(self)
 	self.reducers = MakeReducers(self)
+	self.layers = MakeLayers(self)
+
+	self:registerSystem(self.layers.system)
+	self:registerComponent(self.layers.component)
 
 	return self
 end
@@ -304,6 +309,7 @@ function Rocs:_dispatchComponentChange(aggregate, data)
 	local newData = self:_reduceAggregate(aggregate)
 
 	aggregate.data = newData
+	aggregate.lastData = lastData
 
 	if lastData == nil and newData ~= nil then
 		self:_dispatchLifecycle(aggregate, LIFECYCLE_ADDED)

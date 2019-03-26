@@ -11,20 +11,21 @@ local dep = Deps:all(
 
 local all = Deps:all("Health", "Regen", Rocs.metadata("Replicated"))
 
-local HealthRegenSystem = {
-	name = "HealthRegen";
-
-	[dep] = {
-		onAdded = function(self, e)
-
-		end;
+return {
+	{
+		name = "hello";
 	};
+	{
+		dep:onAdded(function()
 
-	[all] = {
-		onHeartbeat = function(self, e)
+		end),
 
-		end
+		dep:onInterval(20, function()
+
+		end),
+
+		dep:onEvent(RunService.Stepped, function()
+
+		end)
 	}
 }
-
-return HealthRegenSystem

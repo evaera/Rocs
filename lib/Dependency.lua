@@ -33,6 +33,8 @@ function EntityDependency:_dispatchLifecycle(stage, aggregateMap, target)
 				);
 				components = aggregateMap;
 				target = target;
+				data = target.data;
+				lastData = target.lastData;
 			}
 		)
 	end
