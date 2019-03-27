@@ -23,6 +23,8 @@ function EntityDependency.new(dependency, instance)
 end
 
 function EntityDependency:_dispatchLifecycle(stage, aggregateMap, target)
+	aggregateMap = aggregateMap or self._lastAggregateMap
+
 	if self._dependency._hooks[stage] then
 		self._dependency._hooks[stage](
 			self.system,
@@ -41,8 +43,7 @@ function EntityDependency:_dispatchLifecycle(stage, aggregateMap, target)
 	self._lastAggregateMap = aggregateMap;
 end
 
-function EntityDependency:destroy(target)
-	self:_dispatchLifecycle(LIFECYCLE_REMOVED, self._lastAggregateMap, target)
+function EntityDependency:destroy()
 	self._dependency._rocs:_reduceSystemConsumers(self._dependency._staticSystem)
 end
 
@@ -55,24 +56,37 @@ function Dependency.new(rocs, system, step, hooks)
 		_staticSystem = system;
 		_step = step;
 		_hooks = hooks;
-		_entityDependencies = {};
+		_entityDependencies = setmetatable({}, {
+			__index = function(self, k)
+				self[k] = {}
+				return self[k]
+			end;
+		});
 		_connections = nil;
 	}, Dependency)
 end
 
-function Dependency:tap(instance, target)
-	local aggregateMap = self._step:evaluateMap(instance)
+function Dependency:tap(instance, target, filter)
+	local staticTarget = getmetatable(target)
+	local aggregateMap = self._step:evaluateMap(instance, staticTarget, filter)
 
-	if aggregateMap and not self._entityDependencies[instance] then
-		self._entityDependencies[instance] = EntityDependency.new(self, instance)
-		self._entityDependencies[instance]:_dispatchLifecycle(LIFECYCLE_ADDED, aggregateMap, target)
-	elseif not aggregateMap and self._entityDependencies[instance] then
-		self._entityDependencies[instance]:destroy(target)
-		self._entityDependencies[instance] = nil
+	if aggregateMap and not self._entityDependencies[instance][staticTarget] then
+		self._entityDependencies[instance][staticTarget] = EntityDependency.new(self, instance)
+		self._entityDependencies[instance][staticTarget]:_dispatchLifecycle(LIFECYCLE_ADDED, aggregateMap, target)
 	end
 
-	if aggregateMap then
-		self._entityDependencies[instance]:_dispatchLifecycle(LIFECYCLE_UPDATED, aggregateMap, target)
+	if self._entityDependencies[instance][staticTarget] then
+		self._entityDependencies[instance][staticTarget]:_dispatchLifecycle(LIFECYCLE_UPDATED, aggregateMap, target)
+	end
+
+	if not aggregateMap and self._entityDependencies[instance][staticTarget] then
+		self._entityDependencies[instance][staticTarget]:_dispatchLifecycle(LIFECYCLE_REMOVED, nil, target)
+		self._entityDependencies[instance][staticTarget]:destroy()
+		self._entityDependencies[instance][staticTarget] = nil
+
+		if next(self._entityDependencies[instance]) == nil then
+			self._entityDependencies[instance] = nil
+		end
 	end
 
 	self:_tapEvents()

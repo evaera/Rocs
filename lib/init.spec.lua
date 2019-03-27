@@ -86,7 +86,7 @@ return function()
 
 			expect(cmpAg:get(Rocs.metadata("MtTest"), "num")).to.equal(3)
 
-			expect(tostring(cmpAg)).to.equal("aggregate(Test)")
+			expect(tostring(cmpAg)).to.equal("Aggregate(Test)")
 
 			ent:removeComponent(testCmp)
 			ent:removeBaseComponent(testCmp)
@@ -127,8 +127,11 @@ return function()
 					onUpdated = function(self, e)
 						expect(getmetatable(self).name).to.equal("test")
 						expect(e.entity.scope).to.equal("system__test")
+
 						expect(e.components.Test).to.be.ok()
-						expect(e.components.Test:get("one")).to.equal(1)
+						if counter.updated == 0 then
+							expect(e.components.Test:get("one")).to.equal(1)
+						end
 
 						counter:call("updated")
 					end;
@@ -153,7 +156,7 @@ return function()
 			expect(counter.destroy).to.equal(1)
 
 			expect(counter.added).to.equal(1)
-			expect(counter.updated).to.equal(1)
+			expect(counter.updated).to.equal(2)
 			expect(counter.removed).to.equal(1)
 		end)
 	end)
@@ -167,11 +170,20 @@ return function()
 		it("should add and remove components", function()
 			local ent = rocs:getEntity(workspace, "rawr")
 
-			ent:addLayer({
-				workspace = {
-
+			local layerId = ent:addLayer({
+				[workspace] = {
+					Test = {
+						one = 1
+					}
 				}
 			})
+
+			local aggregate = ent:getComponent("Test")
+			expect(aggregate:get("one")).to.equal(1)
+
+			ent:removeLayer(layerId)
+
+			expect(aggregate:get("one")).to.equal(nil)
 		end)
 	end)
 end

@@ -6,7 +6,7 @@ return function (rocs)
 		[rocs.dependencies:hasMetadata(rocs.metadata("_layer"))] = {
 			onUpdated = function(_, e)
 				for instance, components in pairs(e.data) do
-					if not rocs:isMetadata(instance) then
+					if not rocs:_getMetadata(instance) then
 						local entity = rocs:getEntity(instance, e.data[rocs.metadata("_layer")])
 
 						for component, data in pairs(components) do
@@ -15,13 +15,15 @@ return function (rocs)
 					end
 				end
 
-				for instance, components in pairs(e.lastData) do
-					if not rocs:isMetadata(instance) then
-						local entity = rocs:getEntity(instance, e.data[rocs.metadata("_layer")])
+				if e.lastData then
+					for instance, components in pairs(e.lastData) do
+						if not rocs:_getMetadata(instance) then
+							local entity = rocs:getEntity(instance, e.lastData[rocs.metadata("_layer")])
 
-						for component, data in pairs(e.lastData) do
-							if not e.data[instance] or e.data[instance].component then
-								entity:removeComponent(component)
+							for component, data in pairs(components) do
+								if not e.data[instance] or not e.data[instance][component] then
+									entity:removeComponent(component)
+								end
 							end
 						end
 					end
@@ -49,6 +51,10 @@ return function (rocs)
 				)
 			)
 		);
+	}
+
+	layers.metadata = {
+		name = "_layer";
 	}
 
 	return layers

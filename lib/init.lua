@@ -55,10 +55,11 @@ function Rocs.new()
 
 	self.dependencies = DependencyFactory.new(self)
 	self.reducers = MakeReducers(self)
-	self.layers = MakeLayers(self)
+	self._layers = MakeLayers(self)
 
-	self:registerSystem(self.layers.system)
-	self:registerComponent(self.layers.component)
+	self:registerSystem(self._layers.system)
+	self:registerComponent(self._layers.component)
+	self:registerMetadata(self._layers.metadata)
 
 	return self
 end
@@ -144,7 +145,7 @@ function Rocs:registerComponent(componentDefinition)
 	assert(I.ComponentDefinition(componentDefinition))
 
 	componentDefinition._address = tostring(componentDefinition) --! No
-	componentDefinition.__tostring = Util.makeToString("aggregate")
+	componentDefinition.__tostring = Util.makeToString("Aggregate")
 	componentDefinition.__index = componentDefinition.__index or componentDefinition
 
 	componentDefinition.__index.get = componentGetProperty
@@ -388,7 +389,8 @@ end
 
 function Rocs:_getMetadata(name)
 	return
-		name:sub(1, #METADATA_IDENTIFIER) == METADATA_IDENTIFIER
+		type(name) == "string"
+		and name:sub(1, #METADATA_IDENTIFIER) == METADATA_IDENTIFIER
 		and self._metadata[name:sub(#METADATA_IDENTIFIER + 1)]
 		or nil
 end
@@ -418,6 +420,8 @@ function Rocs:_getLayerComponent(layerId, componentResolvable)
 			"Layer component mismatched between addLayer calls"
 		)
 	end
+
+	return self._layerComponents[layerId]
 end
 
 function Rocs.metadata(name)

@@ -34,12 +34,14 @@ function Entity:_getComponentOpValues(componentResolvable, scope, ...)
 end
 
 function Entity:addComponent(componentResolvable, data)
+	warn("ADD", self.instance, componentResolvable, data)
 	return self.rocs:_addComponent(
 		self:_getComponentOpValues(componentResolvable, nil, data or {})
 	)
 end
 
 function Entity:removeComponent(componentResolvable)
+	warn("REMOVE", self.instance, componentResolvable)
 	return self.rocs:_removeComponent(
 		self:_getComponentOpValues(componentResolvable)
 	)
@@ -68,8 +70,10 @@ function Entity:addLayer(layer, layerId, componentResolvable)
 
 	local layerComponent = self.rocs:_getLayerComponent(
 		layerId,
-		componentResolvable or self._layers.component
+		componentResolvable or self.rocs._layers.component
 	)
+
+	assert(layerComponent ~= nil)
 
 	layer[self.rocs.metadata("_layer")] = layerId
 
@@ -78,6 +82,26 @@ function Entity:addLayer(layer, layerId, componentResolvable)
 		layerComponent,
 		self.scope,
 		layer
+	)
+
+	return layerId
+end
+
+function Entity:addSelfLayer(layerData, ...)
+	return self:addLayer({
+		[self.instance] = layerData
+	}, ...)
+end
+
+function Entity:removeLayer(layerId)
+	local layerComponent = self.rocs._layerComponents[layerId]
+
+	assert(layerComponent ~= nil, "Layer ID invalid")
+
+	self.rocs:_removeComponent(
+		self.instance,
+		layerComponent,
+		self.scope
 	)
 end
 

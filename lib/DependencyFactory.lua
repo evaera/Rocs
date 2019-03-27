@@ -30,9 +30,8 @@ function DependencyStep:evaluate(...)
 	return self._qualifier(...)
 end
 
-function DependencyStep:evaluateMap(...)
-	local aggregateArray = self:evaluate(...)
-
+function DependencyStep:evaluateMap(instance, targetFilter)
+	local aggregateArray = self:evaluate(instance)
 	if aggregateArray == true then
 		return {}
 	elseif aggregateArray == nil or #aggregateArray == 0 then
@@ -40,12 +39,17 @@ function DependencyStep:evaluateMap(...)
 	end
 
 	local map = {}
+	local targetFilterMet = nil
 
 	for _, aggregate in ipairs(aggregateArray) do
 		map[getmetatable(aggregate).name] = aggregate
+
+		if getmetatable(aggregate) == targetFilter then
+			targetFilterMet = true
+		end
 	end
 
-	return map
+	return targetFilterMet and map
 end
 
 local DependencyFactory = {}
