@@ -2,9 +2,12 @@ return function (rocs)
 	local layers = {}
 
 	layers.system = {
-		name = "Layers";
-		[rocs.dependencies:hasMetadata(rocs.metadata("_layer"))] = {
-			onUpdated = function(_, e)
+		{
+			name = "Layers";
+		};
+		{
+			rocs.dependencies:hasMetadata(rocs.metadata("_layer"))
+			:onUpdated(function(_, e)
 				for instance, components in pairs(e.data) do
 					if not rocs:_getMetadata(instance) then
 						local entity = rocs:getEntity(instance, e.data[rocs.metadata("_layer")])
@@ -28,7 +31,7 @@ return function (rocs)
 						end
 					end
 				end
-			end
+			end)
 		}
 	}
 	--[[

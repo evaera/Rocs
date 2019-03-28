@@ -57,7 +57,7 @@ function Rocs.new()
 	self.reducers = MakeReducers(self)
 	self._layers = MakeLayers(self)
 
-	self:registerSystem(self._layers.system)
+	self:registerSystem(unpack(self._layers.system))
 	self:registerComponent(self._layers.component)
 	self:registerMetadata(self._layers.metadata)
 
@@ -71,8 +71,8 @@ function Rocs:registerMetadata(metadataDefinition)
 	return metadataDefinition
 end
 
-function Rocs:registerSystem(systemDefinition)
-	assert(I.SystemDefinition(systemDefinition))
+function Rocs:registerSystem(systemDefinition, dependencies)
+	assert(t.tuple(I.SystemDefinition, I.SystemDependencies)(systemDefinition, dependencies))
 
 	systemDefinition.__index = systemDefinition.__index or systemDefinition
 
@@ -82,17 +82,24 @@ function Rocs:registerSystem(systemDefinition)
 
 	self._systems[systemDefinition.name] = systemDefinition
 
-	for key, hooks in pairs(systemDefinition) do
-		if DependencyFactory.isDependencyStep(key) then
-			local dependency = Dependency.new(self, systemDefinition, key, hooks)
-			if key._dependencies == true then
-				table.insert(self._dependencies[ALL_COMPONENTS], dependency)
-			else
-				for _, componentResolvable in ipairs(key._dependencies) do
-					local staticAggregate = self:_getStaticAggregate(componentResolvable)
+	local stepHooks = {}
+	for _, hook in ipairs(dependencies) do
+		if stepHooks[hook.step] == nil then
+			stepHooks[hook.step] = {}
+		end
 
-					table.insert(self._dependencies[staticAggregate], dependency)
-				end
+		table.insert(stepHooks[hook.step], hook)
+	end
+
+	for step, hooks in pairs(stepHooks) do
+		local dependency = Dependency.new(self, systemDefinition, step, hooks)
+		if step._dependencies == true then
+			table.insert(self._dependencies[ALL_COMPONENTS], dependency)
+		else
+			for _, componentResolvable in ipairs(step._dependencies) do
+				local staticAggregate = self:_getStaticAggregate(componentResolvable)
+
+				table.insert(self._dependencies[staticAggregate], dependency)
 			end
 		end
 	end

@@ -35,4 +35,6 @@ I.SystemDefinition = t.intersection(I.InitDestroyable, t.interface({
 	name = t.string;
 }))
 
+I.SystemDependencies = t.array(t.table)
+
 return I

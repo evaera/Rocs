@@ -52,6 +52,42 @@ function DependencyStep:evaluateMap(instance, targetFilter)
 	return targetFilterMet and map
 end
 
+local function makeHook(type, ...)
+	local fields = {...}
+
+	return function (step, ...)
+		local params = {...}
+
+		local hook = {
+			handler = table.remove(params, #params);
+			step = step;
+			type = type;
+		}
+
+		assert(#fields == #params, ("Hook %q accepts %d parameters, but %d were given."):format(
+			type,
+			#fields,
+			#params
+		))
+
+		for i = 1, #fields do
+			hook[fields[i]] = params[i]
+		end
+
+		return hook
+	end
+end
+
+for _, hook in ipairs({
+	{"Event", "event"};
+	{"Interval", "length"};
+	{"Added"};
+	{"Updated"};
+	{"Removed"};
+}) do
+	DependencyStep["on" .. hook[1]] = makeHook("on" .. hook[1], select(2, unpack(hook)))
+end
+
 local DependencyFactory = {}
 DependencyFactory.__index = DependencyFactory
 

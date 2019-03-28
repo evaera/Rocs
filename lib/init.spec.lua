@@ -101,6 +101,7 @@ return function()
 		it("should fire lifecycle methods", function()
 			local dep = rocs.dependencies:hasComponent("Test")
 
+			local bindable = Instance.new("BindableEvent")
 			local counter = Util.callCounter()
 			rocs:registerSystem({
 				name = "test";
@@ -114,42 +115,58 @@ return function()
 					counter:call("destroy")
 					expect(self).to.be.ok()
 				end;
+			}, {
+				dep:onAdded(function(self, e)
+					expect(getmetatable(self).name).to.equal("test")
+					expect(e.entity.scope).to.equal("system__test")
+					expect(e.components.Test).to.be.ok()
+					expect(e.components.Test:get("one")).to.equal(1)
 
-				[dep] = {
-					onAdded = function(self, e)
-						expect(getmetatable(self).name).to.equal("test")
-						expect(e.entity.scope).to.equal("system__test")
-						expect(e.components.Test).to.be.ok()
+					counter:call("added")
+				end);
+
+				dep:onUpdated(function(self, e)
+					expect(getmetatable(self).name).to.equal("test")
+					expect(e.entity.scope).to.equal("system__test")
+
+					expect(e.components.Test).to.be.ok()
+					if counter.updated == 0 then
 						expect(e.components.Test:get("one")).to.equal(1)
+					end
 
-						counter:call("added")
-					end;
-					onUpdated = function(self, e)
-						expect(getmetatable(self).name).to.equal("test")
-						expect(e.entity.scope).to.equal("system__test")
+					counter:call("updated")
+				end);
 
-						expect(e.components.Test).to.be.ok()
-						if counter.updated == 0 then
-							expect(e.components.Test:get("one")).to.equal(1)
-						end
+				dep:onRemoved(function(self, e)
+					expect(getmetatable(self).name).to.equal("test")
+					expect(e.entity.scope).to.equal("system__test")
+					expect(e.components.Test).to.be.ok()
+					expect(e.components.Test:get("one")).to.equal(nil)
 
-						counter:call("updated")
-					end;
-					onRemoved = function(self, e)
-						expect(getmetatable(self).name).to.equal("test")
-						expect(e.entity.scope).to.equal("system__test")
-						expect(e.components.Test).to.be.ok()
-						expect(e.components.Test:get("one")).to.equal(nil)
+					counter:call("removed")
+				end);
 
-						counter:call("removed")
-					end;
-				}
+				dep:onInterval(5, function(dt)
+					counter:call("interval")
+				end);
+
+				dep:onEvent(bindable.Event, function(param)
+					expect(param).to.equal("param")
+					counter:call("event")
+				end)
 			})
 			local ent = rocs:getEntity(workspace, "foo")
+
+			bindable:Fire("foo")
+			expect(counter.event).to.equal(0)
 
 			expect(counter.initialize).to.equal(0)
 			ent:addBaseComponent("Test", { one = 1})
 			expect(counter.initialize).to.equal(1)
+
+			expect(counter.event).to.equal(0)
+			bindable:Fire("param")
+			expect(counter.event).to.equal(1)
 
 			expect(counter.destroy).to.equal(0)
 			ent:removeBaseComponent("Test")
@@ -158,6 +175,11 @@ return function()
 			expect(counter.added).to.equal(1)
 			expect(counter.updated).to.equal(2)
 			expect(counter.removed).to.equal(1)
+
+			bindable:Fire("bar")
+			expect(counter.event).to.equal(1)
+
+			expect(counter.interval).to.equal(0)
 		end)
 	end)
 

@@ -4,12 +4,6 @@ local LIFECYCLE_ADDED = "onAdded"
 local LIFECYCLE_REMOVED = "onRemoved"
 local LIFECYCLE_UPDATED = "onUpdated"
 
-local DEPENDENCY_EVENTS = {
-	onHeartbeat = RunService.Heartbeat;
-	onRenderStepped = RunService.RenderStepped;
-	onStepped = RunService.Stepped;
-}
-
 local EntityDependency = {}
 EntityDependency.__index = EntityDependency
 
@@ -25,20 +19,22 @@ end
 function EntityDependency:_dispatchLifecycle(stage, aggregateMap, target)
 	aggregateMap = aggregateMap or self._lastAggregateMap
 
-	if self._dependency._hooks[stage] then
-		self._dependency._hooks[stage](
-			self.system,
-			{
-				entity = self._dependency._rocs:getEntity(
-					self.instance,
-					"system__" .. self._dependency._staticSystem.name
-				);
-				components = aggregateMap;
-				target = target;
-				data = target.data;
-				lastData = target.lastData;
-			}
-		)
+	for _, hook in ipairs(self._dependency._hooks) do
+		if hook.type == stage then
+			hook.handler(
+				self.system,
+				{
+					entity = self._dependency._rocs:getEntity(
+						self.instance,
+						"system__" .. self._dependency._staticSystem.name
+					);
+					components = aggregateMap;
+					target = target;
+					data = target.data;
+					lastData = target.lastData;
+				}
+			)
+		end
 	end
 	self._lastAggregateMap = aggregateMap;
 end
@@ -66,9 +62,9 @@ function Dependency.new(rocs, system, step, hooks)
 	}, Dependency)
 end
 
-function Dependency:tap(instance, target, filter)
+function Dependency:tap(instance, target)
 	local staticTarget = getmetatable(target)
-	local aggregateMap = self._step:evaluateMap(instance, staticTarget, filter)
+	local aggregateMap = self._step:evaluateMap(instance, staticTarget)
 
 	if aggregateMap and not self._entityDependencies[instance][staticTarget] then
 		self._entityDependencies[instance][staticTarget] = EntityDependency.new(self, instance)
@@ -103,16 +99,36 @@ end
 function Dependency:_connectEvents()
 	self._connections = {}
 
-	for name, event in pairs(DEPENDENCY_EVENTS) do
-		if self._hooks[name] then
-			table.insert(self._connections, event:Connect(self._hooks[name]))
+	for _, hook in ipairs(self._hooks) do
+		-- TODO: Break this out
+		if hook.type == "onEvent" then
+			local connection = hook.event:Connect(hook.handler)
+			table.insert(self._connections, function()
+				connection:Disconnect()
+			end)
+		elseif hook.type == "onInterval" then
+			local continue = true
+
+			spawn(function()
+				while continue do
+					local dt = wait(hook.length)
+
+					if continue then
+						hook.handler(dt)
+					end
+				end
+			end)
+
+			table.insert(self._connections, function()
+				continue = false
+			end)
 		end
 	end
 end
 
 function Dependency:_disconnectEvents()
-	for _, connection in ipairs(self._connections) do
-		connection:Disconnect()
+	for _, disconnect in ipairs(self._connections) do
+		disconnect()
 	end
 
 	self._connections = {}
