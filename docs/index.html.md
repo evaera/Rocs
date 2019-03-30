@@ -26,7 +26,7 @@ Some other prominent features of Rocs include:
 - Compositional system dependency declaration: Systems can depend on one component, all of a set, any of a set, and permutations thereof (`all(foo, any(bar, baz))`)
 - Systems can have multiple dependencies which all have independent hooks
 - Systems are deconstructed when none of their dependencies are met
-- Component can have life cycle methods and functions associated with them independent of systems
+- Components can have life cycle methods and functions associated with them independent of systems
 
 Rocs is compatible with both Lua and [roblox-ts](https://roblox-ts.github.io).
 
@@ -117,6 +117,200 @@ Base components also have special precedence when passed to reducer functions: t
 
 ## Metadata
 
+**Metadata** are similar to components, but cannot be added to entities themselves. Instead, metadata are parts of components -- or well-known sub-fields as part of full components. Metadata are useful for holding data *about* the component itself.
+
+Metadata are registered like components and have their own reducer function just like components. When components are reduced, if a metadata field is encountered, the metadata reducer is used to reduce that field.
+
+Solid examples of metadata will be mentioned in the "layers" section.
+
 ## Systems
 
+**Systems** operate on components from the outside. Systems declare their dependencies, which are components or a set of components that the system deals with. Systems can also depend on any component with a certain metadata field.
+
+### Hooks
+
+Systems can have multiple dependencies. Each dependency can have its own set of **hooks**, which are invoked differently depending on the hook.
+
+For example, there is an `onUpdated` hook which is invoked whenever one of the dependent components is updated (on any entity), the `onInterval` hook can be used to repeatedly call the hook as long as the dependency is met, and the `onEvent` hook can be used to run connect an event listener when the dependency is met and disconnect the listener when it is no longer met. 
+
+### System sleeping
+
+When *none* of a system's dependencies are met, the system is deconstructed. When one of its dependencies are met, the a new instance of the system is constructed. In this way, systems are singletons which can come in and out of existence. 
+
 ## Layers
+
+The final core concept is layers. **Layers** are components that create other components. Layers can be used to group a set of related state changes together.
+
+When you add, modify, or remove a layer, the changes it denotes are enacted immediately. 
+
+Because layers are just components, layer data is reduced if multiple layers with the same ID exist. By default, layers use a random ID. The ID becomes the scope of the components that the layer adds. Layers with different IDs do not affect each other. Layer data only gets reduced if two layers share the same ID.
+
+# Components API
+
+## Registering a component
+```lua
+rocs:registerComponent({
+  name = "MyComponent";
+  reducer = rocs.reducers.propertyReducer({
+    field = rocs.reducers.add;
+  });
+  check = t.interface({
+    field = t.number;
+  });
+  entityCheck = t.instanceIsA("BasePart");
+  tag = "MyComponentTag";
+})
+```
+
+`rocs:registerComponent` is used to register a component class.
+
+### Component class fields
+
+Field | Type | Description | Required
+----- | ---- | ----------- | --------
+name | string | The name of the component. Must be unique across all registered components. | ✓
+reducer | function `(values: Array) -> any` | A function that reduces component data into a component aggregate. | 
+check | function `(value: any) -> boolean` | A function which is invoked to type check the component aggregate after reduction. |
+entityCheck | function | A function which is invoked to ensure this component is allowed to be on this entity. |
+tag | string | A CollectionService tag. When added to an Instance, Rocs will automatically create this component on the Instance. |
+initialize | method | Called when the component class is instantiated
+destroy | method | Called when the component class is destroyed
+onAdded | method | Called when the component is added for the first time
+onUpdated | method | Called when the component aggregate data is updated
+onRemoved | method | Called when the component is removed
+
+## Component class injected fields
+
+The following fields are injected into the component class, and must not be present in the given class.
+
+### get
+`get(...fields) -> any`
+
+```lua
+local component = entity:getComponent("MyComponent")
+
+local allData = component:get()
+
+local field = component:get("field")
+```
+
+Retrieves a field from the current aggregate data, or the entire thing if no parameters are given.
+
+```lua
+local nestedField = component:get("one", "two", "three")
+```
+
+You can also get nested values from sub-tables in the component.
+
+### set
+`set(...fields, value) -> void`
+
+```lua
+component:set("field", 1)
+
+component:set("one", "two", "three", Rocs.None)
+```
+
+Sets a field on the `base` component.
+
+<aside class="warning">Refactor coming soon</aside>
+
+### data
+`data: any`
+
+The current component aggregate data.
+
+### lastData
+`lastData: any`
+
+The previous component aggregate data.
+
+# Built-in Reducers
+
+Rocs provides a number of composable reducer and reducer utilities, so you only have to spend time writing a function for when you need something very specific.
+
+## Reducers
+
+Reducer | Description
+- | -
+`last` | Returns the *last* value of the set. `base` scope components are always first, so `last` will be any non-base scope (unless the base component is the only value)
+`first` | Returns the *first* value of the set. Opposite of `last`.
+`truthy` | Returns the first truthy value in the set (or nil if there is none)
+`falsy` | Returns the first falsy value in the set (or nil if none)
+`add` | Adds the values from the set together (for numbers)
+`multiply` | Multiplies the values from the set together (for numbers)
+
+## Utilities
+
+### propertyReducer
+
+```lua
+reducer = rocs.reducers.propertyReducer({
+  field = rocs.reducers.add;
+});
+```
+
+Reduces a dictionary with a separate reducer for each field.
+
+### propertyReducerAll
+
+```lua
+reducer = rocs.reducers.propertyReducerAll(
+  rocs.reducers.propertyReducer({
+    one = rocs.reducers.multiply;
+    two = table.concat;
+    three = function (values)
+      return values[3]
+    end
+  })
+)
+```
+
+Reduces a dictionary, using the same reducer for each field individually.
+
+### thisOr
+
+```lua
+reducer = rocs.reducers.thisOr(
+  rocs.reducers.truthy,
+  1
+)
+```
+
+Runs the given reducer, and provide a default value in case that reducer returns nil.
+
+### truthyOr
+
+```lua
+reducer = rocs.reducers.truthyOr(1)
+```
+
+Same as `thisOr`, except the `truthy` reducer is always used.
+
+### falsyOr
+
+Same as `truthyOr`, except for falsy values.
+
+# Entities API
+
+```lua
+local entity = rocs:getEntity(workspace)
+```
+
+The rocs insta
+
+# Systems API
+
+## Dependencies
+
+## Hooks
+
+# Layers API
+
+# Rocs API
+
+# Built-in System
+
+## Replication
+
+## Duration
