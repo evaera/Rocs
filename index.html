@@ -223,7 +223,27 @@
             <a href="#rocs" class="toc-h1 toc-link" data-title="Rocs">Rocs</a>
           </li>
           <li>
-            <a href="#example" class="toc-h1 toc-link" data-title="Example">Example</a>
+            <a href="#concepts" class="toc-h1 toc-link" data-title="Concepts">Concepts</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#rocs-instance" class="toc-h2 toc-link" data-title="Rocs instance">Rocs instance</a>
+                  </li>
+                  <li>
+                    <a href="#entities" class="toc-h2 toc-link" data-title="Entities">Entities</a>
+                  </li>
+                  <li>
+                    <a href="#components" class="toc-h2 toc-link" data-title="Components">Components</a>
+                  </li>
+                  <li>
+                    <a href="#metadata" class="toc-h2 toc-link" data-title="Metadata">Metadata</a>
+                  </li>
+                  <li>
+                    <a href="#systems" class="toc-h2 toc-link" data-title="Systems">Systems</a>
+                  </li>
+                  <li>
+                    <a href="#layers" class="toc-h2 toc-link" data-title="Layers">Layers</a>
+                  </li>
+              </ul>
           </li>
       </ul>
         <ul class="toc-footer">
@@ -234,15 +254,84 @@
       <div class="dark-box"></div>
       <div class="content">
         <h1 id='rocs'>Rocs</h1>
-<p>Rocs is pretty cool</p>
-<h1 id='example'>Example</h1><pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="kc">true</span> <span class="o">=</span> <span class="kc">false</span>
-</code></pre>
+<p><strong>Rocs</strong> is a <em>progressive</em> entity-component-system (ECS) framework developed for use in the <a href="http://developer.roblox.com">Roblox</a> game engine.</p>
+
+<p>Rocs also performs the role of a general game state management library. Specifically, Rocs facilitates managing resources from multiple, unrelated places in your code base in a generic way.</p>
+
+<p>Some other prominent features of Rocs include:</p>
+
+<ul>
+<li>Mechanisms for dealing with groups of state changes as a single unit</li>
+<li>Automated state replication to all or specific players with masking (only replicating some properties and not all)</li>
+<li>Compositional system dependency declaration: Systems can depend on one component, all of a set, any of a set, and permutations thereof (<code>all(foo, any(bar, baz))</code>)</li>
+<li>Systems can have multiple dependencies which all have independent hooks</li>
+<li>Systems are deconstructed when none of their dependencies are met</li>
+<li>Component can have life cycle methods and functions associated with them independent of systems</li>
+</ul>
+
+<p>Rocs is compatible with both Lua and <a href="https://roblox-ts.github.io">roblox-ts</a>.</p>
+<h1 id='concepts'>Concepts</h1>
+<p>This section will give an overview of the fundamental concepts used in Rocs so that you can understand the details in the following sections. Don&#39;t focus too much on the code right now, that will come later.</p>
+<h2 id='rocs-instance'>Rocs instance</h2>
 <blockquote>
-<p>This</p>
+<p>Instantiating an instance of Rocs:</p>
 </blockquote>
+<pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">rocs</span> <span class="o">=</span> <span class="n">Rocs</span><span class="p">.</span><span class="n">new</span><span class="p">()</span>
+</code></pre><pre class="highlight typescript tab-typescript"><code><span class="kd">const</span> <span class="nx">rocs</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Rocs</span><span class="p">()</span>
+</code></pre>
+<p>Multiple versions of Rocs can exist at the same time in the same place and do not affect each other. <strong>Rocs instance</strong> refers to the instance of Rocs that you instantiated. Typically, you should only have one instance of Rocs per game. However, this allows Rocs to be used by libraries independently of the containing game.</p>
+<h2 id='entities'>Entities</h2>
+<blockquote>
+<p>Getting an entity wrapper for Workspace, with the scope <code>&quot;foo&quot;</code>:</p>
+</blockquote>
+<pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">entity</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">:</span><span class="n">getEntity</span><span class="p">(</span><span class="n">workspace</span><span class="p">,</span> <span class="s2">"foo"</span><span class="p">)</span>
+</code></pre><pre class="highlight typescript tab-typescript"><code><span class="kd">const</span> <span class="nx">entity</span> <span class="o">=</span> <span class="nx">rocs</span><span class="p">.</span><span class="nx">getEntity</span><span class="p">(</span><span class="nx">workspace</span><span class="p">,</span> <span class="s1">'foo'</span><span class="p">)</span>
+</code></pre>
+<p><strong>Entities</strong> can be Roblox Instances or any table. &quot;Instance&quot; will generally be used to refer to this internal object for purposes of conciseness, but remember that it does not need to be an actual Roblox Instance.</p>
 
-<p>Yes.</p>
+<p>Rocs provides an entity wrapper class for ergonomic API usage, but data is associated internally with the inner instance, and not the wrapper. Multiple entity wrappers can exist for one instance. Entity wrappers hold no internal state themselves.</p>
 
+<p>Entity wrappers must be created with a <strong>scope</strong>, which is a string that should refer to the area in the code where a change is being made. For example, if you wanted to stop a player from moving when they open a menu, then the entity wrapper you create to enact that change should be created with the scope <code>&quot;menu&quot;</code>. The rationale behind this requirement is explained in the next section.</p>
+<h2 id='components'>Components</h2>
+<blockquote>
+<p>Adding a component to an entity:</p>
+</blockquote>
+<pre class="highlight lua tab-lua"><code><span class="n">entity</span><span class="p">:</span><span class="n">addComponent</span><span class="p">(</span><span class="s2">"MyComponent"</span><span class="p">,</span> <span class="p">{</span>
+  <span class="n">foo</span> <span class="o">=</span> <span class="s2">"bar"</span><span class="p">;</span>
+<span class="p">})</span>
+</code></pre><pre class="highlight typescript tab-typescript"><code><span class="k">import</span> <span class="p">{</span> <span class="nx">MyComponent</span> <span class="p">}</span> <span class="k">from</span> <span class="s1">'path/to/component'</span>
+
+<span class="nx">entity</span><span class="p">.</span><span class="nx">addComponent</span><span class="p">(</span><span class="nx">MyComponent</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">foo</span><span class="p">:</span> <span class="s1">'bar'</span>
+<span class="p">})</span>
+</code></pre>
+<p><strong>Components</strong> are, in essence, named <dfn data-t="Typically, a component is a well-structured dictionary table.">groups of related data</dfn> which can be associated with an entity. Every type of component you want to use must be explicitly registered on the Rocs instance with a unique name along with various other options.</p>
+
+<p>In Rocs, components are a little different from a typical ECS framework. In order to facilitate shared <dfn data-t='"Resource" refers to anything that has state which Rocs could manage, such as a property like WalkSpeed.'>resource</dfn> management, multiple components of the same type can exist on the same entity.</p>
+
+<p>As discussed in the previous section, entity wrappers must be created with a scope. Multiple components of the same type are distinguished by this scope. When you add or remove a component from an entity, you only affect components which are also branded with your scope.</p>
+<h3 id='component-aggregates'>Component Aggregates</h3>
+<p>Every time you add, modify, or delete a component, all components of the same type are grouped and subsequently fed into a <dfn data-t="A function that accepts an array of all values of components of the same type, and returns a single value. The function decides how the values should be combined to reach the final value.">reducer function</dfn>. The resultant value is now referred to as a <strong>component aggregate</strong>.</p>
+<h3 id='component-classes'>Component Classes</h3>
+<p>When you register a component type with Rocs, what you are actually registering is a <strong>component class</strong>. Component classes are used to represent a component of a specific type and are how you access the aggregate data.</p>
+
+<p>Component classes may have their own constructors and destructors, <dfn data-t="Functions which fire when the component is added, updated, and removed">life cycle hooks</dfn>, and custom methods.</p>
+
+<p>Only one component class will exist per entity per component type. So if you have an entity with two components of type <code>&quot;MyComponent&quot;</code>, there will only be one <code>MyComponent</code> component class for this entity.</p>
+<h3 id='tags-and-base-scope-components'>Tags and Base Scope Components</h3>
+<p>Component types may also be optionally registered with a [CollectionService] tag. Rocs will then automatically add (with <a href="#">optional initial data</a>) and remove this component from the entity for the respective Instance.</p>
+
+<p>For situations like this where there is a component that exists at a more fundamental level, the <strong>base scope</strong> is used. The base scope is just like any other component scope, except it has special significance in performing the role as the &quot;bottom-most&quot; component (or in other words, the component that holds data for a component type without any additional modifiers from other places in the code base).</p>
+
+<blockquote>
+<p>Changing the <code>name</code> field of the <em>base component</em>.</p>
+</blockquote>
+<pre class="highlight lua tab-lua"><code><span class="n">entity</span><span class="p">:</span><span class="n">getBaseComponent</span><span class="p">(</span><span class="s2">"Character"</span><span class="p">):</span><span class="n">set</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"New name"</span><span class="p">)</span>
+</code></pre>
+<p>The base scope is used for CollectionService tags, but is also useful in your own code. For example, if you had a component that represents a character, situations may arise where you want to modify data destructively, such as in changing a character&#39;s name. We aren&#39;t <em>influencing</em> the existing name, but instead we are completely changing it. In this case, you should change the <code>&quot;name&quot;</code> field on the base component directly. (This assumes that you created the base component earlier in your code, which should be the case if you have <em>basic</em> data like this).</p>
+
+<p>Base components also have special precedence when passed to reducer functions: the base component is always the first value. Values from other scopes subsequently follow in any order. This is useful for situations when you want non-base scopes to partially override fields from the base scope.</p>
+<h2 id='metadata'>Metadata</h2><h2 id='systems'>Systems</h2><h2 id='layers'>Layers</h2>
       </div>
       <div class="dark-box">
           <div class="lang-selector">
