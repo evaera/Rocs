@@ -245,6 +245,59 @@
                   </li>
               </ul>
           </li>
+          <li>
+            <a href="#components-api" class="toc-h1 toc-link" data-title="Components API">Components API</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#registering-a-component" class="toc-h2 toc-link" data-title="Registering a component">Registering a component</a>
+                  </li>
+                  <li>
+                    <a href="#component-class-injected-fields" class="toc-h2 toc-link" data-title="Component class injected fields">Component class injected fields</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#built-in-reducers" class="toc-h1 toc-link" data-title="Built-in Reducers">Built-in Reducers</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#reducers" class="toc-h2 toc-link" data-title="Reducers">Reducers</a>
+                  </li>
+                  <li>
+                    <a href="#utilities" class="toc-h2 toc-link" data-title="Utilities">Utilities</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#entities-api" class="toc-h1 toc-link" data-title="Entities API">Entities API</a>
+          </li>
+          <li>
+            <a href="#systems-api" class="toc-h1 toc-link" data-title="Systems API">Systems API</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#dependencies" class="toc-h2 toc-link" data-title="Dependencies">Dependencies</a>
+                  </li>
+                  <li>
+                    <a href="#hooks-2" class="toc-h2 toc-link" data-title="Hooks">Hooks</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#layers-api" class="toc-h1 toc-link" data-title="Layers API">Layers API</a>
+          </li>
+          <li>
+            <a href="#rocs-api" class="toc-h1 toc-link" data-title="Rocs API">Rocs API</a>
+          </li>
+          <li>
+            <a href="#built-in-system" class="toc-h1 toc-link" data-title="Built-in System">Built-in System</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#replication" class="toc-h2 toc-link" data-title="Replication">Replication</a>
+                  </li>
+                  <li>
+                    <a href="#duration" class="toc-h2 toc-link" data-title="Duration">Duration</a>
+                  </li>
+              </ul>
+          </li>
       </ul>
         <ul class="toc-footer">
             <li><a href='https://github.com/lord/slate'>Documentation Powered by Slate</a></li>
@@ -266,7 +319,7 @@
 <li>Compositional system dependency declaration: Systems can depend on one component, all of a set, any of a set, and permutations thereof (<code>all(foo, any(bar, baz))</code>)</li>
 <li>Systems can have multiple dependencies which all have independent hooks</li>
 <li>Systems are deconstructed when none of their dependencies are met</li>
-<li>Component can have life cycle methods and functions associated with them independent of systems</li>
+<li>Components can have life cycle methods and functions associated with them independent of systems</li>
 </ul>
 
 <p>Rocs is compatible with both Lua and <a href="https://roblox-ts.github.io">roblox-ts</a>.</p>
@@ -331,7 +384,205 @@
 <p>The base scope is used for CollectionService tags, but is also useful in your own code. For example, if you had a component that represents a character, situations may arise where you want to modify data destructively, such as in changing a character&#39;s name. We aren&#39;t <em>influencing</em> the existing name, but instead we are completely changing it. In this case, you should change the <code>&quot;name&quot;</code> field on the base component directly. (This assumes that you created the base component earlier in your code, which should be the case if you have <em>basic</em> data like this).</p>
 
 <p>Base components also have special precedence when passed to reducer functions: the base component is always the first value. Values from other scopes subsequently follow in any order. This is useful for situations when you want non-base scopes to partially override fields from the base scope.</p>
-<h2 id='metadata'>Metadata</h2><h2 id='systems'>Systems</h2><h2 id='layers'>Layers</h2>
+<h2 id='metadata'>Metadata</h2>
+<p><strong>Metadata</strong> are similar to components, but cannot be added to entities themselves. Instead, metadata are parts of components -- or well-known sub-fields as part of full components. Metadata are useful for holding data <em>about</em> the component itself.</p>
+
+<p>Metadata are registered like components and have their own reducer function just like components. When components are reduced, if a metadata field is encountered, the metadata reducer is used to reduce that field.</p>
+
+<p>Solid examples of metadata will be mentioned in the &quot;layers&quot; section.</p>
+<h2 id='systems'>Systems</h2>
+<p><strong>Systems</strong> operate on components from the outside. Systems declare their dependencies, which are components or a set of components that the system deals with. Systems can also depend on any component with a certain metadata field.</p>
+<h3 id='hooks'>Hooks</h3>
+<p>Systems can have multiple dependencies. Each dependency can have its own set of <strong>hooks</strong>, which are invoked differently depending on the hook.</p>
+
+<p>For example, there is an <code>onUpdated</code> hook which is invoked whenever one of the dependent components is updated (on any entity), the <code>onInterval</code> hook can be used to repeatedly call the hook as long as the dependency is met, and the <code>onEvent</code> hook can be used to run connect an event listener when the dependency is met and disconnect the listener when it is no longer met. </p>
+<h3 id='system-sleeping'>System sleeping</h3>
+<p>When <em>none</em> of a system&#39;s dependencies are met, the system is deconstructed. When one of its dependencies are met, the a new instance of the system is constructed. In this way, systems are singletons which can come in and out of existence. </p>
+<h2 id='layers'>Layers</h2>
+<p>The final core concept is layers. <strong>Layers</strong> are components that create other components. Layers can be used to group a set of related state changes together.</p>
+
+<p>When you add, modify, or remove a layer, the changes it denotes are enacted immediately. </p>
+
+<p>Because layers are just components, layer data is reduced if multiple layers with the same ID exist. By default, layers use a random ID. The ID becomes the scope of the components that the layer adds. Layers with different IDs do not affect each other. Layer data only gets reduced if two layers share the same ID.</p>
+<h1 id='components-api'>Components API</h1><h2 id='registering-a-component'>Registering a component</h2><pre class="highlight lua tab-lua"><code><span class="n">rocs</span><span class="p">:</span><span class="n">registerComponent</span><span class="p">({</span>
+  <span class="n">name</span> <span class="o">=</span> <span class="s2">"MyComponent"</span><span class="p">;</span>
+  <span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">propertyReducer</span><span class="p">({</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">add</span><span class="p">;</span>
+  <span class="p">});</span>
+  <span class="n">check</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">interface</span><span class="p">({</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">number</span><span class="p">;</span>
+  <span class="p">});</span>
+  <span class="n">entityCheck</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">instanceIsA</span><span class="p">(</span><span class="s2">"BasePart"</span><span class="p">);</span>
+  <span class="n">tag</span> <span class="o">=</span> <span class="s2">"MyComponentTag"</span><span class="p">;</span>
+<span class="p">})</span>
+</code></pre>
+<p><code>rocs:registerComponent</code> is used to register a component class.</p>
+<h3 id='component-class-fields'>Component class fields</h3>
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+<th>Required</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>name</td>
+<td>string</td>
+<td>The name of the component. Must be unique across all registered components.</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>reducer</td>
+<td>function <code>(values: Array) -&gt; any</code></td>
+<td>A function that reduces component data into a component aggregate.</td>
+<td></td>
+</tr>
+<tr>
+<td>check</td>
+<td>function <code>(value: any) -&gt; boolean</code></td>
+<td>A function which is invoked to type check the component aggregate after reduction.</td>
+<td></td>
+</tr>
+<tr>
+<td>entityCheck</td>
+<td>function</td>
+<td>A function which is invoked to ensure this component is allowed to be on this entity.</td>
+<td></td>
+</tr>
+<tr>
+<td>tag</td>
+<td>string</td>
+<td>A CollectionService tag. When added to an Instance, Rocs will automatically create this component on the Instance.</td>
+<td></td>
+</tr>
+<tr>
+<td>initialize</td>
+<td>method</td>
+<td>Called when the component class is instantiated</td>
+<td></td>
+</tr>
+<tr>
+<td>destroy</td>
+<td>method</td>
+<td>Called when the component class is destroyed</td>
+<td></td>
+</tr>
+<tr>
+<td>onAdded</td>
+<td>method</td>
+<td>Called when the component is added for the first time</td>
+<td></td>
+</tr>
+<tr>
+<td>onUpdated</td>
+<td>method</td>
+<td>Called when the component aggregate data is updated</td>
+<td></td>
+</tr>
+<tr>
+<td>onRemoved</td>
+<td>method</td>
+<td>Called when the component is removed</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id='component-class-injected-fields'>Component class injected fields</h2>
+<p>The following fields are injected into the component class, and must not be present in the given class.</p>
+<h3 id='get'>get</h3>
+<p><code>get(...fields) -&gt; any</code></p>
+<pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">component</span> <span class="o">=</span> <span class="n">entity</span><span class="p">:</span><span class="n">getComponent</span><span class="p">(</span><span class="s2">"MyComponent"</span><span class="p">)</span>
+
+<span class="kd">local</span> <span class="n">allData</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">get</span><span class="p">()</span>
+
+<span class="kd">local</span> <span class="n">field</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">get</span><span class="p">(</span><span class="s2">"field"</span><span class="p">)</span>
+</code></pre>
+<p>Retrieves a field from the current aggregate data, or the entire thing if no parameters are given.</p>
+<pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">nestedField</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">get</span><span class="p">(</span><span class="s2">"one"</span><span class="p">,</span> <span class="s2">"two"</span><span class="p">,</span> <span class="s2">"three"</span><span class="p">)</span>
+</code></pre>
+<p>You can also get nested values from sub-tables in the component.</p>
+<h3 id='set'>set</h3>
+<p><code>set(...fields, value) -&gt; void</code></p>
+<pre class="highlight lua tab-lua"><code><span class="n">component</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="s2">"field"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">component</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="s2">"one"</span><span class="p">,</span> <span class="s2">"two"</span><span class="p">,</span> <span class="s2">"three"</span><span class="p">,</span> <span class="n">Rocs</span><span class="p">.</span><span class="n">None</span><span class="p">)</span>
+</code></pre>
+<p>Sets a field on the <code>base</code> component.</p>
+
+<aside class="warning">Refactor coming soon</aside>
+<h3 id='data'>data</h3>
+<p><code>data: any</code></p>
+
+<p>The current component aggregate data.</p>
+<h3 id='lastdata'>lastData</h3>
+<p><code>lastData: any</code></p>
+
+<p>The previous component aggregate data.</p>
+<h1 id='built-in-reducers'>Built-in Reducers</h1>
+<p>Rocs provides a number of composable reducer and reducer utilities, so you only have to spend time writing a function for when you need something very specific.</p>
+<h2 id='reducers'>Reducers</h2>
+<table><thead>
+<tr>
+<th>Reducer</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>last</code></td>
+<td>Returns the <em>last</em> value of the set. <code>base</code> scope components are always first, so <code>last</code> will be any non-base scope (unless the base component is the only value)</td>
+</tr>
+<tr>
+<td><code>first</code></td>
+<td>Returns the <em>first</em> value of the set. Opposite of <code>last</code>.</td>
+</tr>
+<tr>
+<td><code>truthy</code></td>
+<td>Returns the first truthy value in the set (or nil if there is none)</td>
+</tr>
+<tr>
+<td><code>falsy</code></td>
+<td>Returns the first falsy value in the set (or nil if none)</td>
+</tr>
+<tr>
+<td><code>add</code></td>
+<td>Adds the values from the set together (for numbers)</td>
+</tr>
+<tr>
+<td><code>multiply</code></td>
+<td>Multiplies the values from the set together (for numbers)</td>
+</tr>
+</tbody></table>
+<h2 id='utilities'>Utilities</h2><h3 id='propertyreducer'>propertyReducer</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">propertyReducer</span><span class="p">({</span>
+  <span class="n">field</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">add</span><span class="p">;</span>
+<span class="p">});</span>
+</code></pre>
+<p>Reduces a dictionary with a separate reducer for each field.</p>
+<h3 id='propertyreducerall'>propertyReducerAll</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">propertyReducerAll</span><span class="p">(</span>
+  <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">propertyReducer</span><span class="p">({</span>
+    <span class="n">one</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">multiply</span><span class="p">;</span>
+    <span class="n">two</span> <span class="o">=</span> <span class="nb">table.concat</span><span class="p">;</span>
+    <span class="n">three</span> <span class="o">=</span> <span class="k">function</span> <span class="p">(</span><span class="n">values</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">end</span>
+  <span class="p">})</span>
+<span class="p">)</span>
+</code></pre>
+<p>Reduces a dictionary, using the same reducer for each field individually.</p>
+<h3 id='thisor'>thisOr</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">thisOr</span><span class="p">(</span>
+  <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">truthy</span><span class="p">,</span>
+  <span class="mi">1</span>
+<span class="p">)</span>
+</code></pre>
+<p>Runs the given reducer, and provide a default value in case that reducer returns nil.</p>
+<h3 id='truthyor'>truthyOr</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">truthyOr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</code></pre>
+<p>Same as <code>thisOr</code>, except the <code>truthy</code> reducer is always used.</p>
+<h3 id='falsyor'>falsyOr</h3>
+<p>Same as <code>truthyOr</code>, except for falsy values.</p>
+<h1 id='entities-api'>Entities API</h1><pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">entity</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">:</span><span class="n">getEntity</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span>
+</code></pre>
+<p>The rocs insta</p>
+<h1 id='systems-api'>Systems API</h1><h2 id='dependencies'>Dependencies</h2><h2 id='hooks-2'>Hooks</h2><h1 id='layers-api'>Layers API</h1><h1 id='rocs-api'>Rocs API</h1><h1 id='built-in-system'>Built-in System</h1><h2 id='replication'>Replication</h2><h2 id='duration'>Duration</h2>
       </div>
       <div class="dark-box">
           <div class="lang-selector">
