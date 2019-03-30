@@ -30,6 +30,30 @@ Some other prominent features of Rocs include:
 
 Rocs is compatible with both Lua and [roblox-ts](https://roblox-ts.github.io).
 
+## Use cases
+
+### Shared resource management
+
+A classic example of the necessity to share resources is changing the player's walk speed. 
+
+Let's say you have a heavy weapon that you want to have slow down the player when he equips it. That's easy enough, you just set the walk speed when the weapon is equipped, and set it back to default when the weapon is unequipped.
+
+But what if you want something else to change the player's walk speed as well, potentially at the same time? For example, let's say you want opening a menu to set the character's WalkSpeed to `0`.
+
+If we follow the same flow as when we implemented the logic for the heavy weapon above, we now have a problem: The player can equip the heavy weapon and then open and close the menu. Now, the player can walk around at full speed with a heavy weapon equipped they should still be slowed!
+
+Rocs solves this problem correctly by allowing you to apply a movement speed component from each location in the code base that needs to modify it. Each component can provide its own intensity level for which to affect the movement speed. Then, every time a component is added, modified, or removed, Rocs will group all components of the same type and determine a single value to set the WalkSpeed to, based on your defined [reducer function](#component-aggregates). 
+
+In this case, the function will find the lowest value from all of the components, and then the player's WalkSpeed will be set to that number. ￼Now, there is only one source of truth for the player's WalkSpeed, which solves all of our problems. When there are no longer any components of this type, you can clean up by setting the player's walk speed back to default in a destructor.
+
+### Generic Level-of-Detail with Systems
+
+Systems can depend on groups of components being present on a single entity, so you can make a `LOD` component which has a distance field, and a system that looks for `LOD` components and checks if the player is near them, and if so, adds a `LOD_Near` component to the entity.
+
+Then you could have a secondary system (like, an animator that runs on a tighter loop, for something like bobbing coins up and down in the world) that depends on `all(Coin, LOD_Near)`. Then that system would only receive coins which are near to the player.
+
+Because systems are automatically deconstructed when none of their dependencies are met, you can make systems which have more specific dependencies which automatically free their resources for performance when they aren't in use.
+
 # Concepts
 
 This section will give an overview of the fundamental concepts used in Rocs so that you can understand the details in the following sections. Don't focus too much on the code right now, that will come later.
@@ -309,7 +333,7 @@ The rocs insta
 
 # Rocs API
 
-# Built-in System
+# Built-in Systems
 
 ## Replication
 
