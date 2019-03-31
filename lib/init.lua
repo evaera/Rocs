@@ -323,10 +323,12 @@ function Rocs:_dispatchComponentChange(aggregate, data)
 		self:_dispatchLifecycle(aggregate, LIFECYCLE_ADDED)
 	end
 
+	if newData ~= lastData then
+		self:_dispatchLifecycle(aggregate, LIFECYCLE_UPDATED)
+	end
+
 	if newData == nil then
 		self:_dispatchLifecycle(aggregate, LIFECYCLE_REMOVED)
-	elseif newData ~= lastData then
-		self:_dispatchLifecycle(aggregate, LIFECYCLE_UPDATED)
 	end
 
 	-- Component dependencies

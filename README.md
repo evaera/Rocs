@@ -15,4 +15,5 @@ Still in development
 
 ### Systems
 - Replication of components with mask (A system that operates on metadata)
+  - Remote base is culmination of current data
 - Duration
