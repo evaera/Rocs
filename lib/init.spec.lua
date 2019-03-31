@@ -7,6 +7,8 @@ local function makeTestCmp(rocs, callCounts)
 
 	local reducers = rocs.reducers
 
+	-- TODO: Test onUpdated in components
+
 	return {
 		name = "Test";
 		initialize = function(self)
@@ -99,7 +101,9 @@ return function()
 		rocs:registerComponent(makeTestCmp(rocs))
 
 		it("should fire lifecycle methods", function()
-			local dep = rocs.dependencies:hasComponent("Test")
+			local dep = rocs.dependencies:any(
+				rocs.dependencies:all("Test")
+			)
 
 			local bindable = Instance.new("BindableEvent")
 			local counter = Util.callCounter()
