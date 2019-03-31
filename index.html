@@ -328,7 +328,42 @@
 </ul>
 
 <p>Rocs is compatible with both Lua and <a href="https://roblox-ts.github.io">roblox-ts</a>.</p>
-<h2 id='use-cases'>Use cases</h2><h3 id='shared-resource-management'>Shared resource management</h3>
+<h2 id='use-cases'>Use cases</h2>
+<blockquote>
+<p>Register the component:</p>
+</blockquote>
+<pre class="highlight lua tab-lua"><code><span class="n">rocs</span><span class="p">:</span><span class="n">registerComponent</span><span class="p">({</span>
+  <span class="n">name</span> <span class="o">=</span> <span class="s2">"WalkSpeed"</span><span class="p">;</span>
+  <span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">lowest</span><span class="p">;</span>
+  <span class="n">check</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">number</span><span class="p">;</span>
+  <span class="n">entityCheck</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">instance</span><span class="p">(</span><span class="s2">"Humanoid"</span><span class="p">);</span>
+  <span class="n">onUpdated</span> <span class="o">=</span> <span class="k">function</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span>
+    <span class="n">self</span><span class="p">.</span><span class="n">instance</span><span class="p">.</span><span class="n">WalkSpeed</span> <span class="o">=</span> <span class="n">self</span><span class="p">:</span><span class="n">get</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">16</span>
+  <span class="k">end</span><span class="p">;</span>
+<span class="p">})</span>
+</code></pre>
+<blockquote>
+<p>Inside your weapon code:</p>
+</blockquote>
+<pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">entity</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">:</span><span class="n">getEntity</span><span class="p">(</span><span class="n">humanoid</span><span class="p">,</span> <span class="s2">"weapon"</span><span class="p">)</span>
+
+<span class="c1">-- On Equipped:</span>
+<span class="n">entity</span><span class="p">:</span><span class="n">addComponent</span><span class="p">(</span><span class="s2">"WalkSpeed"</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+<span class="c1">-- On Unequipped:</span>
+<span class="n">entity</span><span class="p">:</span><span class="n">removeComponent</span><span class="p">(</span><span class="s2">"WalkSpeed"</span><span class="p">)</span>
+</code></pre>
+<blockquote>
+<p>Inside your  menu code:</p>
+</blockquote>
+<pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">entity</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">:</span><span class="n">getEntity</span><span class="p">(</span><span class="n">humanoid</span><span class="p">,</span> <span class="s2">"menu"</span><span class="p">)</span>
+
+<span class="c1">-- On Opened:</span>
+<span class="n">entity</span><span class="p">:</span><span class="n">addComponent</span><span class="p">(</span><span class="s2">"WalkSpeed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="c1">-- On Closed:</span>
+<span class="n">entity</span><span class="p">:</span><span class="n">removeComponent</span><span class="p">(</span><span class="s2">"WalkSpeed"</span><span class="p">)</span>
+</code></pre><h3 id='shared-resource-management'>Shared resource management</h3>
 <p>A classic example of the necessity to share resources is changing the player&#39;s walk speed. </p>
 
 <p>Let&#39;s say you have a heavy weapon that you want to have slow down the player when he equips it. That&#39;s easy enough, you just set the walk speed when the weapon is equipped, and set it back to default when the weapon is unequipped.</p>
@@ -340,7 +375,8 @@
 <p>Rocs solves this problem correctly by allowing you to apply a movement speed component from each location in the code base that needs to modify it. Each component can provide its own intensity level for which to affect the movement speed. Then, every time a component is added, modified, or removed, Rocs will group all components of the same type and determine a single value to set the WalkSpeed to, based on your defined <a href="#component-aggregates">reducer function</a>. </p>
 
 <p>In this case, the function will find the lowest value from all of the components, and then the player&#39;s WalkSpeed will be set to that number. ￼Now, there is only one source of truth for the player&#39;s WalkSpeed, which solves all of our problems. When there are no longer any components of this type, you can clean up by setting the player&#39;s walk speed back to default in a destructor.</p>
-<h3 id='generic-level-of-detail-with-systems'>Generic Level-of-Detail with Systems</h3>
+<h3 id='generic-level-of-detail-with-systems'>Generic Level-of-Detail with Systems</h3><pre class="highlight lua tab-lua"><code>
+</code></pre>
 <p>Systems can depend on groups of components being present on a single entity, so you can make a <code>LOD</code> component which has a distance field, and a system that looks for <code>LOD</code> components and checks if the player is near them, and if so, adds a <code>LOD_Near</code> component to the entity.</p>
 
 <p>Then you could have a secondary system (like, an animator that runs on a tighter loop, for something like bobbing coins up and down in the world) that depends on <code>all(Coin, LOD_Near)</code>. Then that system would only receive coins which are near to the player.</p>
