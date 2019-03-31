@@ -12,6 +12,7 @@ Still in development
 - Refactor and clean up
 - Depend on components with field X and value Y 
 - Rocs.None for nil values
+- Serialize and restore in layer format
 
 ### Systems
 - Replication of components with mask (A system that operates on metadata)
