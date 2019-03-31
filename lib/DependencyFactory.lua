@@ -148,21 +148,32 @@ function DependencyFactory:_resolveStep(step)
 		return self:_getMetadata(step)
 	elseif type(step) == "string" then
 		return self:hasComponent(step)
+	elseif typeof(step) == "Instance" then --? Should work for tables?
+		return self:hasEntity(step)
 	end
 
 	error("Invalid dependency in sequence", 2)
 end
 
+function DependencyFactory:_resolveSteps(steps)
+	local resolvedSteps = {}
+
+	for i, step in ipairs(steps) do
+		resolvedSteps[i] = self:_resolveStep(step)
+	end
+
+	return resolvedSteps
+end
+
 function DependencyFactory:all(...)
-	local steps = {...}
+	local steps = self:_resolveSteps({...})
+
 	return DependencyStep.new(
 		self,
 		function (instance)
 			local components = {}
 
 			for _, step in ipairs(steps) do
-				step = self:_resolveStep(step)
-
 				local stepComponents = step:evaluate(instance)
 
 				if stepComponents == nil then
@@ -181,14 +192,13 @@ function DependencyFactory:all(...)
 end
 
 function DependencyFactory:any(...)
-	local steps = {...}
+	local steps = self:_resolveSteps({...})
+
 	return DependencyStep.new(
 		self,
 		function (instance)
 			local components = {}
 			for _, step in ipairs(steps) do
-				step = self:_resolveStep(step)
-
 				local stepComponents = step:evaluate(instance)
 
 				if type(stepComponents) == "table" then
