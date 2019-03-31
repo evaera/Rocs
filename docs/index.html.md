@@ -32,6 +32,44 @@ Rocs is compatible with both Lua and [roblox-ts](https://roblox-ts.github.io).
 
 ## Use cases
 
+> Register the component:
+
+```lua
+rocs:registerComponent({
+  name = "WalkSpeed";
+  reducer = rocs.reducers.lowest;
+  check = t.number;
+  entityCheck = t.instance("Humanoid");
+  onUpdated = function (self)
+    self.instance.WalkSpeed = self:get() or 16
+  end;
+})
+```
+
+> Inside your weapon code:
+
+```lua
+local entity = rocs:getEntity(humanoid, "weapon")
+
+-- On Equipped:
+entity:addComponent("WalkSpeed", 10)
+
+-- On Unequipped:
+entity:removeComponent("WalkSpeed")
+```
+
+> Inside your  menu code:
+
+```lua
+local entity = rocs:getEntity(humanoid, "menu")
+
+-- On Opened:
+entity:addComponent("WalkSpeed", 0)
+
+-- On Closed:
+entity:removeComponent("WalkSpeed")
+```
+
 ### Shared resource management
 
 A classic example of the necessity to share resources is changing the player's walk speed. 
@@ -47,6 +85,10 @@ Rocs solves this problem correctly by allowing you to apply a movement speed com
 In this case, the function will find the lowest value from all of the components, and then the player's WalkSpeed will be set to that number. ￼Now, there is only one source of truth for the player's WalkSpeed, which solves all of our problems. When there are no longer any components of this type, you can clean up by setting the player's walk speed back to default in a destructor.
 
 ### Generic Level-of-Detail with Systems
+
+```lua
+
+```
 
 Systems can depend on groups of components being present on a single entity, so you can make a `LOD` component which has a distance field, and a system that looks for `LOD` components and checks if the player is near them, and if so, adds a `LOD_Near` component to the entity.
 
