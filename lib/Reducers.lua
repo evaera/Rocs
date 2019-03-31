@@ -37,6 +37,8 @@ return function (rocs)
 		return reducedValue
 	end
 
+	-- TODO: multiply, concat, lowest, highest
+
 	function Reducers.propertyReducer(propertyReducers, disableMetadata)
 		return function(values)
 			local properties = {}
@@ -68,6 +70,7 @@ return function (rocs)
 		end
 	end
 
+	-- TODO: PropertyReducer with unknown fields using one
 	function Reducers.propertyReducerAll(reducer, ...)
 		return Reducers.propertyReducer(setmetatable({}, {
 			__index = function()
