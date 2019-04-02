@@ -13,6 +13,7 @@ Still in development
 - Depend on components with field X and value Y 
 - Rocs.None for nil values
 - Serialize and restore in layer format
+- Rename "hook" to "behavior"
 
 ### Systems
 - Replication of components with mask (A system that operates on metadata)
