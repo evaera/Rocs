@@ -28,7 +28,7 @@ Some other prominent features of Rocs include:
 - Systems are deconstructed when none of their dependencies are met
 - Components can have life cycle methods and functions associated with them independent of systems
 
-Rocs is compatible with both Lua and [roblox-ts](https://roblox-ts.github.io).
+Rocs is compatible with both Lua and TypeScript via [roblox-ts](https://roblox-ts.github.io).
 
 ## Use cases
 
@@ -70,7 +70,7 @@ entity:addComponent("WalkSpeed", 0)
 entity:removeComponent("WalkSpeed")
 ```
 
-### Shared resource management
+### Managed state resource sharing
 
 A classic example of the necessity to share resources is changing the player's walk speed. 
 
@@ -87,7 +87,13 @@ In this case, the function will find the lowest value from all of the components
 ### Generic Level-of-Detail with Systems
 
 ```lua
+rocs:registerSystem({
+  name = "LOD"
+}, {
+  rocs.dependencies:hasComponent("LOD"):onInterval(1, function()
 
+  end)
+})
 ```
 
 Systems can depend on groups of components being present on a single entity, so you can make a `LOD` component which has a distance field, and a system that looks for `LOD` components and checks if the player is near them, and if so, adds a `LOD_Near` component to the entity.
@@ -380,3 +386,7 @@ The rocs insta
 ## Replication
 
 ## Duration
+
+# Authors
+
+Rocs was designed and created by [evaera](https://eryn.io).
