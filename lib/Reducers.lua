@@ -37,7 +37,7 @@ return function (rocs)
 		return reducedValue
 	end
 
-	-- TODO: multiply, concat, lowest, highest
+	-- TODO: multiply, concat (string or array), lowest, highest
 
 	function Reducers.propertyReducer(propertyReducers, disableMetadata)
 		return function(values)
