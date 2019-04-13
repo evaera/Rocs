@@ -16,11 +16,11 @@ return {
 		name = "hello";
 	};
 	{
-		dep:onAdded(function()
-
+		dep:onAdded(function(system, e)
+			dep:getEntities()
 		end),
 
-		dep:onInterval(20, function()
+		dep:onInterval(20, function(system)
 
 		end),
 

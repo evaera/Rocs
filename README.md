@@ -16,6 +16,7 @@ Still in development
 - Rename "hook" to "behavior"
 - Function to grab all components of type
 - PriorityValue reducer
+- Rocs unique id on instantiation
 
 ### Systems
 - Replication of components with mask (A system that operates on metadata)

@@ -71,13 +71,16 @@ function Dependency:tap(instance, target)
 		self._entityDependencies[instance][staticTarget]:_dispatchLifecycle(LIFECYCLE_ADDED, aggregateMap, target)
 	end
 
-	if self._entityDependencies[instance][staticTarget] then
-		self._entityDependencies[instance][staticTarget]:_dispatchLifecycle(LIFECYCLE_UPDATED, aggregateMap, target)
+	local entityDependency = self._entityDependencies[instance][staticTarget]
+
+	if entityDependency then
+		entityDependency:_dispatchLifecycle(LIFECYCLE_UPDATED, aggregateMap, target)
 	end
 
-	if not aggregateMap and self._entityDependencies[instance][staticTarget] then
-		self._entityDependencies[instance][staticTarget]:_dispatchLifecycle(LIFECYCLE_REMOVED, nil, target)
-		self._entityDependencies[instance][staticTarget]:destroy()
+	if not aggregateMap and entityDependency then
+		entityDependency:_dispatchLifecycle(LIFECYCLE_REMOVED, nil, target)
+		entityDependency:destroy()
+
 		self._entityDependencies[instance][staticTarget] = nil
 
 		if next(self._entityDependencies[instance]) == nil then
@@ -85,24 +88,26 @@ function Dependency:tap(instance, target)
 		end
 	end
 
-	self:_tapEvents()
+	self:_tapEvents(entityDependency and entityDependency.system)
 end
 
-function Dependency:_tapEvents()
+function Dependency:_tapEvents(system)
 	if next(self._entityDependencies) ~= nil and self._connections == nil then
-		self:_connectEvents()
+		self:_connectEvents(system)
 	elseif next(self._entityDependencies) == nil and self._connections ~= nil then
 		self:_disconnectEvents()
 	end
 end
 
-function Dependency:_connectEvents()
+function Dependency:_connectEvents(system)
 	self._connections = {}
 
 	for _, hook in ipairs(self._hooks) do
 		-- TODO: Break this out
 		if hook.type == "onEvent" then
-			local connection = hook.event:Connect(hook.handler)
+			local connection = hook.event:Connect(function(...)
+				return hook.handler(system, ...)
+			end)
 			table.insert(self._connections, function()
 				connection:Disconnect()
 			end)
@@ -114,7 +119,7 @@ function Dependency:_connectEvents()
 					local dt = wait(hook.length)
 
 					if continue then
-						hook.handler(dt)
+						hook.handler(system, dt)
 					end
 				end
 			end)

@@ -107,7 +107,8 @@ return function()
 
 			local bindable = Instance.new("BindableEvent")
 			local counter = Util.callCounter()
-			rocs:registerSystem({
+			local registeredSystem
+			registeredSystem = rocs:registerSystem({
 				name = "test";
 
 				initialize = function(self)
@@ -150,11 +151,12 @@ return function()
 					counter:call("removed")
 				end);
 
-				dep:onInterval(5, function(dt)
+				dep:onInterval(5, function(system, dt)
 					counter:call("interval")
 				end);
 
-				dep:onEvent(bindable.Event, function(param)
+				dep:onEvent(bindable.Event, function(system, param)
+					expect(getmetatable(system)).to.equal(registeredSystem)
 					expect(param).to.equal("param")
 					counter:call("event")
 				end)
