@@ -31,3 +31,4 @@ Still in development
 - Type of reducer field that accepts a priority list, where matching priority values are reduced together
   - Use case: A string field which you want to concatenate at matching priority, but replace at higher priority
 - Maybe these "reducer fields" should exist as a formalized concept?
+- function to generate defaults values for layers where nesting is required
