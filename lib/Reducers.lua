@@ -8,7 +8,7 @@ return function (rocs)
 	end
 
 	function Reducers.first(values)
-			return values[1]
+		return values[1]
 	end
 
 	function Reducers.truthy(values)
@@ -37,7 +37,59 @@ return function (rocs)
 		return reducedValue
 	end
 
-	-- TODO: multiply, concat (string or array), lowest, highest
+	function Reducers.multiply(values)
+		local reducedValue = 1
+
+		for _, value in ipairs(values) do
+			reducedValue = reducedValue * value
+		end
+
+		return reducedValue
+	end
+
+	Reducers.concatArray = Util.concat
+
+	function Reducers.lowest(values)
+		if #values == 0 then
+			return
+		end
+
+		return math.min(unpack(values))
+	end
+
+	function Reducers.highest(values)
+		if #values == 0 then
+			return
+		end
+
+		return math.max(unpack(values))
+	end
+
+	function Reducers.concatString(delim)
+		return function (values)
+			return table.concat(values, delim or "")
+		end
+	end
+
+	function Reducers.priorityValue(reducer)
+		reducer = reducer or Reducers.last
+
+		return function (values)
+
+			local highestPriority = -math.huge
+			local highestPriorityValues = {}
+
+			for _, struct in ipairs(values) do
+				if struct.priority > highestPriority then
+					highestPriorityValues = {struct.value}
+				elseif struct.priorty == highestPriority then
+					table.insert(highestPriorityValues, struct.value)
+				end
+			end
+
+			return reducer(highestPriorityValues)
+		end
+	end
 
 	function Reducers.propertyReducer(propertyReducers, disableMetadata)
 		return function(values)

@@ -8,14 +8,12 @@ Still in development
 - Make it so on Heartbeat etc. cannot yield
 - Ensure timing of life cycles is ideal
 - ShouldUpdate function?
-- Number type reducer
 - Refactor and clean up
 - Depend on components with field X and value Y 
 - Rocs.None for nil values for :set
 - Serialize and restore in layer format
 - Rename "hook" to "behavior"
 - Function to grab all components of type
-- PriorityValue reducer
 - Rocs unique id on instantiation
 
 ### Systems
@@ -33,3 +31,7 @@ Still in development
   - Use case: A string field which you want to concatenate at matching priority, but replace at higher priority
 - Maybe these "reducer fields" should exist as a formalized concept?
 - function to generate defaults values for layers where nesting is required
+
+## To make examples
+
+- Number type reducer (add/mult)
