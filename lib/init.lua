@@ -414,6 +414,7 @@ function Rocs:makeUniqueComponent(componentResolvable)
 		end;
 	}, staticAggregate)
 	component.__index = component
+	component.__tostring = staticAggregate.__tostring
 
 	return component
 end

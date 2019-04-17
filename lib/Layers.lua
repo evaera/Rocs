@@ -1,3 +1,5 @@
+local inspect = require(script.Parent.Inspect).inspect
+
 return function (rocs)
 	local layers = {}
 
