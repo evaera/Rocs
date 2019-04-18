@@ -1,4 +1,4 @@
-# ROCS
+# Rocs
 Roblox Component System
 
 Still in development.
