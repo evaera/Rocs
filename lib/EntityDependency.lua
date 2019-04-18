@@ -7,11 +7,14 @@ function EntityDependency.new(dependency, instance)
 		instance = instance;
 		system = dependency._rocs:_getSystem(dependency._staticSystem);
 		_lastAggregateMap = nil;
+		_currentAggregateMap = nil;
 	}, EntityDependency)
 end
 
 function EntityDependency:_dispatchLifecycle(stage, aggregateMap, target)
 	aggregateMap = aggregateMap or self._lastAggregateMap
+
+	self._currentAggregateMap = aggregateMap
 
 	for _, hook in ipairs(self._dependency._hooks) do
 		if hook.type == stage then

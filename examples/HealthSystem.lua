@@ -17,7 +17,11 @@ return {
 	};
 	{
 		dep:onAdded(function(system, e)
-			dep:getEntities()
+			for entity, components in dep:entities() do
+				if components.Regen then
+					print(entity .. " has a Regen component omg!!!")
+				end
+			end
 		end),
 
 		dep:onInterval(20, function(system)

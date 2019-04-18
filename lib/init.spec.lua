@@ -1,4 +1,5 @@
 local t = require(script.Parent.t)
+local inspect = require(script.Parent.Inspect).inspect
 local Util = require(script.Parent.Util)
 local Rocs = require(script.Parent)
 
@@ -166,9 +167,14 @@ return function()
 			bindable:Fire("foo")
 			expect(counter.event).to.equal(0)
 
+			expect(dep:entities()()).to.equal(nil)
+
 			expect(counter.initialize).to.equal(0)
 			ent:addBaseComponent("Test", { one = 1})
 			expect(counter.initialize).to.equal(1)
+
+			-- TODO: Write more tests for entities
+			expect(dep:entities()()).to.equal(ent.instance)
 
 			expect(counter.event).to.equal(0)
 			bindable:Fire("param")

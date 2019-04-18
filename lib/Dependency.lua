@@ -9,21 +9,17 @@ local Dependency = {}
 Dependency.__index = Dependency
 
 function Dependency.new(rocs, system, step, hooks)
+	local entityDependencies = {}
+	step._entityDependencies = entityDependencies
+
 	return setmetatable({
 		_rocs = rocs;
 		_staticSystem = system;
 		_step = step;
 		_hooks = hooks;
-		_entityDependencies = {};
+		_entityDependencies = entityDependencies;
 		_connections = nil;
 	}, Dependency)
-end
-
-function Dependency:entities()
-	return function()
-
-
-	end
 end
 
 function Dependency:tap(instance, target)

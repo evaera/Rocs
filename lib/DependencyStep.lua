@@ -9,6 +9,7 @@ function DependencyStep.new(factory, qualifier, dependencies)
 		_rocs = factory._rocs;
 		_qualifier = qualifier;
 		_dependencies = dependencies;
+		_entityDependencies = nil;
 	}, DependencyStep)
 end
 
@@ -24,6 +25,21 @@ function DependencyStep.combineDependencies(steps)
 	end
 
 	return Util.concat(unpack(dependencies))
+end
+
+function DependencyStep:entities(system)
+	local entityDependencies = self._entityDependencies
+
+	if not entityDependencies then
+		error("DependencyStep:entities() can only be called on a top-level dependency step.")
+	end
+
+	local instance, entityDependency
+	return function()
+		instance, entityDependency = next(entityDependencies, instance)
+
+		return instance, entityDependency and entityDependency._currentAggregateMap
+	end
 end
 
 function DependencyStep:evaluate(...)
