@@ -34,8 +34,9 @@ end
 local Rocs = {}
 Rocs.__index = Rocs
 
-function Rocs.new()
+function Rocs.new(name)
 	local self = setmetatable({
+		_name = name or "global";
 		_entities = {};
 		_components = {};
 		_systems = {};

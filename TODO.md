@@ -6,8 +6,8 @@
 - Rocs.None for nil values for :set
 - Serialize and restore in layer format
 - Rename "hook" to "behavior"
-- Rocs unique id on instantiation
 - Make onInterval use consistent timing
+- RegisterComponentsIn/SystemsIn
 
 ### Systems
 - Replication of components with mask (A system that operates on metadata)
