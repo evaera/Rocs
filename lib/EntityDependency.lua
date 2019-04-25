@@ -16,9 +16,9 @@ function EntityDependency:_dispatchLifecycle(stage, aggregateMap, target)
 
 	self._currentAggregateMap = aggregateMap
 
-	for _, hook in ipairs(self._dependency._hooks) do
-		if hook.type == stage then
-			hook.handler(
+	for _, behavior in ipairs(self._dependency._behaviors) do
+		if behavior.type == stage then
+			behavior.handler(
 				self.system,
 				{
 					entity = self._dependency._rocs:getEntity(

@@ -24,7 +24,7 @@ Some other prominent features of Rocs include:
 - Mechanisms for dealing with groups of state changes as a single unit
 - Automated state replication to all or specific players with masking (only replicating some properties and not all)
 - Compositional system dependency declaration: Systems can depend on one component, all of a set, any of a set, and permutations thereof (`all(foo, any(bar, baz))`)
-- Systems can have multiple dependencies which all have independent hooks
+- Systems can have multiple dependencies which all have independent behaviors
 - Systems are deconstructed when none of their dependencies are met
 - Components can have life cycle methods and functions associated with them independent of systems
 
@@ -201,9 +201,9 @@ Solid examples of metadata will be mentioned in the "layers" section.
 
 ### Hooks
 
-Systems can have multiple dependencies. Each dependency can have its own set of **hooks**, which are invoked differently depending on the hook.
+Systems can have multiple dependencies. Each dependency can have its own set of **behaviors**, which are invoked differently depending on the behavior.
 
-For example, there is an `onUpdated` hook which is invoked whenever one of the dependent components is updated (on any entity), the `onInterval` hook can be used to repeatedly call the hook as long as the dependency is met, and the `onEvent` hook can be used to run connect an event listener when the dependency is met and disconnect the listener when it is no longer met. 
+For example, there is an `onUpdated` behavior which is invoked whenever one of the dependent components is updated (on any entity), the `onInterval` behavior can be used to repeatedly call the behavior as long as the dependency is met, and the `onEvent` behavior can be used to run connect an event listener when the dependency is met and disconnect the listener when it is no longer met. 
 
 ### System sleeping
 

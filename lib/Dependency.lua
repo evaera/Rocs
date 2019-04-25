@@ -8,7 +8,7 @@ local LIFECYCLE_UPDATED = "onUpdated"
 local Dependency = {}
 Dependency.__index = Dependency
 
-function Dependency.new(rocs, system, step, hooks)
+function Dependency.new(rocs, system, step, behaviors)
 	local entityDependencies = {}
 	step._entityDependencies = entityDependencies
 
@@ -16,7 +16,7 @@ function Dependency.new(rocs, system, step, hooks)
 		_rocs = rocs;
 		_staticSystem = system;
 		_step = step;
-		_hooks = hooks;
+		_behaviors = behaviors;
 		_entityDependencies = entityDependencies;
 		_connections = nil;
 	}, Dependency)
@@ -59,24 +59,24 @@ end
 function Dependency:_connectEvents(system)
 	self._connections = {}
 
-	for _, hook in ipairs(self._hooks) do
+	for _, behavior in ipairs(self._behaviors) do
 		-- TODO: Break this out
-		if hook.type == "onEvent" then
-			local connection = hook.event:Connect(function(...)
-				return hook.handler(system, ...)
+		if behavior.type == "onEvent" then
+			local connection = behavior.event:Connect(function(...)
+				return behavior.handler(system, ...)
 			end)
 			table.insert(self._connections, function()
 				connection:Disconnect()
 			end)
-		elseif hook.type == "onInterval" then
+		elseif behavior.type == "onInterval" then
 			local continue = true
 
 			spawn(function()
 				while continue do
-					local dt = wait(hook.length)
+					local dt = wait(behavior.length)
 
 					if continue then
-						hook.handler(system, dt)
+						behavior.handler(system, dt)
 					end
 				end
 			end)

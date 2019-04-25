@@ -5,7 +5,6 @@
 - Depend on components with field X and value Y 
 - Rocs.None for nil values for :set
 - Serialize and restore in layer format
-- Rename "hook" to "behavior"
 - Make onInterval use consistent timing
 - RegisterComponentsIn/SystemsIn
 

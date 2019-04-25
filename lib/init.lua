@@ -83,17 +83,17 @@ function Rocs:registerSystem(systemDefinition, dependencies)
 
 	self._systems[systemDefinition.name] = systemDefinition
 
-	local stepHooks = {}
-	for _, hook in ipairs(dependencies) do
-		if stepHooks[hook.step] == nil then
-			stepHooks[hook.step] = {}
+	local stepBehaviors = {}
+	for _, behavior in ipairs(dependencies) do
+		if stepBehaviors[behavior.step] == nil then
+			stepBehaviors[behavior.step] = {}
 		end
 
-		table.insert(stepHooks[hook.step], hook)
+		table.insert(stepBehaviors[behavior.step], behavior)
 	end
 
-	for step, hooks in pairs(stepHooks) do
-		local dependency = Dependency.new(self, systemDefinition, step, hooks)
+	for step, behaviors in pairs(stepBehaviors) do
+		local dependency = Dependency.new(self, systemDefinition, step, behaviors)
 		if step._dependencies == true then
 			table.insert(self._dependencies[ALL_COMPONENTS], dependency)
 		else
