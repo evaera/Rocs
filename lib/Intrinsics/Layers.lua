@@ -1,18 +1,15 @@
-local inspect = require(script.Parent.Inspect).inspect
+local inspect = require(script.Parent.Parent.Inspect).inspect
+local Constants = require(script.Parent.Parent.Constants)
 
 return function (rocs)
-	local layers = {}
-
-	layers.system = {
-		{
+	rocs:registerSystem({
 			name = "Layers";
-		};
-		{
-			rocs.dependencies:hasMetadata(rocs.metadata("_layer"))
+		}, {
+			rocs.dependencies:hasMetadata(rocs.metadata(Constants.LAYER_IDENTIFIER))
 			:onUpdated(function(_, e)
 				for instance, components in pairs(e.data) do
-					if not rocs:_getMetadata(instance) then
-						local entity = rocs:getEntity(instance, e.data[rocs.metadata("_layer")])
+					if not rocs._metadata:get(instance) then
+						local entity = rocs:getEntity(instance, e.data[rocs.metadata(Constants.LAYER_IDENTIFIER)])
 
 						for component, data in pairs(components) do
 							entity:addComponent(component, data)
@@ -22,8 +19,8 @@ return function (rocs)
 
 				if e.lastData then
 					for instance, components in pairs(e.lastData) do
-						if not rocs:_getMetadata(instance) then
-							local entity = rocs:getEntity(instance, e.lastData[rocs.metadata("_layer")])
+						if not rocs._metadata:get(instance) then
+							local entity = rocs:getEntity(instance, e.lastData[rocs.metadata(Constants.LAYER_IDENTIFIER)])
 
 							for component, data in pairs(components) do
 								if not e.data[instance] or not e.data[instance][component] then
@@ -35,7 +32,7 @@ return function (rocs)
 				end
 			end)
 		}
-	}
+	)
 	--[[
 		{
 			Instance = {
@@ -46,8 +43,8 @@ return function (rocs)
 		}
 	]]
 
-	layers.component = {
-		name = "_layer";
+	rocs:registerComponent({
+		name = Constants.LAYER_IDENTIFIER;
 		reducer = rocs.reducers.propertyReducerAll(
 			rocs.reducers.propertyReducerAll(
 				rocs.reducers.propertyReducerAll(
@@ -56,11 +53,9 @@ return function (rocs)
 				)
 			)
 		);
-	}
+	})
 
-	layers.metadata = {
-		name = "_layer";
-	}
-
-	return layers
+	rocs:registerMetadata({
+		name = Constants.LAYER_IDENTIFIER;
+	})
 end

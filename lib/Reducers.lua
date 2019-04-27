@@ -108,8 +108,8 @@ return function (rocs)
 			local reducedValue = {}
 
 			for propName, propValues in pairs(properties) do
-				if not disableMetadata and rocs and rocs:_getMetadata(propName) then
-					local reducible = rocs:_getMetadata(propName)
+				if not disableMetadata and rocs and rocs._metadata:get(propName) then
+					local reducible = rocs._metadata:get(propName)
 
 					reducedValue[propName] = Util.runReducer(reducible, propValues, Reducers.last)
 				else

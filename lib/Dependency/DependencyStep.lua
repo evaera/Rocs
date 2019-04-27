@@ -1,4 +1,4 @@
-local Util = require(script.Parent.Util)
+local Util = require(script.Parent.Parent.Util)
 
 local DependencyStep = {}
 DependencyStep.__index = DependencyStep

@@ -5,7 +5,7 @@ function EntityDependency.new(dependency, instance)
 	return setmetatable({
 		_dependency = dependency;
 		instance = instance;
-		system = dependency._rocs:_getSystem(dependency._staticSystem);
+		system = dependency._rocs._systems:get(dependency._staticSystem);
 		_lastAggregateMap = nil;
 		_currentAggregateMap = nil;
 	}, EntityDependency)
@@ -37,7 +37,7 @@ function EntityDependency:_dispatchLifecycle(stage, aggregateMap, target)
 end
 
 function EntityDependency:destroy()
-	self._dependency._rocs:_reduceSystemConsumers(self._dependency._staticSystem)
+	self._dependency._rocs._systems:finished(self._dependency._staticSystem)
 end
 
 return EntityDependency

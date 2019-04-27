@@ -1,6 +1,5 @@
-local Util = require(script.Parent.Util)
+local Util = require(script.Parent.Parent.Util)
 local DependencyStep = require(script.Parent.DependencyStep)
-local inspect = require(script.Parent.Inspect).inspect
 
 local DependencyFactory = {}
 DependencyFactory.__index = DependencyFactory
@@ -19,9 +18,9 @@ function DependencyFactory:hasComponent(componentResolvable)
 	return DependencyStep.new(
 		self,
 		function(instance)
-			local staticAggregate = self._rocs:_getStaticAggregate(componentResolvable)
+			local staticAggregate = self._rocs._aggregates:getStatic(componentResolvable)
 
-			return {self._rocs:_getAggregate(instance, staticAggregate)}
+			return {self._rocs._aggregates:get(instance, staticAggregate)}
 		end,
 		{componentResolvable}
 	)
@@ -43,7 +42,7 @@ function DependencyFactory:hasMetadata(metadata)
 		function(instance)
 			local aggregates = {}
 
-			for _, aggregate in ipairs(self._rocs:_getAllAggregates(instance)) do
+			for _, aggregate in ipairs(self._rocs._aggregates:getAll(instance)) do
 				if aggregate:get(metadata) ~= nil then
 					aggregates[#aggregates + 1] = aggregate
 				end
@@ -58,8 +57,8 @@ end
 function DependencyFactory:_resolveStep(step)
 	if DependencyFactory.isDependencyStep(step) then
 		return step
-	elseif self._rocs:_getMetadata(step) then
-		return self:_getMetadata(step)
+	elseif self._rocs._metadata:get(step) then
+		return self:hasMetadata(step)
 	elseif type(step) == "string" then
 		return self:hasComponent(step)
 	elseif typeof(step) == "Instance" then --? Should work for tables?

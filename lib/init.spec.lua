@@ -1,5 +1,5 @@
 local t = require(script.Parent.t)
-local inspect = require(script.Parent.Inspect).inspect
+local inspect = require(script.Parent.Inspect).inspect -- luacheck: ignore 211
 local Util = require(script.Parent.Util)
 local Rocs = require(script.Parent)
 
@@ -71,7 +71,7 @@ return function()
 				}
 			})
 
-			local cmpAg = rocs._entities[workspace] and rocs._entities[workspace][testCmp]
+			local cmpAg = rocs._aggregates._entities[workspace] and rocs._aggregates._entities[workspace][testCmp]
 
 			expect(cmpAg).to.be.ok()
 
