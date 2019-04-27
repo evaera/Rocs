@@ -2,6 +2,7 @@ local t = require(script.Parent.t)
 local inspect = require(script.Parent.Inspect).inspect -- luacheck: ignore 211
 local Util = require(script.Parent.Util)
 local Rocs = require(script.Parent)
+local Constants = require(script.Parent.Constants)
 
 local function makeTestCmp(rocs, callCounts)
 	callCounts = callCounts or Util.callCounter()
@@ -75,8 +76,8 @@ return function()
 
 			expect(cmpAg).to.be.ok()
 
-			expect(cmpAg.components.base).to.be.ok()
-			expect(cmpAg.components.base.two).to.equal(2)
+			expect(cmpAg.components[Constants.SCOPE_BASE]).to.be.ok()
+			expect(cmpAg.components[Constants.SCOPE_BASE].two).to.equal(2)
 
 			expect(cmpAg.components.foo).to.be.ok()
 			expect(cmpAg.components.foo.one).to.equal(1)
@@ -88,6 +89,12 @@ return function()
 			expect(cmpAg:get("testDefault")).to.equal(5)
 
 			expect(cmpAg:get(Rocs.metadata("MtTest"), "num")).to.equal(3)
+
+			expect(cmpAg:get("three")).to.never.be.ok()
+			cmpAg:set("three", 3)
+			expect(cmpAg:get("three")).to.equal(3)
+			cmpAg:set("three", Rocs.None)
+			expect(cmpAg:get("three")).to.never.be.ok()
 
 			expect(tostring(cmpAg)).to.equal("Aggregate(Test)")
 

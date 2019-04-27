@@ -1,4 +1,5 @@
 local CollectionService = game:GetService("CollectionService")
+local inspect = require(script.Parent.Parent.Inspect).inspect
 
 local I = require(script.Parent.Parent.Interfaces)
 local Util = require(script.Parent.Parent.Util)
@@ -16,18 +17,30 @@ function AggregateCollection.new(rocs)
 	}, AggregateCollection)
 end
 
-local function makeComponentPropertySetter(collection, staticAggregate)
-	return function (self, key, value)
-		local currentValue = collection:getComponent(self.instance, staticAggregate, Constants.BASE)
-
-		currentValue[key] = value
-		collection:addComponent(self.instance, staticAggregate, Constants.BASE, currentValue)
-	end
-end
-
 local function makeComponentSetter(collection, staticAggregate)
-	return function (self, key, value)
-		collection:addComponent(self.instance, staticAggregate, Constants.BASE, value)
+	return function (self, ...)
+		local path = {...}
+		local value = table.remove(path, #path)
+
+		assert(value ~= nil, "Must provide a value to set")
+
+		if value == Constants.None then
+			value = nil
+		end
+
+		local currentValue = collection:getComponent(self.instance, staticAggregate, Constants.SCOPE_BASE)
+
+		while #path > 1 do
+			currentValue = currentValue[table.remove(path, 1)]
+		end
+
+		if path[1] then
+			currentValue[path[1]] = value
+		else
+			currentValue = value
+		end
+
+		return collection:addComponent(self.instance, staticAggregate, Constants.SCOPE_BASE, currentValue)
 	end
 end
 
@@ -54,7 +67,6 @@ function AggregateCollection:register(componentDefinition)
 
 	componentDefinition.__index.get = componentGetProperty
 	componentDefinition.__index.set = makeComponentSetter(self, componentDefinition)
-	componentDefinition.__index.setProp = makeComponentPropertySetter(self, componentDefinition)
 
 	componentDefinition.new = componentDefinition.new or function()
 		return setmetatable({}, componentDefinition)
@@ -181,10 +193,10 @@ function AggregateCollection:getStatic(componentResolvable)
 end
 
 function AggregateCollection:reduce(aggregate)
-	local values = { aggregate.components.base }
+	local values = { aggregate.components[Constants.SCOPE_BASE] }
 
 	for name, component in pairs(aggregate.components) do
-		if name ~= Constants.BASE then
+		if name ~= Constants.SCOPE_BASE then
 			values[#values + 1] = component
 		end
 	end
@@ -205,11 +217,11 @@ function AggregateCollection:listenForTag(tag, staticAggregate)
 			data = require(instance[staticAggregate.name])
 		end
 
-		self:_addComponent(instance, staticAggregate, Constants.BASE, data)
+		self:_addComponent(instance, staticAggregate, Constants.SCOPE_BASE, data)
 	end
 
 	local function removeFromTag(instance)
-		self:_removeComponent(instance, staticAggregate, Constants.BASE)
+		self:_removeComponent(instance, staticAggregate, Constants.SCOPE_BASE)
 	end
 
 	CollectionService:GetInstanceRemovedSignal(tag):Connect(removeFromTag)

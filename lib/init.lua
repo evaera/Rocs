@@ -9,7 +9,9 @@ local AggregateCollection = require(script.Collections.AggregateCollection)
 local SystemCollection = require(script.Collections.SystemCollection)
 local MetadataCollection = require(script.Collections.MetadataCollection)
 
-local Rocs = {}
+local Rocs = {
+	None = Constants.None;
+}
 Rocs.__index = Rocs
 
 function Rocs.new(name)

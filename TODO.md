@@ -1,9 +1,7 @@
 ## Todo
 - Write more tests
 - ShouldUpdate function?
-- Refactor and clean up
 - Depend on components with field X and value Y 
-- Rocs.None for nil values for :set
 - Serialize and restore in layer format
 - Make onInterval use consistent timing
 - RegisterComponentsIn/SystemsIn
