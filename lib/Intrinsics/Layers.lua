@@ -33,15 +33,6 @@ return function (rocs)
 			end)
 		}
 	)
-	--[[
-		{
-			Instance = {
-				Component = {
-					(data)
-				}
-			}
-		}
-	]]
 
 	rocs:registerComponent({
 		name = Constants.LAYER_IDENTIFIER;

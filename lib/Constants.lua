@@ -9,6 +9,6 @@ return {
     ALL_COMPONENTS = {};
 
     LAYER_IDENTIFIER = "_layer";
-    BASE = "base";
-
+	SCOPE_BASE = "_base";
+	SCOPE_REMOTE = "_remote";
 }

@@ -4,11 +4,16 @@ local I = require(script.Parent.Interfaces)
 local t = require(script.Parent.t)
 local Constants = require(script.Parent.Constants)
 
+local RESERVED_SCOPES = {
+	[Constants.SCOPE_BASE] = true;
+	[Constants.SCOPE_REMOTE] = true;
+}
+
 local Entity = {}
 Entity.__index = Entity
 
 function Entity.new(rocs, instance, scope)
-	assert(scope ~= Constants.BASE, 'Entity scope cannot be "' .. Constants.BASE .. '"')
+	assert(RESERVED_SCOPES[scope] == nil, ("Entity scope cannot be %q"):format(scope))
 
 	return setmetatable({
 		rocs = rocs;
@@ -50,13 +55,13 @@ end
 
 function Entity:addBaseComponent(componentResolvable, data)
 	return self.rocs._aggregates:addComponent(
-		self:_getComponentOpValues(componentResolvable, Constants.BASE, data or {})
+		self:_getComponentOpValues(componentResolvable, Constants.SCOPE_BASE, data or {})
 	)
 end
 
 function Entity:removeBaseComponent(componentResolvable)
 	return self.rocs._aggregates:removeComponent(
-		self:_getComponentOpValues(componentResolvable, Constants.BASE)
+		self:_getComponentOpValues(componentResolvable, Constants.SCOPE_BASE)
 	)
 end
 
