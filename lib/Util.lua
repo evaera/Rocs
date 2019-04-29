@@ -141,4 +141,14 @@ function Util.deepEquals(a, b)
 	return true
 end
 
+function Util.requireAllInAnd(instance, callback, self)
+	for _, object in ipairs(instance:GetChildren()) do
+		if object:IsA("ModuleScript") then
+			callback(self, require(object))
+		else
+			Util.requireAllInAnd(object, callback, self)
+		end
+	end
+end
+
 return Util

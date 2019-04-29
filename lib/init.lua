@@ -1,5 +1,6 @@
 local I = require(script.Interfaces)
 local Entity = require(script.Entity)
+local Util = require(script.Util)
 local t = require(script.t)
 local DependencyFactory = require(script.Dependency.DependencyFactory)
 local Constants = require(script.Constants)
@@ -56,6 +57,20 @@ end
 
 function Rocs:registerMetadata(...)
 	return self._metadata:register(...)
+end
+
+function Rocs:registerSystemsIn(instance)
+	return Util.requireAllInAnd(instance, function (system)
+		self:registerSystem(unpack(system))
+	end)
+end
+
+function Rocs:registerComponentsIn(instance)
+	return Util.requireAllInAnd(instance, self.registerCompoent, self)
+end
+
+function Rocs:registerMetadataIn(instance)
+	return Util.requireAllInAnd(instance, self.registerMetadata, self)
 end
 
 local getEntityCheck = t.tuple(t.union(t.Instance, t.table), t.string)

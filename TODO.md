@@ -3,7 +3,6 @@
 - Depend on components with field X and value Y 
 - Serialize and restore in layer format
 - Make onInterval use consistent timing
-- RegisterComponentsIn/SystemsIn
 
 ### Systems
 - Replication of components with mask (A system that operates on metadata)
