@@ -11,7 +11,7 @@ function EntityDependency.new(dependency, instance)
 	}, EntityDependency)
 end
 
-function EntityDependency:_dispatchLifecycle(stage, aggregateMap, target)
+function EntityDependency:dispatchLifecycle(stage, aggregateMap, target)
 	aggregateMap = aggregateMap or self._lastAggregateMap
 
 	self._currentAggregateMap = aggregateMap

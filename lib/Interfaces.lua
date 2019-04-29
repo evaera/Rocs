@@ -25,6 +25,7 @@ I.ComponentDefinition = t.intersection(I.InitDestroyable, I.Reducible, t.interfa
 	onAdded = t.optional(t.callback);
 	onUpdated = t.optional(t.callback);
 	onRemoved = t.optional(t.callback);
+	shouldUpdate = t.optional(t.callback);
 }))
 
 I.StaticAggregate = t.intersection(t.ComponentDefinition, t.interface({

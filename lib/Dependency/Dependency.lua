@@ -25,17 +25,22 @@ function Dependency:tap(instance, target)
 
 	if aggregateMap and not self._entityDependencies[instance] then
 		self._entityDependencies[instance] = EntityDependency.new(self, instance)
-		self._entityDependencies[instance]:_dispatchLifecycle(Constants.LIFECYCLE_ADDED, aggregateMap, target)
+		self._entityDependencies[instance]:dispatchLifecycle(Constants.LIFECYCLE_ADDED, aggregateMap, target)
 	end
 
 	local entityDependency = self._entityDependencies[instance]
 	local didExistPreviously = entityDependency and entityDependency._lastAggregateMap[staticTarget.name] ~= nil
 
 	if didExistPreviously then
-		entityDependency:_dispatchLifecycle(Constants.LIFECYCLE_UPDATED, aggregateMap, target)
+		if
+			not staticTarget.shouldUpdate
+			or staticTarget.shouldUpdate(target.data, target.lastData)
+		then
+			entityDependency:dispatchLifecycle(Constants.LIFECYCLE_UPDATED, aggregateMap, target)
+		end
 
 		if not aggregateMap then
-			entityDependency:_dispatchLifecycle(Constants.LIFECYCLE_REMOVED, nil, target)
+			entityDependency:dispatchLifecycle(Constants.LIFECYCLE_REMOVED, nil, target)
 			entityDependency:destroy()
 
 			self._entityDependencies[instance] = nil

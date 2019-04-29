@@ -1,6 +1,5 @@
 ## Todo
 - Write more tests
-- ShouldUpdate function?
 - Depend on components with field X and value Y 
 - Serialize and restore in layer format
 - Make onInterval use consistent timing

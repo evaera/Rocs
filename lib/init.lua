@@ -2,8 +2,9 @@ local I = require(script.Interfaces)
 local Entity = require(script.Entity)
 local t = require(script.t)
 local DependencyFactory = require(script.Dependency.DependencyFactory)
-local MakeReducers = require(script.Reducers)
 local Constants = require(script.Constants)
+local makeReducers = require(script.Operators.Reducers)
+local makeComparators = require(script.Operators.Comparators)
 
 local AggregateCollection = require(script.Collections.AggregateCollection)
 local SystemCollection = require(script.Collections.SystemCollection)
@@ -33,7 +34,8 @@ function Rocs.new(name)
 	self._metadata = MetadataCollection.new(self)
 
 	self.dependencies = DependencyFactory.new(self)
-	self.reducers = MakeReducers(self)
+	self.reducers = makeReducers(self)
+	self.comparators = makeComparators(self)
 
 	self:_registerIntrinsics()
 
@@ -97,7 +99,9 @@ function Rocs:_dispatchComponentChange(aggregate, data)
 		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_ADDED)
 	end
 
-	if newData ~= lastData then
+	local staticAggregate = getmetatable(aggregate)
+
+	if (staticAggregate.shouldUpdate or self.comparators.default)(newData, lastData) then
 		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_UPDATED)
 	end
 
@@ -106,7 +110,7 @@ function Rocs:_dispatchComponentChange(aggregate, data)
 	end
 
 	-- Component dependencies
-	for _, dependency in ipairs(self._dependencies[getmetatable(aggregate)]) do
+	for _, dependency in ipairs(self._dependencies[staticAggregate]) do
 		dependency:tap(aggregate.instance, aggregate)
 	end
 

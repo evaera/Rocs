@@ -101,4 +101,44 @@ function Util.runEntityCheck(staticAggregate, instance)
 	return staticAggregate.entityCheck(instance)
 end
 
+function Util.deepCopy(t)
+	if type(t) == "table" then
+		local n = {}
+		for i,v in pairs(t) do
+			n[i] = Util.deepCopy(v)
+		end
+		return n
+	else
+		return t
+	end
+end
+
+function Util.deepEquals(a, b)
+	if type(a) ~= "table" or type(b) ~= "table" then
+		return a == b
+	end
+
+	for k in pairs(a) do
+		local av = a[k]
+		local bv = b[k]
+		if type(av) == "table" and type(bv) == "table" then
+			local result = Util.deepEquals(av, bv)
+			if not result then
+				return false
+			end
+		elseif av ~= bv then
+			return false
+		end
+	end
+
+	-- extra keys in b
+	for k in pairs(b) do
+		if a[k] == nil then
+			return false
+		end
+	end
+
+	return true
+end
+
 return Util

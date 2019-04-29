@@ -30,6 +30,9 @@ local function makeTestCmp(rocs, callCounts)
 				value = reducers.last;
 			})
 		});
+		shouldUpdate = rocs.comparators.propertyComparator({
+			shouldUpdateTest = function() return false end
+		});
 		check = t.interface({});
 		entityCheck = t.instance("Workspace");
 		tag = "Test";
@@ -177,8 +180,12 @@ return function()
 			expect(dep:entities()()).to.equal(nil)
 
 			expect(counter.initialize).to.equal(0)
-			ent:addBaseComponent("Test", { one = 1})
+			ent:addBaseComponent("Test", { one = 1 })
 			expect(counter.initialize).to.equal(1)
+			expect(counter.added).to.equal(1)
+			expect(counter.updated).to.equal(1)
+
+			ent:getComponent("Test"):set("shouldUpdateTest", 1)
 
 			-- TODO: Write more tests for entities
 			expect(dep:entities()()).to.equal(ent.instance)
@@ -191,7 +198,6 @@ return function()
 			ent:removeBaseComponent("Test")
 			expect(counter.destroy).to.equal(1)
 
-			expect(counter.added).to.equal(1)
 			expect(counter.updated).to.equal(2)
 			expect(counter.removed).to.equal(1)
 
