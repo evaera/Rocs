@@ -60,7 +60,7 @@ function Rocs:registerMetadata(...)
 end
 
 function Rocs:registerSystemsIn(instance)
-	return Util.requireAllInAnd(instance, function (system)
+	return Util.requireAllInAnd(instance, function (_, system)
 		self:registerSystem(unpack(system))
 	end)
 end
