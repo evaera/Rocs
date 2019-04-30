@@ -131,6 +131,29 @@ return function (rocs)
 		}), ...)
 	end
 
+	function Reducers.exactly(value)
+		return function ()
+			return value
+		end
+	end
+
+	function Reducers.try(...)
+		local reducers = {...}
+
+		return function (values)
+			for _, reducer in ipairs(reducers) do
+				local result = reducer(values)
+
+				if result ~= nil then
+					return result
+				end
+			end
+
+			return nil
+		end
+	end
+
+	--? Should this be removed in favor of Reducers.try?
 	function Reducers.thisOr(reducer, defaultValue)
 		return function(values)
 			local result = reducer(values)
