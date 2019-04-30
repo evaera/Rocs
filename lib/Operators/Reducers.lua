@@ -91,7 +91,11 @@ return function (rocs)
 		end
 	end
 
-	function Reducers.propertyReducer(propertyReducers, disableMetadata)
+	function Reducers.structure(reducers, default, disableMetadata)
+		if default == nil then
+			default = Reducers.last
+		end
+
 		return function(values)
 			local properties = {}
 
@@ -114,7 +118,7 @@ return function (rocs)
 					reducedValue[propName] = Util.runReducer(reducible, propValues, Reducers.last)
 				else
 					reducedValue[propName] =
-						(propertyReducers[propName] or Reducers.last)(propValues, properties)
+						(reducers[propName] or default)(propValues, properties)
 				end
 			end
 
@@ -122,13 +126,9 @@ return function (rocs)
 		end
 	end
 
-	-- TODO: PropertyReducer with unknown fields using one
-	function Reducers.propertyReducerAll(reducer, ...)
-		return Reducers.propertyReducer(setmetatable({}, {
-			__index = function()
-				return reducer
-			end
-		}), ...)
+	-- TODO: structure with unknown fields using one
+	function Reducers.map(reducer, ...)
+		return Reducers.structure({}, reducer, ...)
 	end
 
 	function Reducers.exactly(value)
@@ -174,7 +174,7 @@ return function (rocs)
 
 	Reducers.truthyOr = makeOr(Reducers.truthy)
 	Reducers.falsyOr = makeOr(Reducers.falsy)
-	Reducers.default = Reducers.propertyReducer({})
+	Reducers.default = Reducers.structure({})
 
 	return Reducers
 end

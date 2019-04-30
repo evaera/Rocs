@@ -36,9 +36,9 @@ return function (rocs)
 
 	rocs:registerComponent({
 		name = Constants.LAYER_IDENTIFIER;
-		reducer = rocs.reducers.propertyReducerAll(
-			rocs.reducers.propertyReducerAll(
-				rocs.reducers.propertyReducerAll(
+		reducer = rocs.reducers.map(
+			rocs.reducers.map(
+				rocs.reducers.map(
 					rocs.reducers.last,
 					true
 				)

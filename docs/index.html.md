@@ -223,7 +223,7 @@ Because layers are just components, layer data is reduced if multiple layers wit
 ```lua
 rocs:registerComponent({
   name = "MyComponent";
-  reducer = rocs.reducers.propertyReducer({
+  reducer = rocs.reducers.structure({
     field = rocs.reducers.add;
   });
   check = t.interface({
@@ -314,21 +314,21 @@ Reducer | Description
 
 ## Utilities
 
-### propertyReducer
+### structure
 
 ```lua
-reducer = rocs.reducers.propertyReducer({
+reducer = rocs.reducers.structure({
   field = rocs.reducers.add;
 });
 ```
 
 Reduces a dictionary with a separate reducer for each field.
 
-### propertyReducerAll
+### map
 
 ```lua
-reducer = rocs.reducers.propertyReducerAll(
-  rocs.reducers.propertyReducer({
+reducer = rocs.reducers.map(
+  rocs.reducers.structure({
     one = rocs.reducers.multiply;
     two = table.concat;
     three = function (values)

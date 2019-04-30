@@ -25,8 +25,8 @@ local function makeTestCmp(rocs, callCounts)
 			[Rocs.metadata("Replicated")] = true;
 			testDefault = 5;
 		};
-		reducer = reducers.propertyReducer({
-			nested = reducers.propertyReducer({
+		reducer = reducers.structure({
+			nested = reducers.structure({
 				value = reducers.last;
 			})
 		});
@@ -49,7 +49,7 @@ return function()
 		local reducers = rocs.reducers
 		rocs:registerMetadata({
 			name = "MtTest";
-			reducer = reducers.propertyReducer({
+			reducer = reducers.structure({
 				num = reducers.add;
 			});
 			check = t.interface({
