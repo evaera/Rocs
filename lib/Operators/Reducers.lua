@@ -114,7 +114,7 @@ return function (rocs)
 					reducedValue[propName] = Util.runReducer(reducible, propValues, Reducers.last)
 				else
 					reducedValue[propName] =
-						(propertyReducers[propName] or Reducers.last)(propValues)
+						(propertyReducers[propName] or Reducers.last)(propValues, properties)
 				end
 			end
 
