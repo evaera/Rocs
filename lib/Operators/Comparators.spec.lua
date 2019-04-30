@@ -43,7 +43,7 @@ return function ()
 
 	describe("Comparator utilities", function()
 		it("should compare by property", function()
-			local compare = Comparators.propertyComparator({
+			local compare = Comparators.structure({
 				reference = Comparators.reference;
 				value = Comparators.value;
 				near = Comparators.near;

@@ -30,7 +30,7 @@ local function makeTestCmp(rocs, callCounts)
 				value = reducers.last;
 			})
 		});
-		shouldUpdate = rocs.comparators.propertyComparator({
+		shouldUpdate = rocs.comparators.structure({
 			shouldUpdateTest = function() return false end
 		});
 		check = t.interface({});

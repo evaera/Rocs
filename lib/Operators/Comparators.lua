@@ -19,7 +19,7 @@ return function(rocs)
 		end
 	end
 
-	function Comparators.propertyComparator(propertyComparators)
+	function Comparators.structure(propertyComparators)
 		return function (a, b)
 			for _, item in pairs({a, b}) do
 				for key in pairs(item) do
