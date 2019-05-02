@@ -1,6 +1,6 @@
 ## Todo
 - Write more tests (for registry functions, etc..)
-- Depend on components with field X and value Y 
+- Depend on components with field X and value Y
 - Serialize and restore in layer format
 - Make onInterval use consistent timing
 
@@ -24,3 +24,8 @@
 ## To make examples
 
 - Number type reducer (add/mult)
+
+workspace.GarageDoor [model] components: {GarageDoor, Open/Closed}
+- Button [part]
+- SlidingDoor [part]
+

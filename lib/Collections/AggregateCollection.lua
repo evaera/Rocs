@@ -172,7 +172,7 @@ function AggregateCollection:getAll(instance)
 
 	if self._entities[instance] ~= nil then
 		for _, aggregate in pairs(self._entities[instance]) do
-			aggregates[#aggregates + 1] = aggregate
+			table.insert(aggregates, aggregate)
 		end
 	end
 
@@ -193,11 +193,12 @@ function AggregateCollection:getStatic(componentResolvable)
 end
 
 function AggregateCollection:reduce(aggregate)
-	local values = { aggregate.components[Constants.SCOPE_BASE] }
+	local values = { aggregate.components[Constants.SCOPE_REMOTE] }
+	table.insert(values, aggregate.components[Constants.SCOPE_BASE])
 
 	for name, component in pairs(aggregate.components) do
-		if name ~= Constants.SCOPE_BASE then
-			values[#values + 1] = component
+		if Constants.RESERVED_SCOPES[name] == nil then
+			table.insert(values, component)
 		end
 	end
 

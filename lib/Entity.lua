@@ -4,16 +4,11 @@ local I = require(script.Parent.Interfaces)
 local t = require(script.Parent.t)
 local Constants = require(script.Parent.Constants)
 
-local RESERVED_SCOPES = {
-	[Constants.SCOPE_BASE] = true;
-	[Constants.SCOPE_REMOTE] = true;
-}
-
 local Entity = {}
 Entity.__index = Entity
 
 function Entity.new(rocs, instance, scope)
-	assert(RESERVED_SCOPES[scope] == nil, ("Entity scope cannot be %q"):format(scope))
+	assert(Constants.RESERVED_SCOPES[scope] == nil, ("Entity scope cannot be %q"):format(scope))
 
 	return setmetatable({
 		rocs = rocs;

@@ -18,7 +18,7 @@ Rocs.__index = Rocs
 
 function Rocs.new(name)
 	local self = setmetatable({
-		_name = name or "global";
+		name = name or "global";
 		_layerComponents = setmetatable({}, {
 			__mode = "kv";
 		});

@@ -1,4 +1,4 @@
-return {
+local Constants = {
 
 	METADATA_IDENTIFIER = "__rocs_metadata__";
 
@@ -16,3 +16,10 @@ return {
 	COMPARATOR_NEAR_DEFAULT = 0.001;
 
 }
+
+Constants.RESERVED_SCOPES = {
+	[Constants.SCOPE_BASE] = true;
+	[Constants.SCOPE_REMOTE] = true;
+}
+
+return Constants
