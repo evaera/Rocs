@@ -1,8 +1,17 @@
 ## Todo
 - Write more tests (for registry functions, etc..)
 - Depend on components with field X and value Y
+  - Rocs.Exists for a property simply being non-nil
+  - Use Rocs.None to ensure property is nil
+  - Similar to pattern matching
 - Serialize and restore in layer format
 - Make onInterval use consistent timing
+- Make calling behaviors auto register in rocs?
+  - How to determine self variable in this case?
+  - Rename "dependencies" to "queries"?
+  - A way to trigger a one-time behavior similar to onUpdated from a query, so you can use queries generically
+    - `findOne`, `findAll`
+    - Shouldn't be "registered" like other behaviors.
 
 ### Systems
 - Replication of components with mask (A system that operates on metadata)
