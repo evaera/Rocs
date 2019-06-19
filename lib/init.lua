@@ -66,7 +66,7 @@ function Rocs:registerSystemsIn(instance)
 end
 
 function Rocs:registerComponentsIn(instance)
-	return Util.requireAllInAnd(instance, self.registerCompoent, self)
+	return Util.requireAllInAnd(instance, self.registerComponent, self)
 end
 
 function Rocs:registerMetadataIn(instance)
