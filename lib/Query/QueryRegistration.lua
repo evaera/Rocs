@@ -75,7 +75,7 @@ function Dependency:_connectEvents(system)
 
 			spawn(function()
 				while continue do
-					local dt = wait(behavior.length)
+					local dt = wait(behavior.length) -- TODO: Make use consistent timing
 
 					if continue then
 						behavior.handler(system, dt)

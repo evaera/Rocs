@@ -1,12 +1,18 @@
 ## Todo
 - Write more tests (for registry functions, etc..)
+- Serialize and restore in layer format
+- Make onInterval use consistent timing
+
+
+### Queries
+- Optimize on both hasEntity and hasComponent
+- Change registration to only occur when onAdded is called, etc
+- Implement any, has optimization where if all have entity filter then they are combined, but if one doesn't then it drops it
 - Depend on components with field X and value Y
   - Rocs.Exists for a property simply being non-nil
   - Use Rocs.None to ensure property is nil
   - Similar to pattern matching
-- Serialize and restore in layer format
-- Make onInterval use consistent timing
-- Make calling behaviors auto register in rocs?
+- Make calling behaviors auto register in rocs
   - How to determine self variable in this case?
   - Rename "dependencies" to "queries"?
   - A way to trigger a one-time behavior similar to onUpdated from a query, so you can use queries generically
