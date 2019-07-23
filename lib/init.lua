@@ -58,23 +58,6 @@ function Rocs:getEntity(instance, scope)
 	return Entity.new(self, instance, scope)
 end
 
-function Rocs:makeUniqueComponent(componentResolvable)
-	assert(I.ComponentResolvable(componentResolvable))
-
-	local staticAggregate = self._aggregates:getStatic(componentResolvable)
-
-	local component
-	component = setmetatable({
-		new = function (...)
-			return setmetatable(staticAggregate.new(...), component)
-		end;
-	}, staticAggregate)
-	component.__index = component
-	component.__tostring = staticAggregate.__tostring
-
-	return component
-end
-
 function Rocs:_dispatchComponentChange(aggregate, data)
 	local lastData = aggregate.data
 	local newData = self._aggregates:reduce(aggregate)
