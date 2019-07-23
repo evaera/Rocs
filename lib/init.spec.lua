@@ -34,7 +34,7 @@ local function makeTestCmp(rocs, callCounts)
 			shouldUpdateTest = function() return false end
 		});
 		check = t.interface({});
-		entityCheck = t.instance("Workspace");
+		entityCheck = t.union(t.instance("Workspace"), t.instance("DataModel"));
 		tag = "Test";
 	}
 end
@@ -104,6 +104,23 @@ return function()
 			ent:removeComponent(testCmp)
 			ent:removeBaseComponent(testCmp)
 			expect(callCounts.testCmpDestroy).to.equal(1)
+		end)
+
+		it("should allow looping over components", function()
+			local entWorkspace = rocs:getEntity(workspace, "foo")
+			entWorkspace:addComponent(testCmp)
+
+			local componentArray = rocs:getComponents(testCmp)
+
+			expect(#componentArray).to.equal(1)
+
+			entWorkspace:addBaseComponent(testCmp, {num = 1})
+			expect(#componentArray).to.equal(1)
+
+			local entGame = rocs:getEntity(game, "foo")
+			entGame:addComponent(testCmp)
+
+			expect(#componentArray).to.equal(2)
 		end)
 	end)
 

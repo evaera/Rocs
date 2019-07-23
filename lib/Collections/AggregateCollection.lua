@@ -13,6 +13,7 @@ function AggregateCollection.new(rocs)
 		rocs = rocs;
 		_components = {};
 		_entities = {};
+		_aggregates = {};
 		_tags = {};
 	}, AggregateCollection)
 end
@@ -103,7 +104,21 @@ end
 function AggregateCollection:deconstruct(aggregate)
 	-- destroy is called in removeComponent for correct timing
 
-	self._entities[aggregate.instance][getmetatable(aggregate)] = nil
+	local staticAggregate = getmetatable(aggregate)
+	self._entities[aggregate.instance][staticAggregate] = nil
+
+	local array = self._aggregates[staticAggregate]
+
+	for i = 1, #array do
+		if array[i] == aggregate then
+			table.remove(array, i)
+			break
+		end
+	end
+
+	if #array == 0 then
+		self._aggregates[staticAggregate] = nil
+	end
 
 	if next(self._entities[aggregate.instance]) == nil then
 		self._entities[aggregate.instance] = nil
@@ -117,9 +132,15 @@ function AggregateCollection:addComponent(instance, staticAggregate, scope, data
 		self._entities[instance] = {}
 	end
 
+	if self._aggregates[staticAggregate] == nil then
+		self._aggregates[staticAggregate] = {}
+	end
+
 	if self._entities[instance][staticAggregate] == nil then
-		self._entities[instance][staticAggregate] =
-			self:construct(staticAggregate, instance)
+		local aggregate = self:construct(staticAggregate, instance)
+		self._entities[instance][staticAggregate] = aggregate
+
+		table.insert(self._aggregates[staticAggregate], aggregate)
 	end
 
 	self._entities[instance][staticAggregate].components[scope] = data

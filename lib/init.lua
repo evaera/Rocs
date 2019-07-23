@@ -43,6 +43,10 @@ function Rocs:registerMetadata(...)
 	return self._metadata:register(...)
 end
 
+function Rocs:getComponents(componentResolvable)
+	return self._aggregates._aggregates[self._aggregates:getStatic(componentResolvable)] or {}
+end
+
 function Rocs:registerComponentsIn(instance)
 	return Util.requireAllInAnd(instance, self.registerCompoent, self)
 end
