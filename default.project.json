@@ -1,0 +1,19 @@
+{
+	"name": "Rocs",
+	"servePort": 8000,
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+			"Rocs": {
+				"$path": "lib"
+			}
+		},
+		"TestService": {
+			"$className": "TestService",
+			"TestEZ": {
+				"$path": "vendor/testez/lib"
+			}
+		}
+	}
+}

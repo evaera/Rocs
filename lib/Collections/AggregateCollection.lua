@@ -1,5 +1,5 @@
 local CollectionService = game:GetService("CollectionService")
-local inspect = require(script.Parent.Parent.Inspect).inspect
+-- local inspect = require(script.Parent.Parent.Inspect).inspect
 
 local I = require(script.Parent.Parent.Interfaces)
 local Util = require(script.Parent.Parent.Util)

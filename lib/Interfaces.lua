@@ -40,10 +40,4 @@ I.ComponentAggregate = t.interface({
 
 I.ComponentResolvable = t.union(t.string, I.StaticAggregate)
 
-I.SystemDefinition = t.intersection(I.InitDestroyable, t.interface({
-	name = t.string;
-}))
-
-I.SystemDependencies = t.array(t.table)
-
 return I

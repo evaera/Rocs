@@ -1,4 +1,4 @@
-local inspect = require(script.Parent.Parent.Inspect).inspect
+-- local inspect = require(script.Parent.Parent.Inspect).inspect
 local Constants = require(script.Parent.Parent.Constants)
 
 return function (rocs)
@@ -22,7 +22,7 @@ return function (rocs)
 						if not rocs._metadata:get(instance) then
 							local entity = rocs:getEntity(instance, e.lastData[rocs.metadata(Constants.LAYER_IDENTIFIER)])
 
-							for component, data in pairs(components) do
+							for component in pairs(components) do
 								if not e.data[instance] or not e.data[instance][component] then
 									entity:removeComponent(component)
 								end
