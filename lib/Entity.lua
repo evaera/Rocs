@@ -66,6 +66,10 @@ function Entity:getComponent(componentResolvable)
 	)
 end
 
+function Entity:getAllComponents()
+	return self.rocs._aggregates:getAll(self.instance)
+end
+
 function Entity:addLayer(layer, layerId, componentResolvable)
 	layerId = layerId or HttpService:GenerateGUID()
 
