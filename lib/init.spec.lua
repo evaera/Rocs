@@ -45,6 +45,9 @@ return function()
 		local testCmp = makeTestCmp(rocs, callCounts)
 		rocs:registerComponent(testCmp)
 
+		rocs:registerLifecycleHook("onAdded", print)
+		rocs:registerComponentHook(testCmp, "global", print)
+
 		local reducers = rocs.reducers
 		local mtTest = rocs:registerComponent({
 			name = "MtTest";

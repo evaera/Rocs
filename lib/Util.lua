@@ -1,5 +1,12 @@
 local Util = {}
 
+Util.easyIndex = {
+	__index = function(self, k)
+		self[k] = {}
+		return self[k]
+	end
+}
+
 function Util.assign(toObj, ...)
 	for _, fromObj in ipairs({...}) do
 		for key, value in pairs(fromObj) do
