@@ -24,6 +24,7 @@ I.ComponentDefinition = t.intersection(I.InitDestroyable, I.Reducible, t.interfa
 	setProp = t.none;
 	onAdded = t.optional(t.callback);
 	onUpdated = t.optional(t.callback);
+	onParentUpdated = t.optional(t.callback);
 	onRemoved = t.optional(t.callback);
 	shouldUpdate = t.optional(t.callback);
 }))

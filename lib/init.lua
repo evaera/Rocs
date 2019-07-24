@@ -17,10 +17,13 @@ Rocs.__index = Rocs
 
 function Rocs.new(name)
 	local self = setmetatable({
-		name = name or "global";
-		_layerComponents = setmetatable({}, {
-			__mode = "kv";
-		});
+		name = name or "global",
+		_layerComponents = setmetatable(
+			{},
+			{
+				__mode = "kv"
+			}
+		)
 	}, Rocs)
 
 	self._aggregates = AggregateCollection.new(self)
@@ -31,7 +34,6 @@ end
 function Rocs:registerComponent(...)
 	return self._aggregates:register(...)
 end
-
 
 function Rocs:getComponents(componentResolvable)
 	return self._aggregates._aggregates[self._aggregates:getStatic(componentResolvable)] or {}
@@ -48,7 +50,7 @@ function Rocs:getEntity(instance, scope)
 	return Entity.new(self, instance, scope)
 end
 
-function Rocs:_dispatchComponentChange(aggregate, data)
+function Rocs:_dispatchComponentChange(aggregate)
 	local lastData = aggregate.data
 	local newData = self._aggregates:reduce(aggregate)
 
@@ -63,6 +65,16 @@ function Rocs:_dispatchComponentChange(aggregate, data)
 
 	if (staticAggregate.shouldUpdate or self.comparators.default)(newData, lastData) then
 		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_UPDATED)
+
+		local childAggregates = self._aggregates:getAll(aggregate)
+		for i = 1, #childAggregates do
+			local childAggregate = childAggregates[i]
+
+			self:_dispatchLifecycle(
+				childAggregate,
+				Constants.LIFECYCLE_PARENT_UPDATED
+			)
+		end
 	end
 
 	if newData == nil then
@@ -82,10 +94,7 @@ function Rocs:_getLayerComponent(layerId, componentResolvable)
 	if self._layerComponents[layerId] == nil then
 		self._layerComponents[layerId] = self:makeUniqueComponent(staticAggregate)
 	else
-		assert(
-			staticAggregate == self._layerComponents[layerId],
-			"Layer component mismatched between addLayer calls"
-		)
+		assert(staticAggregate == self._layerComponents[layerId], "Layer component mismatched between addLayer calls")
 	end
 
 	return self._layerComponents[layerId]

@@ -138,32 +138,42 @@ function AggregateCollection:addComponent(instance, staticAggregate, scope, data
 		self._aggregates[staticAggregate] = {}
 	end
 
-	if self._entities[instance][staticAggregate] == nil then
-		local aggregate = self:construct(staticAggregate, instance)
+	local aggregate = self._entities[instance][staticAggregate]
+	local isNew = false
+
+	if aggregate == nil then
+		isNew = true
+		aggregate = self:construct(staticAggregate, instance)
 		self._entities[instance][staticAggregate] = aggregate
 
 		table.insert(self._aggregates[staticAggregate], aggregate)
 	end
 
-	self._entities[instance][staticAggregate].components[scope] = data
+	aggregate.components[scope] = data
 
-	self.rocs:_dispatchComponentChange(
-		self._entities[instance][staticAggregate],
-		data
-	)
+	self.rocs:_dispatchComponentChange(aggregate)
 
 	if metacomponents then
 		for componentResolvable, metacomponentData in pairs(metacomponents) do
 			local metacomponentStaticAggregate = self:getStatic(componentResolvable)
 
-			self:addComponent(
-				self._entities[instance][staticAggregate],
+			local metacomponentAggregate, wasNew = self:addComponent(
+				aggregate,
 				metacomponentStaticAggregate,
 				scope,
 				metacomponentData
 			)
+
+			if wasNew then
+				self.rocs:_dispatchLifecycle(
+					metacomponentAggregate,
+					Constants.LIFECYCLE_PARENT_UPDATED
+				)
+			end
 		end
 	end
+
+	return aggregate, isNew
 end
 
 function AggregateCollection:removeAllComponents(instance)

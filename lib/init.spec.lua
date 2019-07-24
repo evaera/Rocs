@@ -53,7 +53,10 @@ return function()
 			});
 			check = t.interface({
 				num = t.number;
-			})
+			});
+			onParentUpdated = function(self)
+				callCounts:call("onParentUpdated")
+			end
 		})
 
 		it("should apply components", function()
@@ -68,6 +71,7 @@ return function()
 				}
 			})
 			expect(callCounts.testCmpInit).to.equal(1)
+			expect(callCounts.onParentUpdated).to.equal(1)
 			ent:addBaseComponent("Test", {
 				two = 2;
 			}, {
@@ -75,6 +79,7 @@ return function()
 					num = 2;
 				}
 			})
+			expect(callCounts.onParentUpdated).to.equal(2)
 
 			local cmpAg = rocs._aggregates._entities[workspace] and rocs._aggregates._entities[workspace][testCmp]
 
@@ -110,6 +115,7 @@ return function()
 			ent:removeComponent(testCmp)
 			ent:removeBaseComponent(testCmp)
 			expect(callCounts.testCmpDestroy).to.equal(1)
+			expect(callCounts.onParentUpdated).to.equal(5)
 		end)
 
 		it("should allow looping over components", function()

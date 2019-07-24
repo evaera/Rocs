@@ -3,6 +3,7 @@ local Constants = {
 	LIFECYCLE_ADDED = "onAdded";
 	LIFECYCLE_REMOVED = "onRemoved";
 	LIFECYCLE_UPDATED = "onUpdated";
+	LIFECYCLE_PARENT_UPDATED = "onParentUpdated";
 
 	ALL_COMPONENTS = {};
 	None = {};
