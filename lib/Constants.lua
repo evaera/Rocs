@@ -8,7 +8,6 @@ local Constants = {
 	ALL_COMPONENTS = {};
 	None = {};
 
-	LAYER_IDENTIFIER = "_layer";
 	SCOPE_BASE = "_base";
 	SCOPE_REMOTE = "_remote";
 

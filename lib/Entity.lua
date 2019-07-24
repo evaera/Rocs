@@ -70,44 +70,4 @@ function Entity:getAllComponents()
 	return self.rocs._aggregates:getAll(self.instance)
 end
 
-function Entity:addLayer(layer, layerId, componentResolvable)
-	layerId = layerId or HttpService:GenerateGUID()
-
-	local layerComponent = self.rocs:_getLayerComponent(
-		layerId,
-		componentResolvable or self.rocs._aggregates:getStatic(Constants.LAYER_IDENTIFIER)
-	)
-
-	assert(layerComponent ~= nil)
-
-	layer[self.rocs.metadata(Constants.LAYER_IDENTIFIER)] = layerId
-
-	self.rocs._aggregates:addComponent(
-		self.instance,
-		layerComponent,
-		self.scope,
-		layer
-	)
-
-	return layerId
-end
-
-function Entity:addSelfLayer(layerData, ...)
-	return self:addLayer({
-		[self.instance] = layerData
-	}, ...)
-end
-
-function Entity:removeLayer(layerId)
-	local layerComponent = self.rocs._layerComponents[layerId]
-
-	assert(layerComponent ~= nil, "Layer ID invalid")
-
-	self.rocs._aggregates:removeComponent(
-		self.instance,
-		layerComponent,
-		self.scope
-	)
-end
-
 return Entity

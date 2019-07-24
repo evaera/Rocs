@@ -18,12 +18,6 @@ Rocs.__index = Rocs
 function Rocs.new(name)
 	local self = setmetatable({
 		name = name or "global",
-		_layerComponents = setmetatable(
-			{},
-			{
-				__mode = "kv"
-			}
-		)
 	}, Rocs)
 
 	self._aggregates = AggregateCollection.new(self)
@@ -86,18 +80,6 @@ function Rocs:_dispatchLifecycle(aggregate, stage)
 	if aggregate[stage] then
 		aggregate[stage](self:getEntity(aggregate.instance, aggregate._address))
 	end
-end
-
-function Rocs:_getLayerComponent(layerId, componentResolvable)
-	local staticAggregate = self._aggregates:getStatic(componentResolvable)
-
-	if self._layerComponents[layerId] == nil then
-		self._layerComponents[layerId] = self:makeUniqueComponent(staticAggregate)
-	else
-		assert(staticAggregate == self._layerComponents[layerId], "Layer component mismatched between addLayer calls")
-	end
-
-	return self._layerComponents[layerId]
 end
 
 return Rocs
