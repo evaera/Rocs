@@ -34,10 +34,10 @@ function Entity:_getComponentOpValues(componentResolvable, scope, ...)
 		...
 end
 
-function Entity:addComponent(componentResolvable, data)
+function Entity:addComponent(componentResolvable, data, metacomponents)
 	warn("ADD", self.instance, componentResolvable, data)
 	return self.rocs._aggregates:addComponent(
-		self:_getComponentOpValues(componentResolvable, nil, data or {})
+		self:_getComponentOpValues(componentResolvable, nil, data or {}, metacomponents)
 	)
 end
 
@@ -48,9 +48,9 @@ function Entity:removeComponent(componentResolvable)
 	)
 end
 
-function Entity:addBaseComponent(componentResolvable, data)
+function Entity:addBaseComponent(componentResolvable, data, metacomponents)
 	return self.rocs._aggregates:addComponent(
-		self:_getComponentOpValues(componentResolvable, Constants.SCOPE_BASE, data or {})
+		self:_getComponentOpValues(componentResolvable, Constants.SCOPE_BASE, data or {}, metacomponents)
 	)
 end
 

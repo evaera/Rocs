@@ -123,9 +123,11 @@ function AggregateCollection:deconstruct(aggregate)
 	if next(self._entities[aggregate.instance]) == nil then
 		self._entities[aggregate.instance] = nil
 	end
+
+	self:removeAllComponents(aggregate)
 end
 
-function AggregateCollection:addComponent(instance, staticAggregate, scope, data)
+function AggregateCollection:addComponent(instance, staticAggregate, scope, data, metacomponents)
 	assert(Util.runEntityCheck(staticAggregate, instance))
 
 	if self._entities[instance] == nil then
@@ -149,6 +151,35 @@ function AggregateCollection:addComponent(instance, staticAggregate, scope, data
 		self._entities[instance][staticAggregate],
 		data
 	)
+
+	if metacomponents then
+		for componentResolvable, metacomponentData in pairs(metacomponents) do
+			local metacomponentStaticAggregate = self:getStatic(componentResolvable)
+
+			self:addComponent(
+				self._entities[instance][staticAggregate],
+				metacomponentStaticAggregate,
+				scope,
+				metacomponentData
+			)
+		end
+	end
+end
+
+function AggregateCollection:removeAllComponents(instance)
+	if self._entities[instance] == nil then
+		return
+	end
+
+	for _, aggregate in ipairs(self:getAll(instance)) do
+		self:deconstruct(aggregate)
+
+		self.rocs:_dispatchComponentChange(aggregate)
+
+		if aggregate.destroy then
+			aggregate:destroy()
+		end
+	end
 end
 
 function AggregateCollection:removeComponent(instance, staticAggregate, scope)
@@ -165,7 +196,7 @@ function AggregateCollection:removeComponent(instance, staticAggregate, scope)
 
 	local shouldDestroy = next(aggregate.components) == nil
 	if shouldDestroy then
-		self:deconstruct(aggregate, staticAggregate)
+		self:deconstruct(aggregate)
 	end
 
 	self.rocs:_dispatchComponentChange(
