@@ -1,7 +1,5 @@
 local Constants = {
 
-	METADATA_IDENTIFIER = "__rocs_metadata__";
-
 	LIFECYCLE_ADDED = "onAdded";
 	LIFECYCLE_REMOVED = "onRemoved";
 	LIFECYCLE_UPDATED = "onUpdated";

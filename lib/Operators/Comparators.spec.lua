@@ -1,4 +1,4 @@
-local Comparators = require(script.Parent.Comparators)()
+local Comparators = require(script.Parent.Comparators)
 local Constants = require(script.Parent.Parent.Constants)
 local Util = require(script.Parent.Parent.Util)
 

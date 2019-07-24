@@ -3,14 +3,15 @@ local Entity = require(script.Entity)
 local Util = require(script.Util)
 local t = require(script.t)
 local Constants = require(script.Constants)
-local makeReducers = require(script.Operators.Reducers)
-local makeComparators = require(script.Operators.Comparators)
+local Reducers = require(script.Operators.Reducers)
+local Comparators = require(script.Operators.Comparators)
 
 local AggregateCollection = require(script.Collections.AggregateCollection)
-local MetadataCollection = require(script.Collections.MetadataCollection)
 
 local Rocs = {
 	None = Constants.None;
+	reducers = Reducers;
+	comparators = Comparators;
 }
 Rocs.__index = Rocs
 
@@ -23,25 +24,14 @@ function Rocs.new(name)
 	}, Rocs)
 
 	self._aggregates = AggregateCollection.new(self)
-	self._metadata = MetadataCollection.new(self)
-
-	self.reducers = makeReducers(self)
-	self.comparators = makeComparators(self)
 
 	return self
-end
-
-function Rocs.metadata(name)
-	return Constants.METADATA_IDENTIFIER .. name
 end
 
 function Rocs:registerComponent(...)
 	return self._aggregates:register(...)
 end
 
-function Rocs:registerMetadata(...)
-	return self._metadata:register(...)
-end
 
 function Rocs:getComponents(componentResolvable)
 	return self._aggregates._aggregates[self._aggregates:getStatic(componentResolvable)] or {}
@@ -49,10 +39,6 @@ end
 
 function Rocs:registerComponentsIn(instance)
 	return Util.requireAllInAnd(instance, self.registerCompoent, self)
-end
-
-function Rocs:registerMetadataIn(instance)
-	return Util.requireAllInAnd(instance, self.registerMetadata, self)
 end
 
 local getEntityCheck = t.tuple(t.union(t.Instance, t.table), t.string)

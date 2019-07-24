@@ -22,7 +22,6 @@ local function makeTestCmp(rocs, callCounts)
 			callCounts:call("testCmpDestroy")
 		end;
 		defaults = {
-			[Rocs.metadata("Replicated")] = true;
 			testDefault = 5;
 		};
 		reducer = reducers.structure({
@@ -47,7 +46,7 @@ return function()
 		rocs:registerComponent(testCmp)
 
 		local reducers = rocs.reducers
-		rocs:registerMetadata({
+		local mtTest = rocs:registerComponent({
 			name = "MtTest";
 			reducer = reducers.structure({
 				num = reducers.add;
@@ -63,15 +62,17 @@ return function()
 			expect(callCounts.testCmpInit).to.equal(0)
 			ent:addComponent(testCmp, {
 				one = 1;
-				[Rocs.metadata("MtTest")] = {
-					num = 2;
+			}, {
+				MtTest = {
+					num = 1;
 				}
 			})
 			expect(callCounts.testCmpInit).to.equal(1)
 			ent:addBaseComponent("Test", {
 				two = 2;
-				[Rocs.metadata("MtTest")] = {
-					num = 1;
+			}, {
+				MtTest = {
+					num = 2;
 				}
 			})
 
@@ -91,7 +92,12 @@ return function()
 			expect(cmpAg:get("two")).to.equal(2)
 			expect(cmpAg:get("testDefault")).to.equal(5)
 
-			expect(cmpAg:get(Rocs.metadata("MtTest"), "num")).to.equal(3)
+
+			local cmpAgEnt = rocs._aggregates._entities[cmpAg][mtTest]
+
+			expect(cmpAgEnt).to.be.ok()
+
+			expect(cmpAgEnt:get("num")).to.equal(3)
 
 			expect(cmpAg:get("three")).to.never.be.ok()
 			cmpAg:set("three", 3)
