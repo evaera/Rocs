@@ -139,8 +139,7 @@ end
 function System:onInterval(interval, hook)
 	table.insert(self.intervals, {
 		Interval = interval,
-		Hook = hook,
-		LastInvoke = 0
+		Hook = hook
 	})
 
 	if #self.entities > 0 then
