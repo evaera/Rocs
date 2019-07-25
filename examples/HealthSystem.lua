@@ -9,7 +9,45 @@ local dep = Deps:all(
 	)
 )
 
-local all = Deps:all("Health", "Regen", Rocs.metadata("Replicated"))
+local all = Deps:all("Health", "Regen")   --, Rocs.metadata("Replicated"))
+
+
+
+
+local selector = Rocs.select(
+	Rocs.selectors.all {
+		Health = {
+			Rocs.selectors.hasmeta("Replicated"),
+			Value = Rocs.selector.geq(50)
+		},
+		 Rocs.selectors.hascomponent(
+			"Health",
+			{
+				Value = Rocs.selector.geq(50)
+			},
+			{
+				Replicated = true
+			}
+		)
+		"Regen",
+		Rocs.selectors.any(
+			"SuperBigHealth",
+			"MiniHealth"
+		),
+		Rocs.selectors.class("Humanoid"),
+		Rocs.selectors.check(function(entity) return Players:GetPlayerFromCharacter(entity.instance.Parent) ~= nil end)
+	}
+)
+local selecto2 = Rocs.selectors.any("Slowdown", "Poison")
+
+selector:onAdded(
+	function(entity)
+		print("A regenerating unit has appeared: ", entity.instance:GetFullName())
+	end
+)
+
+
+
 
 Rocs.query:all(
 	Rocs.query:isEntity(someHumanoid),

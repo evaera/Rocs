@@ -1,18 +1,5 @@
-## CORE
-- state management, reducers, lifetime events (Aurora)
-    - metadata
-    - layers
-    - goal: making sure your state doesn't get clobbered
-- systems (processes groups of behaviors) (Entity)
-    - behaviors (code that's run one or more times based on some constraints)
-        - queries (generic ways to get info about state)
-        - state (combination of all entities and components and systems in a game at some time)
-    - components (labels with data that can be aggregated thru reducers)
-    - aggregates (has lifetime events)
-    - goal: "entity-component" strategy for optimization over single instances of classes
-
 ## NEW CORE
-- we can apply labels (components) to objects that contain some data, plus metadata
+- we can apply labels (components) to objects that contain some data, plus meta-components
 - labels on an object can be reduced (prevents state clobbering, nice state changes, etc) into aggregates
 - we can apply aggregates to the objects (like setting properties of Instances)
 - we want to query all objects that have a certain label with their aggregates
@@ -20,22 +7,20 @@
 
 ## REPLICATION -- USES --> CORE
 - replication (propagate additions/changes/removals, masking)
+- Allow registration of serializers and deserializers for network purposes
+	- For example, need one for aggregates so we can send components which are on aggregates.
+
+## LAYERS
+- target objects? (primitives which point to other objects)
+- Components which describe atomic changes to other components.
+- Format should be standardized and used in replication or applying multiple components at once.
 
 ## SELECTOR -- USES --> CORE
 - selector (masking over more than one label, inner properties)
 
-## SYSTEM (shorthand) -- USES --> CORE/SELECTOR
-- shorthand for writing nice structures
-- reconstruction/deconstruction for timed queries
-
 OnInterval(20, function(system) ... end)
 
-- state management, reducers, lifetime events
-    - components
-        - reduced into aggregates
-        - get aggregate result and do something with it
-        - can apply multiple components on one thing and have it all count
-    - 
+-----------------------------------
 
 # Todo
 - Write more tests (for registry functions, etc..)
