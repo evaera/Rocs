@@ -16,11 +16,7 @@ local all = Deps:all("Health", "Regen")   --, Rocs.metadata("Replicated"))
 
 local selector = Rocs.select(
 	Rocs.selectors.all {
-		Health = {
-			Rocs.selectors.hasmeta("Replicated"),
-			Value = Rocs.selector.geq(50)
-		},
-		 Rocs.selectors.hascomponent(
+		Rocs.selectors.hascomponent(
 			"Health",
 			{
 				Value = Rocs.selector.geq(50)
