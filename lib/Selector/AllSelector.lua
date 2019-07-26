@@ -1,5 +1,4 @@
 local BaseSelector = require(script.Parent.BaseSelector)
-local ComponentSelector = require(script.Parent.ComponentSelector)
 local Util = require(script.Parent.Util)
 
 local AllSelector = setmetatable({}, BaseSelector)
@@ -21,60 +20,20 @@ function AllSelector.new(rocs, ...)
 	return self
 end
 
-function AllSelector:setup()
-	if self._ready then
-		return
-	end
-	self._ready = true
-
-	for _, selector in pairs(self._selectors) do
-		selector:setup()
-
-		selector:onAdded(
-			function(aggregate, ...)
-				local entity = self._rocs:getEntity(aggregate.instance)
-				if self:check(entity) then
-					self:_trigger("onAdded", aggregate, ...)
-				end
-			end
-		)
-
-		selector:onRemoved(
-			function(...)
-				self:_trigger("onRemoved", ...)
-			end
-		)
-
-		selector:onChanged(
-			function(...)
-				self:_trigger("onChanged", ...)
-			end
-		)
-
-		selector:onParentChanged(
-			function(...)
-				self:_trigger("onParentChanged", ...)
-			end
-		)
-	end
-
-	return self
-end
-
-function AllSelector:get()
-	local cache = {}
+function AllSelector:instances()
+	local instances = {}
 
 	if #self._selectors > 0 then
 		-- get first selection of entities
-		for _, entity in pairs(self._selectors[1]:get()) do
-			cache[entity] = true
+		for _, entity in pairs(self._selectors[1]:instances()) do
+			instances[entity] = true
 		end
 
 		-- filter the ones out that don't match function checks
 		for _, check in pairs(self._checks) do
-			for entity in pairs(cache) do
-				if not check(entity) then
-					cache[entity] = nil
+			for instance in pairs(instances) do
+				if not check(instance) then
+					instances[instance] = nil
 				end
 			end
 		end
@@ -82,32 +41,32 @@ function AllSelector:get()
 		-- filter the ones out that don't match other selectors
 		for i = 2, #self._selectors do
 			local selector = self._selectors[i]
-			for entity in pairs(cache) do
-				if not selector:check(entity) then
-					cache[entity] = nil
+			for instance in pairs(instances) do
+				if not selector:check(instance) then
+					instances[instance] = nil
 				end
 			end
 		end
 
 		-- turn lookup into array
-		for entity in pairs(cache) do
-			table.insert(cache, entity)
-			cache[entity] = nil
+		for instance in pairs(instances) do
+			table.insert(instances, instance)
+			instances[instance] = nil
 		end
 	end
 
-	return cache
+	return instances
 end
 
-function AllSelector:check(entity)
+function AllSelector:check(instance)
 	for _, check in pairs(self._checks) do
-		if not check(entity) then
+		if not check(instance) then
 			return false
 		end
 	end
 
 	for _, selector in pairs(self._selectors) do
-		if not selector:check(entity) then
+		if not selector:check(instance) then
 			return false
 		end
 	end

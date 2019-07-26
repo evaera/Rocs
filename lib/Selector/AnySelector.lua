@@ -10,7 +10,7 @@ function AnySelector.new(rocs, ...)
 	self._selectors = {}
 	for _, property in pairs(...) do
 		if type(property) == "function" then
-			error("Cannot have check functions in selectors.any", 2)
+			error("Cannot have functions in selectors.any", 2)
 		else
 			table.insert(self._selectors, Util.resolve(property))
 		end
@@ -19,69 +19,30 @@ function AnySelector.new(rocs, ...)
 	return self
 end
 
-function AnySelector:setup()
-	if self._ready then
-		return
-	end
-	self._ready = true
-
-	for _, selector in pairs(self._selectors) do
-		selector:setup()
-
-		selector:onAdded(
-			function(...)
-				self:_trigger("onAdded", ...)
-			end
-		)
-
-		selector:onRemoved(
-			function(entity, ...)
-				if not self:check(entity) then
-					self:_trigger("onRemoved", entity, ...)
-				end
-			end
-		)
-
-		selector:onChanged(
-			function(...)
-				self:_trigger("onChanged", ...)
-			end
-		)
-
-		selector:onParentChanged(
-			function(...)
-				self:_trigger("onParentChanged", ...)
-			end
-		)
-	end
-
-	return self
-end
-
-function AnySelector:get()
-	local cache = {}
+function AnySelector:instances()
+	local instances = {}
 
 	if #self._selectors > 0 then
 		-- accumulate entities into cache, only-once
 		for _, selector in pairs(self._selectors) do
-			for _, entity in pairs(selector:get()) do
-				cache[entity] = true
+			for _, instance in pairs(selector:instances()) do
+				instances[instance] = true
 			end
 		end
 
 		-- turn lookup into array
-		for entity in pairs(cache) do
-			table.insert(cache, entity)
-			cache[entity] = nil
+		for instance in pairs(instances) do
+			table.insert(instances, instance)
+			instances[instance] = nil
 		end
 	end
 
-	return cache
+	return instances
 end
 
-function AnySelector:check(entity)
+function AnySelector:check(instance)
 	for _, selector in pairs(self._selectors) do
-		if selector:check(entity) then
+		if selector:check(instance) then
 			return true
 		end
 	end

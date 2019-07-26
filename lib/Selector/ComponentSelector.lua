@@ -4,78 +4,46 @@ local ComponentSelector = setmetatable({}, BaseSelector)
 ComponentSelector.__index = ComponentSelector
 
 function ComponentSelector.new(rocs, componentResolvable, properties, metaComponents)
+	assert(componentResolvable)
 	local self = setmetatable(BaseSelector.new(rocs), ComponentSelector)
 
 	self._componentResolvable = componentResolvable
 	self._properties = properties
 	self._metaComponents = metaComponents
 
-	-- TODO handle properties and metaComponents
-
 	return self
 end
 
--- TODO handle properties and metaComponents
-function ComponentSelector:setup()
-	if self.ready then
-		return
-	end
-	self.ready = true
-
-	self._rocs:registerComponentHook(
-		self._componentResolvable,
-		"onAdded",
-		function(...)
-			self:_trigger("onAdded", ...)
-		end
-	)
-
-	self._rocs:registerComponentHook(
-		self._componentResolvable,
-		"onRemoved",
-		function(...)
-			self:_trigger("onRemoved", ...)
-		end
-	)
-
-	self._rocs:registerComponentHook(
-		self._componentResolvable,
-		"onUpdated",
-		function(...)
-			self:_trigger("onUpdated", ...)
-		end
-	)
-
-	self._rocs:registerComponentHook(
-		self._componentResolvable,
-		"onParentUpdated",
-		function(...)
-			self:_trigger("onParentUpdated", ...)
-		end
-	)
-
-	return self
-end
-
-function ComponentSelector:get()
-	local cache = {}
+function ComponentSelector:instances()
+	local instances = {}
 
 	for _, component in pairs(self._rocs:getComponents(self._componentResolvable)) do
-		local entity = self._rocs:getEntity(component.instance)
-		cache[entity] = true
+		instances[component.instance] = true
 	end
 
-	for entity in pairs(cache) do
-		table.insert(cache, entity)
-		cache[entity] = nil
+	for instance in pairs(instances) do
+		table.insert(instances, instance)
+		instances[instance] = nil
 	end
 
-	return cache
+	return instances
 end
 
--- TODO handle properties and metaComponents
-function ComponentSelector:check(entity)
-	return entity:getComponent(self._componentResolvable) ~= nil
+function ComponentSelector:check(instance)
+	local component = self._rocs:getEntity(instance):getComponent(self._componentResolvable)
+	if not component then
+		return false
+	end
+
+	if self.properties then
+		-- TODO handle properties
+	end
+
+	if self.metaComponents then
+		-- TODO handle metacomponents
+	end
+
+	return true
 end
 
 return ComponentSelector

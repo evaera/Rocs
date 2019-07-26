@@ -5,7 +5,7 @@ local AllSelector = require(script.Parent.AllSelector)
 return function(rocs)
 
 	rocs.system = function(scope, ...) -- optimized for reuse
-		return System.new(rocs, ...):setup() -- TODO use scope
+		return System.new(rocs, scope):setup() -- TODO use scope
 	end
 
 	rocs.get = function(scope, ...) -- single use entity list getter

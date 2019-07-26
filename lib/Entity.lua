@@ -1,5 +1,3 @@
-local HttpService = game:GetService("HttpService")
-
 local I = require(script.Parent.Interfaces)
 local t = require(script.Parent.t)
 local Constants = require(script.Parent.Constants)
@@ -68,6 +66,10 @@ end
 
 function Entity:getAllComponents()
 	return self.rocs._aggregates:getAll(self.instance)
+end
+
+function Entity:getScope(newScope)
+	return self.rocs:getEntity(self.instance, newScope)
 end
 
 return Entity

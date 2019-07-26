@@ -7,7 +7,7 @@ local RunService = game:GetService("RunService")
 local System = setmetatable({}, AllSelector)
 System.__index = System
 
-function System.new(rocs, ...)
+function System.new(rocs, scope, ...)
 	local args = {...}
 
 	local base
@@ -27,6 +27,8 @@ function System.new(rocs, ...)
 	self.events = {} -- {Event = RbxScriptSignal, Hook = function, Connection = nil/RbxScriptConnection}
 	self.intervals = {} -- {Interval = num, Hook = function, LastInvoke = tick()}
 	self.intervalConnection = nil
+
+	self.scope = scope
 
 	return self
 end
@@ -77,57 +79,78 @@ function System:setup()
 	end
 	self._ready = true
 
-	self.entities = getmetatable(self).get(self)
-	for _, entity in (self.entities) do
-		self.lookup[entity] = true
+	for _, instance in (self:instances()) do
+		local entity = self._rocs:getEntity(instance, self.scope)
+		table.insert(self.entities, entity)
+		self.lookup[instance] = entity
+	end
+
+	if #self.entities > 0 then
+		self:_start()
 	end
 
 	for _, selector in pairs(self.selectors) do
 		selector:setup()
 
 		selector:onAdded(
-			function(entity, ...)
-				if not self.lookup[entity] and self:check(entity) then
-					table.insert(self.entities, entity)
-					self.lookup[entity] = true
-					if #self.entities == 1 then
-						self:_start()
+			function(aggregate)
+				local instance = aggregate.instance
+				if self:check(instance) then
+					if not self.lookup[instance] then
+						local entity = self._rocs:getEntity(instance, self.scope)
+						table.insert(self.entities, entity)
+						self.lookup[instance] = entity
+						if #self.entities == 1 then
+							self:_start()
+						end
+						self:_trigger("onAdded", entity, aggregate)
 					end
-					self:_trigger("onAdded", entity, ...)
+					self:_trigger("onComponentAdded", aggregate)
 				end
 			end
 		)
 
 		selector:onRemoved(
-			function(entity, ...)
-				if self.lookup[entity] then
-					for key, value in pairs(self.entities) do
-						if entity == value then
-							table.remove(self.entities, key)
-							break
+			function(aggregate)
+				local instance = aggregate.instance
+				if self.lookup[instance] then
+					if not self:check(instance) then
+						local entity = self.lookup[instance]
+						self.lookup[instance] = nil
+						for key, value in pairs(self.entities) do
+							if value == entity then
+								table.remove(self.entities, key)
+								break
+							end
 						end
+						if #self.entities == 0 then
+							self:_stop()
+						end
+						self:_trigger("onRemoved", entity, aggregate)
 					end
-					self.lookup[entity] = nil
-					if #self.entities == 0 then
-						self:_stop()
-					end
-					self:_trigger("onRemoved", entity, ...)
+					self:_trigger("onComponentRemoved", aggregate)
 				end
 			end
 		)
 
-		selector:onChanged(
-			function(entity, ...)
-				if self.lookup[entity] then
-					self:_trigger("onChanged", entity, ...)
+		-- TODO: is this right?
+		selector:onUpdated(
+			function(aggregate)
+				local instance = aggregate.instance
+				if self.lookup[instance] then
+					self:_trigger("onUpdated", self.lookup[instance], aggregate)
+					self:_trigger("onComponentChanged", aggregate)
 				end
 			end
 		)
 
+		-- TODO: is this right?
 		selector:onParentChanged(
-			function(entity, ...)
-				if self.lookup[entity] then
-					self:_trigger("onParentChanged", entity, ...)
+			function(aggregate)
+				local instance = aggregate.instance
+				if self.lookup[instance] then
+					self:_trigger("onParentChanged", self.lookup[instance], aggregate)
+					self:_trigger("onComponentParentChanged", aggregate)
 				end
 			end
 		)
