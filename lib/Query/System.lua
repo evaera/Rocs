@@ -7,6 +7,8 @@ local intervalSignal = game:GetService("RunService").Stepped
 local System = setmetatable({}, AllSelector)
 System.__index = System
 
+-- TODO: look into logic of aggregate/component events
+
 function System.new(rocs, scope, ...)
 	local args = {...}
 
