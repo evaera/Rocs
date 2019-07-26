@@ -1,6 +1,6 @@
 local AllSelector = require(script.Parent.AllSelector)
-local Util = require(script.Parent.Util)
 local ComponentSelector = require(script.Parent.ComponentSelector)
+local Util = require(script.Parent.Selectors.Util)
 
 local intervalSignal = game:GetService("RunService").Stepped
 
@@ -22,7 +22,7 @@ function System.new(rocs, scope, ...)
 	local self = setmetatable(base or AllSelector.new(rocs, ...), System)
 
 	self._entities = {} -- keeping track of what entities are in system
-	self._lookup = {} -- [instance] = entity
+						-- self._lookup: [instance] = entity
 
 	self._events = {} -- {Event = RbxScriptSignal, Hook = function, Connection = nil/RbxScriptConnection}
 	self._intervals = {} -- {Interval = num, Hook = function, LastInvoke = tick()}
@@ -78,7 +78,7 @@ function System:_start()
 	end
 end
 
-function System:listen() -- override
+function System:_listen() -- override
 	for _, selector in pairs(self._selectors) do
 		selector:onAdded(
 			function(aggregate)
@@ -151,7 +151,7 @@ function System:setup() -- override
 	end
 	self._ready = true
 
-	self:listen()
+	self:_listen()
 
 	for _, selector in pairs(self._selectors) do
 		selector:setup()
@@ -174,6 +174,7 @@ function System:catchup()
 	for _, entity in pairs(self._entities) do
 		self:_trigger("onAdded", entity)
 	end
+	return self
 end
 
 function System:onInterval(interval, hook)
@@ -185,6 +186,8 @@ function System:onInterval(interval, hook)
 	if #self._entities > 0 then
 		self:_start()
 	end
+
+	return self
 end
 
 function System:onEvent(event, hook)
@@ -196,6 +199,8 @@ function System:onEvent(event, hook)
 	if #self._entities > 0 then
 		self:_start()
 	end
+
+	return self
 end
 
 function System:get()
@@ -204,18 +209,22 @@ end
 
 function System:onComponentAdded(hook)
 	table.insert(self._hooks.onComponentAdded, hook)
+	return self
 end
 
 function System:onComponentRemoved(hook)
 	table.insert(self._hooks.onComponentRemoved, hook)
+	return self
 end
 
 function System:onComponentUpdated(hook)
 	table.insert(self._hooks.onComponentUpdated, hook)
+	return self
 end
 
 function System:onComponentParentUpdated(hook)
 	table.insert(self._hooks.onComponentParentUpdated, hook)
+	return self
 end
 
 return System

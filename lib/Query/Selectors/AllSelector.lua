@@ -1,5 +1,5 @@
 local BaseSelector = require(script.Parent.BaseSelector)
-local Util = require(script.Parent.Parent.Util)
+local Util = require(script.Parent.Util)
 
 local AllSelector = setmetatable({}, BaseSelector)
 AllSelector.__index = AllSelector
@@ -19,7 +19,7 @@ function AllSelector.new(rocs, ...)
 	return self
 end
 
-function AllSelector:listen()
+function AllSelector:_listen()
 	for _, selector in pairs(self._selectors) do
 		selector:onAdded(
 			function(aggregate)

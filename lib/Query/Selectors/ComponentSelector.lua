@@ -14,7 +14,7 @@ function ComponentSelector.new(rocs, componentResolvable, properties, metaCompon
 	return self
 end
 
-function ComponentSelector:listen()
+function ComponentSelector:_listen()
 
 	self._rocs:registerComponentHook(
 		self._componentResolvable,

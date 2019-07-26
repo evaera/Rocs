@@ -27,7 +27,7 @@ function BaseSelector:fetch()
 	if self._ready then
 		local instances = {}
 
-		for _, instance in pairs(self._lookup) do
+		for instance in pairs(self._lookup) do
 			table.insert(instances, instance)
 		end
 
@@ -43,7 +43,7 @@ function BaseSelector:setup()
 	end
 	self._ready = true
 
-	self:listen()
+	self:_listen()
 
 	for _, selector in pairs(self._selectors) do
 		selector:setup()
@@ -58,18 +58,22 @@ end
 
 function BaseSelector:onAdded(hook)
 	table.insert(self._hooks.onAdded, hook)
+	return self
 end
 
 function BaseSelector:onRemoved(hook)
 	table.insert(self._hooks.onRemoved, hook)
+	return self
 end
 
 function BaseSelector:onUpdated(hook)
 	table.insert(self._hooks.onUpdated, hook)
+	return self
 end
 
 function BaseSelector:onParentUpdated(hook)
 	table.insert(self._hooks.onParentUpdated, hook)
+	return self
 end
 
 return BaseSelector

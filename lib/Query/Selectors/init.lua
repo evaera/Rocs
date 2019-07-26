@@ -6,6 +6,8 @@ return function(rocs)
 	local Selectors = {}
 
 	function Selectors.isa(class)
+		assert(type(class) == "string")
+
 		return function(instance)
 			return instance:IsA(class)
 		end
@@ -20,6 +22,10 @@ return function(rocs)
 	end
 
 	function Selectors.has(name, properties, metacomponents)
+		assert(type(name) == "string")
+		assert(properties == nil or type(properties) == "table")
+		assert(metacomponents == nil or type(metacomponents) == "table")
+
 		return ComponentSelector.new(rocs, name, properties, metacomponents)
 	end
 
