@@ -1,7 +1,7 @@
 local Util = {}
 
-local ComponentSelector = require(script.Parent.ComponentSelector)
-local BaseSelector = require(script.Parent.BaseSelector)
+local ComponentSelector = require(script.Parent.Selectors.ComponentSelector)
+local BaseSelector = require(script.Parent.Selectors.BaseSelector)
 
 function Util.resolve(rocs, selectorResolvable)
 	if type(selectorResolvable) == "string" then

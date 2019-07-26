@@ -1,13 +1,13 @@
-local AllSelector = require(script.Parent.AllSelector)
-local AnySelector = require(script.Parent.AnySelector)
-local ComponentSelector = require(script.Parent.ComponentSelector)
+local AllSelector = require(script.AllSelector)
+local AnySelector = require(script.AnySelector)
+local ComponentSelector = require(script.ComponentSelector)
 
 return function(rocs)
 	local Selectors = {}
 
 	function Selectors.isa(class)
-		return function(entity)
-			return entity.instance:IsA(class)
+		return function(instance)
+			return instance:IsA(class)
 		end
 	end
 
