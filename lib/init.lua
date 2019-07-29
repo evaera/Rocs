@@ -136,7 +136,7 @@ end
 
 function Rocs:_dispatchLifecycle(aggregate, stage)
 	if aggregate[stage] then
-		aggregate[stage](self:getEntity(aggregate.instance, aggregate._address))
+		aggregate[stage](aggregate)
 	end
 
 	self:_dispatchComponentLifecycleHooks(aggregate, stage)
