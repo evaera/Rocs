@@ -85,7 +85,7 @@ end
 local function makeArrayEntityCheck(array)
 	return function(instance)
 		for _, className in ipairs(array) do
-			if instance.ClassName == className then
+			if instance:IsA(className) then
 				return true
 			end
 		end
