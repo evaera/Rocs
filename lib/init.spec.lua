@@ -35,6 +35,9 @@ local function makeTestCmp(rocs, callCounts)
 		check = t.interface({});
 		entityCheck = t.union(t.instance("Workspace"), t.instance("DataModel"));
 		tag = "Test";
+		onUpdated = function()
+			callCounts:call("onUpdated")
+		end;
 	}
 end
 
@@ -118,7 +121,8 @@ return function()
 			ent:removeComponent(testCmp)
 			ent:removeBaseComponent(testCmp)
 			expect(callCounts.testCmpDestroy).to.equal(1)
-			expect(callCounts.onParentUpdated).to.equal(5)
+			expect(callCounts.onUpdated).to.equal(3)
+			expect(callCounts.onParentUpdated).to.equal(3)
 		end)
 
 		it("should allow looping over components", function()
