@@ -1,19 +1,34 @@
 {
-	"name": "Rocs",
-	"servePort": 8000,
-	"tree": {
-		"$className": "DataModel",
-		"ReplicatedStorage": {
-			"$className": "ReplicatedStorage",
-			"Rocs": {
-				"$path": "lib"
-			}
-		},
-		"TestService": {
-			"$className": "TestService",
-			"TestEZ": {
-				"$path": "vendor/testez/lib"
-			}
-		}
-	}
+  "name": "Rocs",
+  "servePort": 8000,
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Rocs": {
+        "$path": "lib"
+      }
+    },
+    "TestService": {
+      "$className": "TestService",
+      "TestEZ": {
+        "$path": "vendor/testez/lib"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Examples": {
+        "$path": "examples/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Examples": {
+          "$path": "examples/client"
+        }
+      }
+    }
+  }
 }
