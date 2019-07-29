@@ -88,6 +88,10 @@ function AggregateCollection:deconstruct(aggregate)
 end
 
 function AggregateCollection:addComponent(instance, staticAggregate, scope, data, metacomponents)
+	if data == nil then
+		return self:removeComponent(instance, staticAggregate, scope), false
+	end
+
 	assert(Util.runEntityCheck(staticAggregate, instance))
 
 	if self._entities[instance] == nil then
@@ -113,6 +117,23 @@ function AggregateCollection:addComponent(instance, staticAggregate, scope, data
 
 	self.rocs:_dispatchComponentChange(aggregate)
 
+	local pendingParentUpdated = {}
+
+	if isNew and staticAggregate.components then
+		for componentResolvable, metacomponentData in pairs(staticAggregate.components) do
+			local metacomponentStaticAggregate = self:getStatic(componentResolvable)
+
+			local metacomponentAggregate = self:addComponent(
+				aggregate,
+				metacomponentStaticAggregate,
+				"base",
+				metacomponentData
+			)
+
+			pendingParentUpdated[metacomponentAggregate] = true
+		end
+	end
+
 	if metacomponents then
 		for componentResolvable, metacomponentData in pairs(metacomponents) do
 			local metacomponentStaticAggregate = self:getStatic(componentResolvable)
@@ -125,12 +146,17 @@ function AggregateCollection:addComponent(instance, staticAggregate, scope, data
 			)
 
 			if wasNew then
-				self.rocs:_dispatchLifecycle(
-					metacomponentAggregate,
-					Constants.LIFECYCLE_PARENT_UPDATED
-				)
+				pendingParentUpdated[metacomponentAggregate] = true
 			end
 		end
+	end
+
+	-- De-duplicate onParentUpdated calls in case both tables have same
+	for metacomponentAggregate in pairs(pendingParentUpdated) do
+		self.rocs:_dispatchLifecycle(
+			metacomponentAggregate,
+			Constants.LIFECYCLE_PARENT_UPDATED
+		)
 	end
 
 	return aggregate, isNew
