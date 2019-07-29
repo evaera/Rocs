@@ -24,7 +24,6 @@ function AggregateCollection:register(componentDefinition)
 
 	setmetatable(componentDefinition, Aggregate)
 
-	componentDefinition._address = tostring(componentDefinition) --! No
 	componentDefinition.__index = componentDefinition
 	componentDefinition.__tostring = Aggregate.__tostring
 	componentDefinition.rocs = self.rocs
@@ -270,11 +269,11 @@ function AggregateCollection:listenForTag(tag, staticAggregate)
 			data = require(instance[staticAggregate.name])
 		end
 
-		self:_addComponent(instance, staticAggregate, Constants.SCOPE_BASE, data)
+		self:addComponent(instance, staticAggregate, Constants.SCOPE_BASE, data)
 	end
 
 	local function removeFromTag(instance)
-		self:_removeComponent(instance, staticAggregate, Constants.SCOPE_BASE)
+		self:removeComponent(instance, staticAggregate, Constants.SCOPE_BASE)
 	end
 
 	CollectionService:GetInstanceRemovedSignal(tag):Connect(removeFromTag)
