@@ -9,11 +9,10 @@
 - replication (propagate additions/changes/removals, masking)
 - Allow registration of serializers and deserializers for network purposes
 	- For example, need one for aggregates so we can send components which are on aggregates.
+    - search up getmetatable chain until find a serializer for type
 
 ## LAYERS
-- target objects? (primitives which point to other objects)
-- Components which describe atomic changes to other components.
-- Format should be standardized and used in replication or applying multiple components at once.
+- Removed
 
 ## SELECTOR -- USES --> CORE
 - selector (masking over more than one label, inner properties)
