@@ -5,8 +5,12 @@ local Constants = require(script.Parent.Constants)
 local Entity = {}
 Entity.__index = Entity
 
-function Entity.new(rocs, instance, scope)
-	assert(Constants.RESERVED_SCOPES[scope] == nil, ("Entity scope cannot be %q"):format(scope))
+function Entity.new(rocs, instance, scope, overrideReserveCheck)
+	assert(
+		overrideReserveCheck == nil and
+		Constants.RESERVED_SCOPES[scope] == nil,
+		("Entity scope cannot be %q"):format(scope)
+	)
 
 	return setmetatable({
 		rocs = rocs;
