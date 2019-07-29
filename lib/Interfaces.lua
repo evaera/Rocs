@@ -12,6 +12,7 @@ I.Reducible = t.interface({
 	reducer = t.optional(t.callback);
 	check = t.optional(t.callback);
 	defaults = t.optional(t.map(t.string, t.any));
+	components = t.optional(t.map(t.string, t.any));
 })
 
 I.ComponentDefinition = t.intersection(I.InitDestroyable, I.Reducible, t.interface({
