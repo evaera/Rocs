@@ -1,8 +1,9 @@
 local CollectionService = game:GetService("CollectionService")
-local inspect = require(script.Parent.Parent.Inspect).inspect
+-- local inspect = require(script.Parent.Parent.Inspect).inspect
 
 local I = require(script.Parent.Parent.Interfaces)
 local Util = require(script.Parent.Parent.Util)
+local Aggregate = require(script.Parent.Aggregate)
 local Constants = require(script.Parent.Parent.Constants)
 
 local AggregateCollection = {}
@@ -13,60 +14,19 @@ function AggregateCollection.new(rocs)
 		rocs = rocs;
 		_components = {};
 		_entities = {};
+		_aggregates = {};
 		_tags = {};
 	}, AggregateCollection)
-end
-
-local function makeComponentSetter(collection, staticAggregate)
-	return function (self, ...)
-		local path = {...}
-		local value = table.remove(path, #path)
-
-		assert(value ~= nil, "Must provide a value to set")
-
-		if value == Constants.None then
-			value = nil
-		end
-
-		local currentValue = collection:getComponent(self.instance, staticAggregate, Constants.SCOPE_BASE)
-
-		while #path > 1 do
-			currentValue = currentValue[table.remove(path, 1)]
-		end
-
-		if path[1] then
-			currentValue[path[1]] = value
-		else
-			currentValue = value
-		end
-
-		return collection:addComponent(self.instance, staticAggregate, Constants.SCOPE_BASE, currentValue)
-	end
-end
-
-local function componentGetProperty(component, ...)
-	local object = component.data
-
-	for _, field in ipairs({...}) do
-		object = object[field]
-
-		if object == nil then
-			return
-		end
-	end
-
-	return object
 end
 
 function AggregateCollection:register(componentDefinition)
 	assert(I.ComponentDefinition(componentDefinition))
 
-	componentDefinition._address = tostring(componentDefinition) --! No
-	componentDefinition.__tostring = Util.makeToString("Aggregate")
-	componentDefinition.__index = componentDefinition.__index or componentDefinition
+	setmetatable(componentDefinition, Aggregate)
 
-	componentDefinition.__index.get = componentGetProperty
-	componentDefinition.__index.set = makeComponentSetter(self, componentDefinition)
+	componentDefinition.__index = componentDefinition
+	componentDefinition.__tostring = Aggregate.__tostring
+	componentDefinition.rocs = self.rocs
 
 	componentDefinition.new = componentDefinition.new or function()
 		return setmetatable({}, componentDefinition)
@@ -103,31 +63,120 @@ end
 function AggregateCollection:deconstruct(aggregate)
 	-- destroy is called in removeComponent for correct timing
 
-	self._entities[aggregate.instance][getmetatable(aggregate)] = nil
+	local staticAggregate = getmetatable(aggregate)
+	self._entities[aggregate.instance][staticAggregate] = nil
+
+	local array = self._aggregates[staticAggregate]
+
+	for i = 1, #array do
+		if array[i] == aggregate then
+			table.remove(array, i)
+			break
+		end
+	end
+
+	if #array == 0 then
+		self._aggregates[staticAggregate] = nil
+	end
 
 	if next(self._entities[aggregate.instance]) == nil then
 		self._entities[aggregate.instance] = nil
 	end
+
+	self:removeAllComponents(aggregate)
 end
 
-function AggregateCollection:addComponent(instance, staticAggregate, scope, data)
+function AggregateCollection:addComponent(instance, staticAggregate, scope, data, metacomponents)
+	if data == nil then
+		return self:removeComponent(instance, staticAggregate, scope), false
+	end
+
 	assert(Util.runEntityCheck(staticAggregate, instance))
 
 	if self._entities[instance] == nil then
 		self._entities[instance] = {}
 	end
 
-	if self._entities[instance][staticAggregate] == nil then
-		self._entities[instance][staticAggregate] =
-			self:construct(staticAggregate, instance)
+	if self._aggregates[staticAggregate] == nil then
+		self._aggregates[staticAggregate] = {}
 	end
 
-	self._entities[instance][staticAggregate].components[scope] = data
+	local aggregate = self._entities[instance][staticAggregate]
+	local isNew = false
 
-	self.rocs:_dispatchComponentChange(
-		self._entities[instance][staticAggregate],
-		data
-	)
+	if aggregate == nil then
+		isNew = true
+		aggregate = self:construct(staticAggregate, instance)
+		self._entities[instance][staticAggregate] = aggregate
+
+		table.insert(self._aggregates[staticAggregate], aggregate)
+	end
+
+	aggregate.components[scope] = data
+
+	self.rocs:_dispatchComponentChange(aggregate)
+
+	local pendingParentUpdated = {}
+
+	if isNew and staticAggregate.components then
+		for componentResolvable, metacomponentData in pairs(staticAggregate.components) do
+			local metacomponentStaticAggregate = self:getStatic(componentResolvable)
+
+			local metacomponentAggregate = self:addComponent(
+				aggregate,
+				metacomponentStaticAggregate,
+				"base",
+				metacomponentData
+			)
+
+			pendingParentUpdated[metacomponentAggregate] = true
+		end
+	end
+
+	if metacomponents then
+		for componentResolvable, metacomponentData in pairs(metacomponents) do
+			local metacomponentStaticAggregate = self:getStatic(componentResolvable)
+
+			local metacomponentAggregate, wasNew = self:addComponent(
+				aggregate,
+				metacomponentStaticAggregate,
+				scope,
+				metacomponentData
+			)
+
+			if wasNew then
+				pendingParentUpdated[metacomponentAggregate] = true
+			end
+		end
+	end
+
+	-- De-duplicate onParentUpdated calls in case both tables have same
+	for metacomponentAggregate in pairs(pendingParentUpdated) do
+		self.rocs:_dispatchLifecycle(
+			metacomponentAggregate,
+			Constants.LIFECYCLE_PARENT_UPDATED
+		)
+	end
+
+	return aggregate, isNew
+end
+
+function AggregateCollection:removeAllComponents(instance)
+	if self._entities[instance] == nil then
+		return
+	end
+
+	for _, aggregate in ipairs(self:getAll(instance)) do
+		aggregate.components = {}
+
+		self:deconstruct(aggregate)
+
+		self.rocs:_dispatchComponentChange(aggregate)
+
+		if aggregate.destroy then
+			aggregate:destroy()
+		end
+	end
 end
 
 function AggregateCollection:removeComponent(instance, staticAggregate, scope)
@@ -142,14 +191,12 @@ function AggregateCollection:removeComponent(instance, staticAggregate, scope)
 
 	aggregate.components[scope] = nil
 
+	self.rocs:_dispatchComponentChange(aggregate)
+
 	local shouldDestroy = next(aggregate.components) == nil
 	if shouldDestroy then
-		self:deconstruct(aggregate, staticAggregate)
+		self:deconstruct(aggregate)
 	end
-
-	self.rocs:_dispatchComponentChange(
-		aggregate
-	)
 
 	if shouldDestroy and aggregate.destroy then
 		aggregate:destroy()
@@ -172,7 +219,7 @@ function AggregateCollection:getAll(instance)
 
 	if self._entities[instance] ~= nil then
 		for _, aggregate in pairs(self._entities[instance]) do
-			aggregates[#aggregates + 1] = aggregate
+			table.insert(aggregates, aggregate)
 		end
 	end
 
@@ -193,11 +240,16 @@ function AggregateCollection:getStatic(componentResolvable)
 end
 
 function AggregateCollection:reduce(aggregate)
-	local values = { aggregate.components[Constants.SCOPE_BASE] }
+	if next(aggregate.components) == nil then
+		return
+	end
+
+	local values = { aggregate.components[Constants.SCOPE_REMOTE] }
+	table.insert(values, aggregate.components[Constants.SCOPE_BASE])
 
 	for name, component in pairs(aggregate.components) do
-		if name ~= Constants.SCOPE_BASE then
-			values[#values + 1] = component
+		if Constants.RESERVED_SCOPES[name] == nil then
+			table.insert(values, component)
 		end
 	end
 
@@ -217,11 +269,11 @@ function AggregateCollection:listenForTag(tag, staticAggregate)
 			data = require(instance[staticAggregate.name])
 		end
 
-		self:_addComponent(instance, staticAggregate, Constants.SCOPE_BASE, data)
+		self:addComponent(instance, staticAggregate, Constants.SCOPE_BASE, data)
 	end
 
 	local function removeFromTag(instance)
-		self:_removeComponent(instance, staticAggregate, Constants.SCOPE_BASE)
+		self:removeComponent(instance, staticAggregate, Constants.SCOPE_BASE)
 	end
 
 	CollectionService:GetInstanceRemovedSignal(tag):Connect(removeFromTag)

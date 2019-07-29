@@ -1,19 +1,16 @@
-local HttpService = game:GetService("HttpService")
-
 local I = require(script.Parent.Interfaces)
 local t = require(script.Parent.t)
 local Constants = require(script.Parent.Constants)
 
-local RESERVED_SCOPES = {
-	[Constants.SCOPE_BASE] = true;
-	[Constants.SCOPE_REMOTE] = true;
-}
-
 local Entity = {}
 Entity.__index = Entity
 
-function Entity.new(rocs, instance, scope)
-	assert(RESERVED_SCOPES[scope] == nil, ("Entity scope cannot be %q"):format(scope))
+function Entity.new(rocs, instance, scope, overrideReserveCheck)
+	assert(
+		overrideReserveCheck == nil and
+		Constants.RESERVED_SCOPES[scope] == nil,
+		("Entity scope cannot be %q"):format(scope)
+	)
 
 	return setmetatable({
 		rocs = rocs;
@@ -39,10 +36,10 @@ function Entity:_getComponentOpValues(componentResolvable, scope, ...)
 		...
 end
 
-function Entity:addComponent(componentResolvable, data)
+function Entity:addComponent(componentResolvable, data, metacomponents)
 	warn("ADD", self.instance, componentResolvable, data)
 	return self.rocs._aggregates:addComponent(
-		self:_getComponentOpValues(componentResolvable, nil, data or {})
+		self:_getComponentOpValues(componentResolvable, nil, data or {}, metacomponents)
 	)
 end
 
@@ -53,9 +50,9 @@ function Entity:removeComponent(componentResolvable)
 	)
 end
 
-function Entity:addBaseComponent(componentResolvable, data)
+function Entity:addBaseComponent(componentResolvable, data, metacomponents)
 	return self.rocs._aggregates:addComponent(
-		self:_getComponentOpValues(componentResolvable, Constants.SCOPE_BASE, data or {})
+		self:_getComponentOpValues(componentResolvable, Constants.SCOPE_BASE, data or {}, metacomponents)
 	)
 end
 
@@ -71,44 +68,12 @@ function Entity:getComponent(componentResolvable)
 	)
 end
 
-function Entity:addLayer(layer, layerId, componentResolvable)
-	layerId = layerId or HttpService:GenerateGUID()
-
-	local layerComponent = self.rocs:_getLayerComponent(
-		layerId,
-		componentResolvable or self.rocs._aggregates:getStatic(Constants.LAYER_IDENTIFIER)
-	)
-
-	assert(layerComponent ~= nil)
-
-	layer[self.rocs.metadata(Constants.LAYER_IDENTIFIER)] = layerId
-
-	self.rocs._aggregates:addComponent(
-		self.instance,
-		layerComponent,
-		self.scope,
-		layer
-	)
-
-	return layerId
+function Entity:getAllComponents()
+	return self.rocs._aggregates:getAll(self.instance)
 end
 
-function Entity:addSelfLayer(layerData, ...)
-	return self:addLayer({
-		[self.instance] = layerData
-	}, ...)
-end
-
-function Entity:removeLayer(layerId)
-	local layerComponent = self.rocs._layerComponents[layerId]
-
-	assert(layerComponent ~= nil, "Layer ID invalid")
-
-	self.rocs._aggregates:removeComponent(
-		self.instance,
-		layerComponent,
-		self.scope
-	)
+function Entity:getScope(newScope)
+	return self.rocs:getEntity(self.instance, newScope)
 end
 
 return Entity

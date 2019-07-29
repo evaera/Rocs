@@ -12,6 +12,7 @@ I.Reducible = t.interface({
 	reducer = t.optional(t.callback);
 	check = t.optional(t.callback);
 	defaults = t.optional(t.map(t.string, t.any));
+	components = t.optional(t.map(t.string, t.any));
 })
 
 I.ComponentDefinition = t.intersection(I.InitDestroyable, I.Reducible, t.interface({
@@ -21,9 +22,9 @@ I.ComponentDefinition = t.intersection(I.InitDestroyable, I.Reducible, t.interfa
 	lastData = t.none;
 	set = t.none;
 	get = t.none;
-	setProp = t.none;
 	onAdded = t.optional(t.callback);
 	onUpdated = t.optional(t.callback);
+	onParentUpdated = t.optional(t.callback);
 	onRemoved = t.optional(t.callback);
 	shouldUpdate = t.optional(t.callback);
 }))
@@ -39,11 +40,5 @@ I.ComponentAggregate = t.interface({
 })
 
 I.ComponentResolvable = t.union(t.string, I.StaticAggregate)
-
-I.SystemDefinition = t.intersection(I.InitDestroyable, t.interface({
-	name = t.string;
-}))
-
-I.SystemDependencies = t.array(t.table)
 
 return I

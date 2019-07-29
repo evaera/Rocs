@@ -2,75 +2,76 @@ local I = require(script.Interfaces)
 local Entity = require(script.Entity)
 local Util = require(script.Util)
 local t = require(script.t)
-local DependencyFactory = require(script.Dependency.DependencyFactory)
 local Constants = require(script.Constants)
-local makeReducers = require(script.Operators.Reducers)
-local makeComparators = require(script.Operators.Comparators)
+local Reducers = require(script.Operators.Reducers)
+local Comparators = require(script.Operators.Comparators)
 
 local AggregateCollection = require(script.Collections.AggregateCollection)
-local SystemCollection = require(script.Collections.SystemCollection)
-local MetadataCollection = require(script.Collections.MetadataCollection)
 
 local Rocs = {
 	None = Constants.None;
+	reducers = Reducers;
+	comparators = Comparators;
 }
 Rocs.__index = Rocs
 
 function Rocs.new(name)
 	local self = setmetatable({
-		_name = name or "global";
-		_layerComponents = setmetatable({}, {
-			__mode = "kv";
-		});
-		_dependencies = setmetatable({}, {
-			__index = function(self, k)
-				self[k] = {}
-				return self[k]
-			end;
-		});
+		name = name or "global";
+		_lifecycleHooks = {
+			global = setmetatable({}, Util.easyIndex);
+			component = {
+				global = setmetatable({}, Util.easyIndex);
+				[Constants.LIFECYCLE_ADDED] = setmetatable({}, Util.easyIndex);
+				[Constants.LIFECYCLE_REMOVED] = setmetatable({}, Util.easyIndex);
+				[Constants.LIFECYCLE_UPDATED] = setmetatable({}, Util.easyIndex);
+				[Constants.LIFECYCLE_PARENT_UPDATED] = setmetatable({}, Util.easyIndex);
+			}
+		}
 	}, Rocs)
 
-	self._systems = SystemCollection.new(self)
 	self._aggregates = AggregateCollection.new(self)
-	self._metadata = MetadataCollection.new(self)
-
-	self.dependencies = DependencyFactory.new(self)
-	self.reducers = makeReducers(self)
-	self.comparators = makeComparators(self)
-
-	self:_registerIntrinsics()
 
 	return self
 end
 
-function Rocs.metadata(name)
-	return Constants.METADATA_IDENTIFIER .. name
+function Rocs:registerLifecycleHook(lifecycle, hook)
+	table.insert(self._lifecycleHooks.global[lifecycle], hook)
 end
 
-function Rocs:registerSystem(...)
-	return self._systems:register(...)
+function Rocs:registerComponentHook(componentResolvable, lifecycle, hook)
+	local staticAggregate = self._aggregates:getStatic(componentResolvable)
+
+	table.insert(self._lifecycleHooks.component[lifecycle][staticAggregate], hook)
+
+	return {
+		disconnect = function()
+			local hooks = self._lifecycleHooks.component[lifecycle][staticAggregate]
+			for i = 1, #hooks do
+				if hooks[i] == hook then
+					table.remove(hooks, i)
+
+					if #hooks == 0 then
+						self._lifecycleHooks.component[lifecycle][staticAggregate] = nil
+					end
+
+					break
+				end
+			end
+		end
+	}
 end
 
 function Rocs:registerComponent(...)
 	return self._aggregates:register(...)
 end
 
-function Rocs:registerMetadata(...)
-	return self._metadata:register(...)
-end
-
-function Rocs:registerSystemsIn(instance)
-	return Util.requireAllInAnd(instance, function (_, system)
-		self:registerSystem(unpack(system))
-	end)
+function Rocs:getComponents(componentResolvable)
+	return self._aggregates._aggregates[self._aggregates:getStatic(componentResolvable)] or {}
 end
 
 function Rocs:registerComponentsIn(instance)
 	return Util.requireAllInAnd(instance, self.registerComponent, self)
-end
-
-function Rocs:registerMetadataIn(instance)
-	return Util.requireAllInAnd(instance, self.registerMetadata, self)
 end
 
 local getEntityCheck = t.tuple(t.union(t.Instance, t.table), t.string)
@@ -80,30 +81,7 @@ function Rocs:getEntity(instance, scope)
 	return Entity.new(self, instance, scope)
 end
 
-function Rocs:makeUniqueComponent(componentResolvable)
-	assert(I.ComponentResolvable(componentResolvable))
-
-	local staticAggregate = self._aggregates:getStatic(componentResolvable)
-
-	local component
-	component = setmetatable({
-		new = function (...)
-			return setmetatable(staticAggregate.new(...), component)
-		end;
-	}, staticAggregate)
-	component.__index = component
-	component.__tostring = staticAggregate.__tostring
-
-	return component
-end
-
-function Rocs:_registerIntrinsics()
-	for _, module in ipairs(script.Intrinsics:GetChildren()) do
-		require(module)(self)
-	end
-end
-
-function Rocs:_dispatchComponentChange(aggregate, data)
+function Rocs:_dispatchComponentChange(aggregate)
 	local lastData = aggregate.data
 	local newData = self._aggregates:reduce(aggregate)
 
@@ -118,49 +96,53 @@ function Rocs:_dispatchComponentChange(aggregate, data)
 
 	if (staticAggregate.shouldUpdate or self.comparators.default)(newData, lastData) then
 		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_UPDATED)
+
+		local childAggregates = self._aggregates:getAll(aggregate)
+		for i = 1, #childAggregates do
+			local childAggregate = childAggregates[i]
+
+			self:_dispatchLifecycle(
+				childAggregate,
+				Constants.LIFECYCLE_PARENT_UPDATED
+			)
+		end
 	end
 
 	if newData == nil then
 		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_REMOVED)
 	end
+end
 
-	-- Component dependencies
-	for _, dependency in ipairs(self._dependencies[staticAggregate]) do
-		dependency:tap(aggregate.instance, aggregate)
-	end
+function Rocs:_dispatchComponentLifecycleHooks(aggregate, stagePool, stage)
+	stage = stage or stagePool
+	local staticAggregate = getmetatable(aggregate)
 
-	-- Entity dependencies
-	if rawget(self._dependencies, aggregate.instance) then
-		for _, dependency in ipairs(self._dependencies[aggregate.instance]) do
-			dependency:tap(aggregate.instance, aggregate)
+	if rawget(self._lifecycleHooks.component[stagePool], staticAggregate) then
+		local hooks = self._lifecycleHooks.component[stagePool][staticAggregate]
+
+		for i = 1, #hooks do
+			hooks[i](aggregate, stage)
 		end
 	end
+end
 
-	-- "All" dependencies
-	for _, dependency in ipairs(self._dependencies[Constants.ALL_COMPONENTS]) do
-		dependency:tap(aggregate.instance, aggregate)
+function Rocs:_dispatchGlobalLifecycleHooks(aggregate, stagePool, stage)
+	stage = stage or stagePool
+
+	for i = 1, #self._lifecycleHooks.global[stagePool] do
+		self._lifecycleHooks.global[stagePool][i](aggregate, stage)
 	end
 end
 
 function Rocs:_dispatchLifecycle(aggregate, stage)
 	if aggregate[stage] then
-		aggregate[stage](self:getEntity(aggregate.instance, aggregate._address))
-	end
-end
-
-function Rocs:_getLayerComponent(layerId, componentResolvable)
-	local staticAggregate = self._aggregates:getStatic(componentResolvable)
-
-	if self._layerComponents[layerId] == nil then
-		self._layerComponents[layerId] = self:makeUniqueComponent(staticAggregate)
-	else
-		assert(
-			staticAggregate == self._layerComponents[layerId],
-			"Layer component mismatched between addLayer calls"
-		)
+		aggregate[stage](aggregate)
 	end
 
-	return self._layerComponents[layerId]
+	self:_dispatchComponentLifecycleHooks(aggregate, stage)
+	self:_dispatchComponentLifecycleHooks(aggregate, "global", stage)
+	self:_dispatchGlobalLifecycleHooks(aggregate, stage)
+	self:_dispatchGlobalLifecycleHooks(aggregate, "global", stage)
 end
 
 return Rocs

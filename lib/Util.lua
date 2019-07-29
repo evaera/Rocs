@@ -1,5 +1,12 @@
 local Util = {}
 
+Util.easyIndex = {
+	__index = function(self, k)
+		self[k] = {}
+		return self[k]
+	end
+}
+
 function Util.assign(toObj, ...)
 	for _, fromObj in ipairs({...}) do
 		for key, value in pairs(fromObj) do
@@ -78,7 +85,7 @@ end
 local function makeArrayEntityCheck(array)
 	return function(instance)
 		for _, className in ipairs(array) do
-			if instance.ClassName == className then
+			if instance:IsA(className) then
 				return true
 			end
 		end
