@@ -455,13 +455,13 @@ reducer = rocs.reducers.thisOr(
 
 Runs the given reducer, and provide a default value in case that reducer returns nil.
 
-### firstOr
+### lastOr
 
 ```lua
-reducer = rocs.reducers.firstOr(1)
+reducer = rocs.reducers.lastOr(1)
 ```
 
-Returns the first non-nil value or a default value if there is none.
+Returns the last non-nil value or a default value if there is none.
 
 ### truthyOr
 

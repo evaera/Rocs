@@ -169,7 +169,7 @@ end
 
 Reducers.truthyOr = makeOr(Reducers.truthy)
 Reducers.falsyOr = makeOr(Reducers.falsy)
-Reducers.firstOr = makeOr(Reducers.first)
+Reducers.lastOr = makeOr(Reducers.last)
 Reducers.default = Reducers.structure({})
 
 return Reducers
