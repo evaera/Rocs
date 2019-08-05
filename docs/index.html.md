@@ -29,6 +29,8 @@ Additionally, Rocs supports middleware by means of life cycle hooks and augmenti
 - Selectors, which offer a way to query against your current set of components within your game and create systems with behaviors which are only active when those queries are met.
 - Replication, which offers a batteries-included way to replicate components (or parts of components) you choose to clients.
 
+To get started with Rocs, sync in with [Rojo](https://rojo.space) or [download the latest release](https://github.com/FreshlySqueezedNerds/Rocs/releases).
+
 <!-- Rocs is compatible with both Lua and TypeScript via [roblox-ts](https://roblox-ts.github.io). -->
 
 ## Use cases
