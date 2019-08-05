@@ -363,7 +363,7 @@ The current component aggregate data.
 ### lastData
 `lastData: any`
 
-The previous component aggregate data.
+The previous component aggregate data. This is only available during life cycle methods such as `onUpdated`.
 
 # Built-in Operators 
 
@@ -397,6 +397,8 @@ reducer = rocs.reducers.structure({
 
 Reduces a dictionary with a separate reducer for each field.
 
+Accepts the default reducer to use for omitted properties as a secondary parameter. By default, `Reducers.last` is used for omitted properties.
+
 ### map
 
 ```lua
@@ -411,7 +413,7 @@ reducer = rocs.reducers.map(
 )
 ```
 
-Reduces a dictionary, using the same reducer for each field individually.
+Reduces a table, using the same reducer for each key.
 
 ### concatString
 
