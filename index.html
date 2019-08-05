@@ -276,6 +276,9 @@
             <a href="#rocs-api" class="toc-h1 toc-link" data-title="Rocs API">Rocs API</a>
               <ul class="toc-list-h2">
                   <li>
+                    <a href="#types" class="toc-h2 toc-link" data-title="Types">Types</a>
+                  </li>
+                  <li>
                     <a href="#new" class="toc-h2 toc-link" data-title="new"><code>new</code></a>
                   </li>
                   <li>
@@ -702,6 +705,8 @@ Because systems are automatically deconstructed when none of their dependencies 
 <p>The previous component aggregate data.</p>
 <h1 id='built-in-operators'>Built-in Operators</h1>
 <p>Rocs provides a number of composable reducer and reducer utilities, so you only have to spend time writing a function for when you need something very specific.</p>
+
+<aside class="notice">Remember that these functions exist for convenience, and you are encouraged to implement custom functions for whatever you might need to do.</aside>
 <h2 id='reducers'>Reducers</h2>
 <table><thead>
 <tr>
@@ -783,9 +788,9 @@ Because systems are automatically deconstructed when none of their dependencies 
 <span class="p">)</span>
 </code></pre>
 <p>Runs the given reducer, and provide a default value in case that reducer returns nil.</p>
-<h3 id='firstor'>firstOr</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">firstOr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<h3 id='lastor'>lastOr</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">lastOr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </code></pre>
-<p>Returns the first non-nil value or a default value if there is none.</p>
+<p>Returns the last non-nil value or a default value if there is none.</p>
 <h3 id='truthyor'>truthyOr</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">truthyOr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </code></pre>
 <p>Same as <code>thisOr</code>, except the <code>truthy</code> reducer is always used.</p>
@@ -820,7 +825,9 @@ Because systems are automatically deconstructed when none of their dependencies 
 <h3 id='within'>within</h3><pre class="highlight lua tab-lua"><code><span class="n">shouldUpdate</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">comparators</span><span class="p">.</span><span class="n">within</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </code></pre>
 <p>Allows an update only when the change is not within the given epsilon.</p>
-<h1 id='rocs-api'>Rocs API</h1><h2 id='new'><code>new</code></h2>
+<h1 id='rocs-api'>Rocs API</h1><h2 id='types'>Types</h2><h3 id='componentresolvable'>componentResolvable</h3>
+<p>&quot;componentResolvable&quot; refers to any value which can resolve into a component. Specifically, this means either the component name as a string, or the component definition itself as a value. Either will work, but the string form is usually more ergonomic.</p>
+<h2 id='new'><code>new</code></h2>
 <p><code>Rocs.new(name: string = &quot;global&quot;): rocs</code></p>
 
 <p>Creats a new Rocs instance. Use <code>name</code> if you are using Rocs within a library; for games the default of <code>&quot;global&quot;</code> is fine.</p>
