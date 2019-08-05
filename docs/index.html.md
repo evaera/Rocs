@@ -6,7 +6,8 @@ language_tabs:
   - typescript
 
 toc_footers:
-  - <a href='https://github.com/lord/slate'>Documentation Powered by Slate</a>
+  - <a href='https://github.com/FreshlySqueezedNerds/Rocs'>GitHub Repository</a>
+  - <a href='https://github.com/FreshlySqueezedNerds/Rocs/tree/master/examples'>Examples</a>
 
 includes:
 
@@ -15,7 +16,7 @@ search: true
 
 # Rocs
 
-**Rocs** is a *progressive* entity-component-system (ECS) framework developed for use in the [Roblox](http://developer.roblox.com) game engine.
+**Rocs** is a *progressive* entity-component-system (ECS) library developed for use in the [Roblox](http://developer.roblox.com) game engine.
 
 Rocs also performs the role of a general game state management library. Specifically, Rocs facilitates managing resources from multiple, unrelated places in your code base in a generic way.
 
@@ -25,10 +26,9 @@ Some other prominent features of Rocs include:
 - Automated state replication to all or specific players with masking (only replicating some properties and not all)
 - Compositional system dependency declaration: Systems can depend on one component, all of a set, any of a set, and permutations thereof (`all(foo, any(bar, baz))`)
 - Systems can have multiple dependencies which all have independent behaviors
-- Systems are deconstructed when none of their dependencies are met
 - Components can have life cycle methods and functions associated with them independent of systems
 
-Rocs is compatible with both Lua and TypeScript via [roblox-ts](https://roblox-ts.github.io).
+<!-- Rocs is compatible with both Lua and TypeScript via [roblox-ts](https://roblox-ts.github.io). -->
 
 ## Use cases
 
@@ -41,7 +41,7 @@ rocs:registerComponent({
   check = t.number;
   entityCheck = t.instance("Humanoid");
   onUpdated = function (self)
-    self.instance.WalkSpeed = self:get() or 16
+    self.instance.WalkSpeed = self:getOr(16)
   end;
 })
 ```
@@ -58,7 +58,7 @@ entity:addComponent("WalkSpeed", 10)
 entity:removeComponent("WalkSpeed")
 ```
 
-> Inside your  menu code:
+> Inside your menu code:
 
 ```lua
 local entity = rocs:getEntity(humanoid, "menu")
@@ -70,7 +70,7 @@ entity:addComponent("WalkSpeed", 0)
 entity:removeComponent("WalkSpeed")
 ```
 
-### Managed state resource sharing
+### Influencing shared state from disparate code locations
 
 A classic example of the necessity to share resources is changing the player's walk speed. 
 
@@ -78,13 +78,14 @@ Let's say you have a heavy weapon that you want to have slow down the player whe
 
 But what if you want something else to change the player's walk speed as well, potentially at the same time? For example, let's say you want opening a menu to set the character's WalkSpeed to `0`.
 
-If we follow the same flow as when we implemented the logic for the heavy weapon above, we now have a problem: The player can equip the heavy weapon and then open and close the menu. Now, the player can walk around at full speed with a heavy weapon equipped they should still be slowed!
+If we follow the same flow as when we implemented the logic for the heavy weapon above, we now have a problem: The player can equip the heavy weapon and then open and close the menu. Now, the player can walk around at full speed with a heavy weapon equipped when they should still be slowed!
 
-Rocs solves this problem correctly by allowing you to apply a movement speed component from each location in the code base that needs to modify it. Each component can provide its own intensity level for which to affect the movement speed. Then, every time a component is added, modified, or removed, Rocs will group all components of the same type and determine a single value to set the WalkSpeed to, based on your defined [reducer function](#component-aggregates). 
+Rocs solves this problem correctly by allowing you to apply a movement speed component from each location in the code base that needs to modify the walk speed. Each component can provide its own intensity level for which to affect the movement speed. Then, every time a component is added, modified, or removed, Rocs will group all components of the same type and determine a single value to set the WalkSpeed to, based on your defined [reducer function](#component-aggregates). 
 
 In this case, the function will find the lowest value from all of the components, and then the player's WalkSpeed will be set to that number. ￼Now, there is only one source of truth for the player's WalkSpeed, which solves all of our problems. When there are no longer any components of this type, you can clean up by setting the player's walk speed back to default in a destructor.
 
-### Generic Level-of-Detail with Systems
+<!-- TODO: Rewrite this section -->
+<!-- ### Generic Level-of-Detail with Systems
 
 ```lua
 rocs:registerSystem({
@@ -100,7 +101,7 @@ Systems can depend on groups of components being present on a single entity, so 
 
 Then you could have a secondary system (like, an animator that runs on a tighter loop, for something like bobbing coins up and down in the world) that depends on `all(Coin, LOD_Near)`. Then that system would only receive coins which are near to the player.
 
-Because systems are automatically deconstructed when none of their dependencies are met, you can make systems which have more specific dependencies which automatically free their resources for performance when they aren't in use.
+Because systems are automatically deconstructed when none of their dependencies are met, you can make systems which have more specific dependencies which automatically free their resources for performance when they aren't in use. -->
 
 # Concepts
 
@@ -121,20 +122,22 @@ Multiple versions of Rocs can exist at the same time in the same place and do no
 
 ## Entities
 
-> Getting an entity wrapper for Workspace, with the scope `"foo"`:
+> Getting an entity wrapper for Workspace, with the scope `"my scope"`:
 
 ```lua
-local entity = rocs:getEntity(workspace, "foo")
+local entity = rocs:getEntity(workspace, "my scope")
 ```
 ```typescript
-const entity = rocs.getEntity(workspace, 'foo')
+const entity = rocs.getEntity(workspace, 'my scope')
 ```
 
-**Entities** can be Roblox Instances or any table. "Instance" will generally be used to refer to this internal object for purposes of conciseness, but remember that it does not need to be an actual Roblox Instance.
+**Entities** are the objects that we put components on. These can be Roblox Instances or objects that you create yourself. "Instance" will generally be used to refer to these objects for purposes of conciseness, but remember that it does not need to be an actual Roblox Instance.
 
-Rocs provides an entity wrapper class for ergonomic API usage, but data is associated internally with the inner instance, and not the wrapper. Multiple entity wrappers can exist for one instance. Entity wrappers hold no internal state themselves.
+For the sake of ergonomic API, Rocs provides an entity wrapper class which has many of the methods you will use to modify components. However, state is associated internally with the instance for which the wrapper belongs, and not within the wrapper itself. Multiple entity wrappers can exist for one instance.
 
-Entity wrappers must be created with a **scope**, which is a string that should refer to the area in the code where a change is being made. For example, if you wanted to stop a player from moving when they open a menu, then the entity wrapper you create to enact that change should be created with the scope `"menu"`. The rationale behind this requirement is explained in the next section.
+Entity wrappers must be created with a **scope**, which is some value associated with the source of the state change. For example, if you wanted to stop a player from moving when they open a menu, then the entity wrapper you create to enact that change could be created with the scope `"menu"` (a string). If instead some state change on a player was coming from within a tool, you could use the `Tool` object as the scope.
+
+The rationale behind this requirement is explained in the next section.
 
 ## Components
 
@@ -153,27 +156,27 @@ entity.addComponent(MyComponent, {
 })
 ```
 
-**Components** are, in essence, named <dfn data-t="Typically, a component is a well-structured dictionary table.">groups of related data</dfn> which can be associated with an entity. Every type of component you want to use must be explicitly registered on the Rocs instance with a unique name along with various other options.
+**Components** are, in essence, named <dfn data-t="Typically, a component is a well-structured dictionary table.">groups of related data</dfn> which can be associated with an entity. Every type of component you want to use must be explicitly registered on the Rocs instance with a <dfn data-t="Components must have unique names to ensure that we can keep server and client components straight when replicating. It also enables some shorthands within the API. We recommend that you give your components specific enough names so that naming collisions do not occur. Attempting to register two components with the same name is an error.">unique name</dfn> along with various other options.
 
-In Rocs, components are a little different from a typical ECS framework. In order to facilitate shared <dfn data-t='"Resource" refers to anything that has state which Rocs could manage, such as a property like WalkSpeed.'>resource</dfn> management, multiple components of the same type can exist on the same entity.
+In Rocs, components are a little different from a typical ECS library. In order to allow disparate locations of your code to influence and mutate the same state in a safe way, multiple of the same component can exist on one entity.
 
-As discussed in the previous section, entity wrappers must be created with a scope. Multiple components of the same type are distinguished by this scope. When you add or remove a component from an entity, you only affect components which are also branded with your scope.
+As discussed in the previous section, entity wrappers must be created with a scope. Multiple of the same component on one entity are distinguished by the scopes that you choose when adding the component. When you add or remove a component from an entity, you only affect components which are also branded with your scope.
 
 ### Component Aggregates
 
-Every time you add, modify, or delete a component, all components of the same type are grouped and subsequently fed into a <dfn data-t="A function that accepts an array of all values of components of the same type, and returns a single value. The function decides how the values should be combined to reach the final value.">reducer function</dfn>. The resultant value is now referred to as a **component aggregate**.
+Every time you add, modify, or remove a component, all components of the same type are grouped and fed into a <dfn data-t="A function which you define that accepts an array of all values of components of the same type, and returns a single value. The function decides how the values should be combined to reach the final value.">reducer function</dfn>. The resultant value is now referred to as a **component aggregate**.
 
 ### Component Classes
 
 When you register a component type with Rocs, what you are actually registering is a **component class**. Component classes are used to represent a component of a specific type and are how you access the aggregate data.
 
-Component classes may have their own constructors and destructors, <dfn data-t="Functions which fire when the component is added, updated, and removed">life cycle hooks</dfn>, and custom methods.
+Component classes may have their own constructors and destructors, <dfn data-t="Functions which fire when the component is added, updated, and removed">life cycle hooks</dfn>, and custom methods if you wish.
 
-Only one component class will exist per entity per component type. So if you have an entity with two components of type `"MyComponent"`, there will only be one `MyComponent` component class for this entity.
+Only one instance of a component class will exist per entity per component type. So if you have an entity with two components of type `"MyComponent"`, there will only be one `MyComponent` component class for this entity.
 
 ### Tags and Base Scope Components
 
-Component types may also be optionally registered with a [CollectionService] tag. Rocs will then automatically add (with [optional initial data](#)) and remove this component from the entity for the respective Instance.
+Component types may also be optionally registered with a [CollectionService] tag. Rocs will then automatically add and remove this component from the Instance when the tag is added or removed.
 
 For situations like this where there is a component that exists at a more fundamental level, the **base scope** is used. The base scope is just like any other component scope, except it has special significance in performing the role as the "bottom-most" component (or in other words, the component that holds data for a component type without any additional modifiers from other places in the code base).
 
@@ -183,39 +186,71 @@ For situations like this where there is a component that exists at a more fundam
 entity:getBaseComponent("Character"):set("name", "New name")
 ```
 
-The base scope is used for CollectionService tags, but is also useful in your own code. For example, if you had a component that represents a character, situations may arise where you want to modify data destructively, such as in changing a character's name. We aren't *influencing* the existing name, but instead we are completely changing it. In this case, you should change the `"name"` field on the base component directly. (This assumes that you created the base component earlier in your code, which should be the case if you have *basic* data like this).
+The base scope is used for CollectionService tags, but is also useful in your own code. For example, if you had a component that represents a character, situations may arise where you want to modify data destructively, such as in changing a character's name. We aren't *influencing* the existing name, but instead we are completely changing it. In this case, you should change the `"name"` field on the base component directly. (This assumes that you initialized the base component earlier in your code, which should be the case if you have *basic* data like this).
 
-Base components also have special precedence when passed to reducer functions: the base component is always the first value. Values from other scopes subsequently follow in any order. This is useful for situations when you want non-base scopes to partially override fields from the base scope.
+Base components also have special precedence when passed to reducer functions: the base component is always the first value. Values from other scopes subsequently follow in the array in any order. This is useful for situations when you want non-base scopes to partially override fields from the base scope.
 
-## Metadata
+## Patterns
 
-**Metadata** are similar to components, but cannot be added to entities themselves. Instead, metadata are parts of components -- or well-known sub-fields as part of full components. Metadata are useful for holding data *about* the component itself.
+### Higher-Order Components
 
-Metadata are registered like components and have their own reducer function just like components. When components are reduced, if a metadata field is encountered, the metadata reducer is used to reduce that field.
+```lua
+rocs:registerComponent({
+  name = "Empowered";
+  reducer = rocs.reducers.structure({
+    intensity = rocs.reducers.highest;
+  });
+  check = t.interface({
+    intensity = t.number;
+  });
+  onUpdated = function (self)
+    local entity = rocs:getEntity(self.instance, self) -- This component is the scope.
 
-Solid examples of metadata will be mentioned in the "layers" section.
+    entity:addComponent("Health", self:getAnd("intensity", function(intensity)
+      return {
+        MaxHealthModifier = intensity;
+      }
+    end))
 
-## Systems
+    entity:addComponent("WalkSpeed", self:getAnd("intensity", function(intensity)
+      return intensity * 16
+    end))
+  end;
+})
+```
 
-**Systems** operate on components from the outside. Systems declare their dependencies, which are components or a set of components that the system deals with. Systems can also depend on any component with a certain metadata field.
+When creating games, it is often useful to have multiple levels of abstraction when dealing with state changes.
 
-### Hooks
+For example, you might have a `WalkSpeed` component which is only focused on dealing with the player's movement speed and nothing more. You might also have a `Health` component which only deals with the player's health. It's a good idea to create small components like this with each of their concerns wholly separated and decoupled.
 
-Systems can have multiple dependencies. Each dependency can have its own set of **behaviors**, which are invoked differently depending on the behavior.
+However, it can become tiresome to modify these components individually if you often find yourself changing them in tandem. For example, if your game had a mechanic where players regularly received a buff that makes them walk faster *and* have more health, it's a good idea to group these state changes together so that they stay in sync and are applied <dfn data-t="An atomic change is an indivisible grouping of operations such that either all occur or none occur, thus preventing desynchronization.">atomically</dfn>.
 
-For example, there is an `onUpdated` behavior which is invoked whenever one of the dependent components is updated (on any entity), the `onInterval` behavior can be used to repeatedly call the behavior as long as the dependency is met, and the `onEvent` behavior can be used to run connect an event listener when the dependency is met and disconnect the listener when it is no longer met. 
+Higher-order components allow you to do just this. A higher-order component is simply just a component that creates other components within their life cycle methods. In the code sample, we use the `onUpdated` life cycle method to add two components to the instance that this component is already attached to. 
 
-### System sleeping
+`getAnd` is a helper function on component classes which gets a field from the current component's data and then calls the callback only if that value is non-nil. If the value is nil, `getAnd` just returns `nil` immediately. Adding a component with the value of `nil` is the same as removing it.
 
-When *none* of a system's dependencies are met, the system is deconstructed. When one of its dependencies are met, the a new instance of the system is constructed. In this way, systems are singletons which can come in and out of existence. 
+<aside class="notice">Higher-order components are not a Rocs feature per se. They are a pattern that emerges from Rocs' compositional nature.</aside>
 
-## Layers
+### Meta-components
 
-The final core concept is layers. **Layers** are components that create other components. Layers can be used to group a set of related state changes together.
+```lua
+entity:addComponent("ComponentName", data, {
+  Replicated = true
+})
+```
+> The above code is equivalent to:
 
-When you add, modify, or remove a layer, the changes it denotes are enacted immediately. 
+```lua
+local component = entity:addComponent("ComponentName", data)
+local componentEntity = rocs:getEntity(component)
+componentEntity:addComponent("Replicated", true)
+```
 
-Because layers are just components, layer data is reduced if multiple layers with the same ID exist. By default, layers use a random ID. The ID becomes the scope of the components that the layer adds. Layers with different IDs do not affect each other. Layer data only gets reduced if two layers share the same ID.
+Not only can components create other components, but components can actually be *on* other components. We refer to these components which are on other components as **meta-components**. Meta-components exist on the component class instance of another component.
+
+Meta-components are useful to store state about components themselves rather than whatever the component manages. For example, the optional built-in `Replication` component, when present on another component, will cause that parent component to automatically be replicated over the network to clients.
+
+A short hand exists in the `addComponent` method on entity wrappers to add meta-components quickly immediately after adding your main component. You can also define implicit meta-components upon component registration which will always be added to those specific components.
 
 # Components API
 
@@ -234,9 +269,9 @@ rocs:registerComponent({
 })
 ```
 
-`rocs:registerComponent` is used to register a component class.
+`rocs:registerComponent` is used to register a component.
 
-### Component class fields
+### Component registration fields
 
 Field | Type | Description | Required
 ----- | ---- | ----------- | --------
@@ -245,15 +280,19 @@ reducer | function `(values: Array) -> any` | A function that reduces component 
 check | function `(value: any) -> boolean` | A function which is invoked to type check the component aggregate after reduction. |
 entityCheck | function | A function which is invoked to ensure this component is allowed to be on this entity. |
 tag | string | A CollectionService tag. When added to an Instance, Rocs will automatically create this component on the Instance. |
+defaults | dict | Default values for fields within this component. |
+components | dict | Default meta-components for this component. |
 initialize | method | Called when the component class is instantiated
 destroy | method | Called when the component class is destroyed
 onAdded | method | Called when the component is added for the first time
 onUpdated | method | Called when the component aggregate data is updated
+onParentUpdated | method | called when the component this meta-component is attached to is updated. (Only applies to meta-components).
 onRemoved | method | Called when the component is removed
+shouldUpdate | method | Called before onUpdated to decide if onUpdated should be called.
 
-## Component class injected fields
+## Component class methods and fields
 
-The following fields are injected into the component class, and must not be present in the given class.
+The following fields are inherited from the base component class and must not be present in registered components.
 
 ### get
 `get(...fields) -> any`
@@ -274,6 +313,34 @@ local nestedField = component:get("one", "two", "three")
 
 You can also get nested values from sub-tables in the component.
 
+### getOr
+`getOr(...fields, default)`
+
+```lua
+local value = component:getOr("field", "default value if nil")
+
+local value = component:getOr("field", function(field)
+  return "default value if nil"
+end)
+```
+
+Similar to `get`, except returns the last parameter if the given field happens to be `nil`.
+
+If the last parameter is a function, the function will be called and its return value will be returned.
+
+### getAnd
+`getAnd(...fields, callback)`
+
+```lua
+local value = component:getAnd("field", function(field)
+  return field or "default value"
+end)
+```
+
+Similar to `get`, except the retrieved field is fed through the given callback and its return value is returned from `getAnd` if the field is non-nil.
+
+If the field *is* nil, then `getAnd` always returns `nil` and the callback is never invoked. This function is useful for transforming a value before using it.
+
 ### set
 `set(...fields, value) -> void`
 
@@ -283,9 +350,7 @@ component:set("field", 1)
 component:set("one", "two", "three", Rocs.None)
 ```
 
-Sets a field on the `base` component.
-
-<aside class="warning">Refactor coming soon</aside>
+Sets a field on the base scope within component. If you want to set a field to `nil`, you must use `Rocs.None` instead of `nil`.
 
 ### data
 `data: any`
@@ -297,7 +362,7 @@ The current component aggregate data.
 
 The previous component aggregate data.
 
-# Built-in Reducers
+# Built-in Operators 
 
 Rocs provides a number of composable reducer and reducer utilities, so you only have to spend time writing a function for when you need something very specific.
 
@@ -305,14 +370,17 @@ Rocs provides a number of composable reducer and reducer utilities, so you only 
 
 Reducer | Description
 - | -
-`last` | Returns the *last* value of the set. `base` scope components are always first, so `last` will be any non-base scope (unless the base component is the only value)
+`last` | Returns the *last* value of the set. base scope components are always first, so `last` will be any non-base scope (unless the base component is the only value)
 `first` | Returns the *first* value of the set. Opposite of `last`.
 `truthy` | Returns the first truthy value in the set (or nil if there is none)
 `falsy` | Returns the first falsy value in the set (or nil if none)
 `add` | Adds the values from the set together (for numbers)
 `multiply` | Multiplies the values from the set together (for numbers)
+`lowest` | Lowest value (for numbers)
+`highest` | Highest value (for numbers)
+`concatArray` | Concatenates arrays
 
-## Utilities
+## Reducer Utilities
 
 ### structure
 
@@ -340,6 +408,41 @@ reducer = rocs.reducers.map(
 
 Reduces a dictionary, using the same reducer for each field individually.
 
+### concatString
+
+```lua
+reducer = rocs.reducers.concatString(" - ")
+```
+
+Concatenates strings with a given delimiter.
+
+### priorityValue
+
+```lua
+reducer = rocs.reducers.priorityValue(rocs.reducers.concatString(" - "))
+```
+
+Takes values in the form `{ priority: number, value: any }` and produces the `value` with the highest `priority`, reducing any values with equivalent priorities through the given reducer. If the reducer is omitted, `Reducers.last` is implicit.
+
+### exactly
+
+```lua
+reducer = rocs.reducers.exactly("some value")
+```
+
+Creates a reducer which always results in the same value.
+
+### try
+
+```lua
+reducer = rocs.reducers.try(
+  rocs.reducers.truthy,
+  rocs.reducers.exactly("Default")
+)
+```
+
+Tries a set of reducer functions until one of them returns a non-nil value.
+
 ### thisOr
 
 ```lua
@@ -350,6 +453,14 @@ reducer = rocs.reducers.thisOr(
 ```
 
 Runs the given reducer, and provide a default value in case that reducer returns nil.
+
+### firstOr
+
+```lua
+reducer = rocs.reducers.firstOr(1)
+```
+
+Returns the first non-nil value or a default value if there is none.
 
 ### truthyOr
 
@@ -363,30 +474,137 @@ Same as `thisOr`, except the `truthy` reducer is always used.
 
 Same as `truthyOr`, except for falsy values.
 
+## Comparators
+
+Comparator | Description
+---------- | -----------
+`reference` | Compares two values by reference.
+`value` | Compares two objects by value with a deep comparison.
+`near` | Compares two numbers and only allows an update if the difference is greater than 0.001.
+
+## Comparator Utilities
+
+### structure
+
+```lua
+shouldUpdate = rocs.comparators.structure({
+  propertyOne = rocs.comparators.reference;
+  propertyTwo = rocs.comparators.near;
+})
+```
+
+Compares tables with a different function for each field within the table. If any of the properties should update, the entire structure will update. Omitted properties are compared by reference.
+
+### within
+
+```lua
+shouldUpdate = rocs.comparators.within(1)
+```
+
+Allows an update only when the change is not within the given epsilon.
+
+# Rocs API
+
+## `new`
+`Rocs.new(name: string = "global"): rocs`
+
+Creats a new Rocs instance. Use `name` if you are using Rocs within a library; for games the default of `"global"` is fine.
+
+## `registerComponent`
+`rocs:registerComponent(definition: dictionary): definition`
+
+See "Registering a component"
+
+## `registerComponentsIn`
+`rocs:registerComponentsIn(instance: Instance): void`
+
+Calls registerComponent on the return value from all ModuleScripts inside the given instance.
+
+## `registerLifecycleHook`
+`rocs:registerLifecycleHook(lifecycle: string, hook: callback): void`
+
+Registers a callback which is called whenever the given life cycle method is invoked on any component. Callback is called with `(componentAggregate, stageName)`.
+
+- `onAdded`
+- `onUpdated`
+- `onParentUpdated`
+- `onRemoved`
+- `global`
+
+## `registerComponentHook`
+`rocs:registerComponentHook(component: componentResolvable, lifecycle: string, hook: callback): { disconnect: callback }`
+
+Same as `registerLifecycleHook`, except only for a single component type.
+
+## `getComponents`
+`rocs:getComponents(component: componentResolvable): array<Aggregate>`
+
+Returns an array of all component aggregates of the given type in the entire Rocs instance.
+
+<aside class="warning"><strong>Do not modify this array</strong>, as it is used internally. If you need to mutate, you must copy it first.</aside>
+
 # Entities API
 
 ```lua
 local entity = rocs:getEntity(workspace)
 ```
 
-The rocs insta
+## `addComponent`
+`entity:addComponent(component: componentResolvable, data: any, metaComponents: dict?): Aggregate, boolean`
 
-# Systems API
+Adds a new component to this entity under the entity's scope.
 
-## Dependencies
+If `data` is nil then this is equivalent to `removeComponent`.
 
-## Hooks
+Returns the associated aggregate class and a boolean indicating whether or not this component was new on this entity.
 
-# Layers API
+## `removeComponent`
+`entity:removeComponent(component: componentResolvable): void`
 
-# Rocs API
+Removes the given component from this entity.
 
-# Built-in Systems
+## `addBaseComponent`
+`entity:addBaseComponent(component: componentResolvable, data: any, metaComponents: dict?): Aggregate, boolean`
+
+Similar to `addComponent`, but with the special base scope.
+
+## `removeBaseComponent`
+`entity:removeBaseComponent(component: componentResolvable): void`
+
+Similar to `removeBaseComponent`, but with the special base scope.
+
+## `getComponent`
+`entity:getComponent(component: componentResolvable): Aggregate?`
+
+Returns the aggregate class for the given component from this entity if it exists.
+
+## `getAllComponents`
+`entity:getAllComponents(): array<Aggregate>`
+
+Returns all aggregates on this entity.
+
+## `removeAllComponents`
+`entity:removeAllComponents(): void`
+
+Removes all aggregates on this entity.
+
+## `getScope`
+`entity:getScope(scope: any): Entity`
+
+Returns a new Entity linked to the same instance as this entity but with a new scope.
+
+# Built-in Middleware
+
+- Mention how to use middleware
 
 ## Replication
 
-## Duration
+- Todo
+
+## Selectors
+
+- Todo
 
 # Authors
 
-Rocs was designed and created by [evaera](https://eryn.io).
+Rocs was designed and created by [evaera](https://eryn.io) and [buildthomas](https://github.com/buildthomas/).
