@@ -27,7 +27,24 @@ function Aggregate:getOr(...)
 
 	local value = self:get(unpack(path))
 
-	return value or type(default) == "function" and default() or default
+	if value ~= nil then
+		return value
+	elseif type(default) == "function" then
+		return default(unpack(path))
+	else
+		return default
+	end
+end
+
+function Aggregate:getAnd(...)
+	local path = {...}
+	local callback = table.remove(path, #path)
+
+	local value = self:get(unpack(path))
+
+	if value ~= nil then
+		return callback(value)
+	end
 end
 
 function Aggregate:set(...)
