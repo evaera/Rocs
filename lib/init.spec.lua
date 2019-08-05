@@ -41,15 +41,14 @@ local function makeTestCmp(rocs, callCounts)
 	}
 end
 
+-- TODO: Test life cycle hooks
+
 return function()
 	describe("Components", function()
 		local rocs = Rocs.new()
 		local callCounts = Util.callCounter()
 		local testCmp = makeTestCmp(rocs, callCounts)
 		rocs:registerComponent(testCmp)
-
-		rocs:registerLifecycleHook("onAdded", print)
-		rocs:registerComponentHook(testCmp, "global", print)
 
 		local reducers = rocs.reducers
 		local mtTest = rocs:registerComponent({
