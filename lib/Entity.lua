@@ -72,6 +72,10 @@ function Entity:getAllComponents()
 	return self.rocs._aggregates:getAll(self.instance)
 end
 
+function Entity:removeAllComponents()
+	return self.rocs._aggregates:removeAllComponents(self.instance)
+end
+
 function Entity:getScope(newScope)
 	return self.rocs:getEntity(self.instance, newScope)
 end
