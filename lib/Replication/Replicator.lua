@@ -114,7 +114,7 @@ function Replicator:_reifyPayload(payload)
 		if entry.target then
 			local instance = self:_deserialize(entry.target)
 
-			local entity = self.rocs:getEntity(instance, "remote", true)
+			local entity = self.rocs:getEntity(instance, "_remote", self.rocs.Internal)
 
 			entity:addComponent(entry.component, entry.data)
 		else

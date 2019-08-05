@@ -126,7 +126,7 @@ function AggregateCollection:addComponent(instance, staticAggregate, scope, data
 			local metacomponentAggregate = self:addComponent(
 				aggregate,
 				metacomponentStaticAggregate,
-				"base",
+				Constants.SCOPE_BASE,
 				metacomponentData
 			)
 

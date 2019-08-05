@@ -7,7 +7,7 @@ Entity.__index = Entity
 
 function Entity.new(rocs, instance, scope, overrideReserveCheck)
 	assert(
-		overrideReserveCheck == nil and
+		overrideReserveCheck == true or
 		Constants.RESERVED_SCOPES[scope] == nil,
 		("Entity scope cannot be %q"):format(scope)
 	)

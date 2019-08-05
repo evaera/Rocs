@@ -7,6 +7,7 @@ local Constants = {
 
 	ALL_COMPONENTS = {};
 	None = {};
+	Internal = {};
 
 	SCOPE_BASE = "_base";
 	SCOPE_REMOTE = "_remote";

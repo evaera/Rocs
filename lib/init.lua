@@ -10,6 +10,7 @@ local AggregateCollection = require(script.Collections.AggregateCollection)
 
 local Rocs = {
 	None = Constants.None;
+	Internal = Constants.Internal;
 	reducers = Reducers;
 	comparators = Comparators;
 }
@@ -75,10 +76,11 @@ function Rocs:registerComponentsIn(instance)
 end
 
 local getEntityCheck = t.tuple(t.union(t.Instance, t.table), t.string)
-function Rocs:getEntity(instance, scope)
+function Rocs:getEntity(instance, scope, override)
 	assert(getEntityCheck(instance, scope))
+	assert(override == nil or override == Rocs.Internal)
 
-	return Entity.new(self, instance, scope)
+	return Entity.new(self, instance, scope, override ~= nil)
 end
 
 function Rocs:_dispatchComponentChange(aggregate)
