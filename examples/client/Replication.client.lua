@@ -4,6 +4,6 @@ Rocs:registerComponent({
 	name = "WalkSpeed";
 
 	onUpdated = function(self)
-		print("New speed is", self.data.speed)
+		print("New speed is", self:getOr("speed", "back to default"))
 	end
 })

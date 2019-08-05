@@ -5,11 +5,7 @@ Rocs:registerComponent({
 	name = "WalkSpeed";
 
 	onUpdated = function(self)
-		local data = self.data or {
-			speed = 16
-		}
-
-		self.instance.WalkSpeed = data.speed
+		self.instance.WalkSpeed = self:getOr("speed", 16)
 	end;
 
 	components = {
@@ -28,9 +24,13 @@ Players.PlayerAdded:Connect(function(player)
 		local entity = Rocs:getEntity(humanoid, "test")
 
 		while true do
-			entity:addComponent("WalkSpeed", {
-				speed = math.random(2, 40)
-			})
+			if math.random(1, 10) == 1 then
+				entity:removeComponent("WalkSpeed")
+			else
+				entity:addComponent("WalkSpeed", {
+					speed = math.random(2, 40)
+				})
+			end
 
 			wait(2)
 		end
