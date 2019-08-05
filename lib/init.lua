@@ -114,6 +114,8 @@ function Rocs:_dispatchComponentChange(aggregate)
 	if newData == nil then
 		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_REMOVED)
 	end
+
+	aggregate.lastData = nil
 end
 
 function Rocs:_dispatchComponentLifecycleHooks(aggregate, stagePool, stage)
