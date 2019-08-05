@@ -1,6 +1,14 @@
-# Rocs
-Roblox Component System
+<p align="center"><img src="https://user-images.githubusercontent.com/2489210/62466698-f44d6600-b75f-11e9-80f1-19fbec20e89c.png"></p>
 
-Still in development.
-
-https://freshlysqueezednerds.github.io/Rocs/
+<p align="center">
+  <b>Ro</b>blox
+  <b>C</b>omponent
+  <b>S</b>ystem
+</p>
+<br><br>
+<p align="center">
+  <a href="https://freshlysqueezednerds.github.io/Rocs/"><b>Read the Docs</b></a>
+</p>
+<p align="center">
+  ⚠️ Unstable pre-release! ⚠️
+</p>
