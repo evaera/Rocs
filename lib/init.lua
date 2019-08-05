@@ -9,6 +9,7 @@ local Comparators = require(script.Operators.Comparators)
 local AggregateCollection = require(script.Collections.AggregateCollection)
 
 local Rocs = {
+	debug = false;
 	None = Constants.None;
 	Internal = Constants.Internal;
 	reducers = Reducers;
