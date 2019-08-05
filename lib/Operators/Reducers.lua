@@ -64,6 +64,8 @@ function Reducers.highest(values)
 	return math.max(unpack(values))
 end
 
+-- Utilities
+
 function Reducers.concatString(delim)
 	return function (values)
 		return table.concat(values, delim or "")
@@ -167,6 +169,7 @@ end
 
 Reducers.truthyOr = makeOr(Reducers.truthy)
 Reducers.falsyOr = makeOr(Reducers.falsy)
+Reducers.firstOr = makeOr(Reducers.first)
 Reducers.default = Reducers.structure({})
 
 return Reducers
