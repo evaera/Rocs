@@ -21,6 +21,7 @@ end
 
 function AggregateCollection:register(componentDefinition)
 	assert(I.ComponentDefinition(componentDefinition))
+	assert(self._components[componentDefinition.name] == nil, "A component with this name is already registered!")
 
 	setmetatable(componentDefinition, Aggregate)
 
