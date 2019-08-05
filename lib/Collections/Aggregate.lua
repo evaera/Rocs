@@ -6,6 +6,10 @@ Aggregate.__index = Aggregate
 function Aggregate:get(...)
 	local object = self.data
 
+	if object == nil then
+		return
+	end
+
 	for _, field in ipairs({...}) do
 		object = object[field]
 
