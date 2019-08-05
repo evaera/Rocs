@@ -367,6 +367,8 @@ The previous component aggregate data.
 
 Rocs provides a number of composable reducer and reducer utilities, so you only have to spend time writing a function for when you need something very specific.
 
+Remember that these functions just exist for convenience, and you are encouraged to implement custom functions for whatever you might need to do.
+
 ## Reducers
 
 Reducer | Description
@@ -505,6 +507,12 @@ shouldUpdate = rocs.comparators.within(1)
 Allows an update only when the change is not within the given epsilon.
 
 # Rocs API
+
+## Types
+
+### componentResolvable
+
+"componentResolvable" refers to any value which can resolve into a component. Specifically, this means either the component name as a string, or the component definition itself as a value. Either will work, but the string form is usually more ergonomic.
 
 ## `new`
 `Rocs.new(name: string = "global"): rocs`
