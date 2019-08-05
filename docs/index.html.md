@@ -367,7 +367,7 @@ The previous component aggregate data.
 
 Rocs provides a number of composable reducer and reducer utilities, so you only have to spend time writing a function for when you need something very specific.
 
-Remember that these functions just exist for convenience, and you are encouraged to implement custom functions for whatever you might need to do.
+<aside class="notice">Remember that these functions exist for convenience, and you are encouraged to implement custom functions for whatever you might need to do.</aside>
 
 ## Reducers
 
