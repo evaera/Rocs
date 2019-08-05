@@ -21,6 +21,15 @@ function Aggregate:get(...)
 	return object
 end
 
+function Aggregate:getOr(...)
+	local path = {...}
+	local default = table.remove(path, #path)
+
+	local value = self:get(unpack(path))
+
+	return value or type(default) == "function" and default() or default
+end
+
 function Aggregate:set(...)
 		local path = {...}
 		local value = table.remove(path, #path)
