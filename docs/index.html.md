@@ -20,13 +20,14 @@ search: true
 
 Rocs also performs the role of a general game state management library. Specifically, Rocs facilitates managing resources from multiple, unrelated places in your code base in a generic way.
 
-Some other prominent features of Rocs include:
+To that end, Rocs allows more than one of the same component to exist at the same time on a single entity. After every mutation, Rocs uses functions that you define to determine the single source of truth for that component. This allows disparate locations in your code base to influence a shared state.
 
-- Mechanisms for dealing with groups of state changes as a single unit
-- Automated state replication to all or specific players with masking (only replicating some properties and not all)
-- Compositional system dependency declaration: Systems can depend on one component, all of a set, any of a set, and permutations thereof (`all(foo, any(bar, baz))`)
-- Systems can have multiple dependencies which all have independent behaviors
-- Components can have life cycle methods and functions associated with them independent of systems
+The Rocs workflow encourages compositional patterns, decoupled separation of concerns, and generic components which are reusable across many games. Because of this, patterns such as higher order components emerge naturally and allow you to keep grouped state changes atomic and concise. 
+
+Additionally, Rocs supports middleware by means of life cycle hooks and augmenting core functionality. By default, two optional middleware are included:
+
+- Selectors, which offer a way to query against your current set of components within your game and create systems with behaviors which are only active when those queries are met.
+- Replication, which offers a batteries-included way to replicate components (or parts of components) you choose to clients.
 
 <!-- Rocs is compatible with both Lua and TypeScript via [roblox-ts](https://roblox-ts.github.io). -->
 
