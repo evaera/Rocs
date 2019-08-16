@@ -252,7 +252,7 @@
                     <a href="#registering-a-component" class="toc-h2 toc-link" data-title="Registering a component">Registering a component</a>
                   </li>
                   <li>
-                    <a href="#component-class-methods-and-fields" class="toc-h2 toc-link" data-title="Component class methods and fields">Component class methods and fields</a>
+                    <a href="#aggregate-methods-and-fields" class="toc-h2 toc-link" data-title="Aggregate methods and fields">Aggregate methods and fields</a>
                   </li>
               </ul>
           </li>
@@ -376,7 +376,9 @@
 </blockquote>
 <pre class="highlight lua tab-lua"><code><span class="n">rocs</span><span class="p">:</span><span class="n">registerComponent</span><span class="p">({</span>
   <span class="n">name</span> <span class="o">=</span> <span class="s2">"WalkSpeed"</span><span class="p">;</span>
-  <span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">lowest</span><span class="p">;</span>
+  <span class="n">reducer</span> <span class="o">=</span> <span class="k">function</span> <span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">math.min</span><span class="p">(</span><span class="n">unpack</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+  <span class="k">end</span><span class="p">;</span>
   <span class="n">check</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">number</span><span class="p">;</span>
   <span class="n">entityCheck</span> <span class="o">=</span> <span class="n">t</span><span class="p">.</span><span class="n">instance</span><span class="p">(</span><span class="s2">"Humanoid"</span><span class="p">);</span>
   <span class="n">onUpdated</span> <span class="o">=</span> <span class="k">function</span> <span class="p">(</span><span class="n">self</span><span class="p">)</span>
@@ -479,14 +481,14 @@ Because systems are automatically deconstructed when none of their dependencies 
 <p>In Rocs, components are a little different from a typical ECS library. In order to allow disparate locations of your code to influence and mutate the same state in a safe way, multiple of the same component can exist on one entity.</p>
 
 <p>As discussed in the previous section, entity wrappers must be created with a scope. Multiple of the same component on one entity are distinguished by the scopes that you choose when adding the component. When you add or remove a component from an entity, you only affect components which are also branded with your scope.</p>
+<h3 id='reduced-values'>Reduced values</h3>
+<p>Every time you add, modify, or remove a component, all components of the same type are grouped and fed into a <dfn data-t="A function which you define that accepts an array of all values of components of the same type, and returns a single value. The function decides how the values should be combined to reach the final value."><strong>reducer function</strong></dfn>. The resultant value is now referred to as a <strong>reduced value</strong>.</p>
 <h3 id='component-aggregates'>Component Aggregates</h3>
-<p>Every time you add, modify, or remove a component, all components of the same type are grouped and fed into a <dfn data-t="A function which you define that accepts an array of all values of components of the same type, and returns a single value. The function decides how the values should be combined to reach the final value.">reducer function</dfn>. The resultant value is now referred to as a <strong>component aggregate</strong>.</p>
-<h3 id='component-classes'>Component Classes</h3>
-<p>When you register a component type with Rocs, what you are actually registering is a <strong>component class</strong>. Component classes are used to represent a component of a specific type and are how you access the aggregate data.</p>
+<p>When you register a component type with Rocs, the table you register becomes the metatable of that component&#39;s <strong>Aggregate</strong>. Aggregates are essentially class instances which are used to represent all components of the same type on a single entity. They provide methods and have properties where you can access data from this component externally.</p>
 
-<p>Component classes may have their own constructors and destructors, <dfn data-t="Functions which fire when the component is added, updated, and removed">life cycle hooks</dfn>, and custom methods if you wish.</p>
+<p>Aggregates may have their own constructors and destructors, <dfn data-t="Functions which fire when the component is added, updated, and removed">life cycle hooks</dfn>, and custom methods if you wish.</p>
 
-<p>Only one instance of a component class will exist per entity per component type. So if you have an entity with two components of type <code>&quot;MyComponent&quot;</code>, there will only be one <code>MyComponent</code> component class for this entity.</p>
+<p>Only one instance of an Aggregate will exist per entity per component type. So if you have an entity with two components of type <code>&quot;MyComponent&quot;</code>, there will only be one <code>MyComponent</code> Aggregate for this entity.</p>
 <h3 id='tags-and-base-scope-components'>Tags and Base Scope Components</h3>
 <p>Component types may also be optionally registered with a [CollectionService] tag. Rocs will then automatically add and remove this component from the Instance when the tag is added or removed.</p>
 
@@ -531,7 +533,7 @@ Because systems are automatically deconstructed when none of their dependencies 
 
 <p>Higher-order components allow you to do just this. A higher-order component is simply just a component that creates other components within their life cycle methods. In the code sample, we use the <code>onUpdated</code> life cycle method to add two components to the instance that this component is already attached to. </p>
 
-<p><code>getAnd</code> is a helper function on component classes which gets a field from the current component&#39;s data and then calls the callback only if that value is non-nil. If the value is nil, <code>getAnd</code> just returns <code>nil</code> immediately. Adding a component with the value of <code>nil</code> is the same as removing it.</p>
+<p><code>getAnd</code> is a helper function on Aggregates which gets a field from the current component&#39;s data and then calls the callback only if that value is non-nil. If the value is nil, <code>getAnd</code> just returns <code>nil</code> immediately. Adding a component with the value of <code>nil</code> is the same as removing it.</p>
 
 <aside class="notice">Higher-order components are not a Rocs feature per se. They are a pattern that emerges from Rocs' compositional nature.</aside>
 <h3 id='meta-components'>Meta-components</h3><pre class="highlight lua tab-lua"><code><span class="n">entity</span><span class="p">:</span><span class="n">addComponent</span><span class="p">(</span><span class="s2">"ComponentName"</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="p">{</span>
@@ -545,11 +547,11 @@ Because systems are automatically deconstructed when none of their dependencies 
 <span class="kd">local</span> <span class="n">componentEntity</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">:</span><span class="n">getEntity</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
 <span class="n">componentEntity</span><span class="p">:</span><span class="n">addComponent</span><span class="p">(</span><span class="s2">"Replicated"</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
 </code></pre>
-<p>Not only can components create other components, but components can actually be <em>on</em> other components. We refer to these components which are on other components as <strong>meta-components</strong>. Meta-components exist on the component class instance of another component.</p>
+<p>Not only can components create other components, but components can actually be <em>on</em> other components. We refer to these components which are on other components as <strong>meta-components</strong>. Meta-components exist on the Aggregate instance of another component.</p>
 
 <p>Meta-components are useful to store state about components themselves rather than whatever the component manages. For example, the optional built-in <code>Replication</code> component, when present on another component, will cause that parent component to automatically be replicated over the network to clients.</p>
 
-<p>A short hand exists in the <code>addComponent</code> method on entity wrappers to add meta-components quickly immediately after adding your main component. You can also define implicit meta-components upon component registration which will always be added to those specific components.</p>
+<p>A short hand exists in the <code>addComponent</code> method on entity wrappers to add meta-components quickly immediately after adding your main component. You can also define implicit meta-components upon component registration which will always be added to those specific components via the <code>components</code> field.</p>
 <h1 id='components-api'>Components API</h1><h2 id='registering-a-component'>Registering a component</h2><pre class="highlight lua tab-lua"><code><span class="n">rocs</span><span class="p">:</span><span class="n">registerComponent</span><span class="p">({</span>
   <span class="n">name</span> <span class="o">=</span> <span class="s2">"MyComponent"</span><span class="p">;</span>
   <span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">structure</span><span class="p">({</span>
@@ -581,13 +583,13 @@ Because systems are automatically deconstructed when none of their dependencies 
 <tr>
 <td>reducer</td>
 <td>function <code>(values: Array) -&gt; any</code></td>
-<td>A function that reduces component data into a component aggregate.</td>
+<td>A function that reduces component data into a reduced value.</td>
 <td></td>
 </tr>
 <tr>
 <td>check</td>
 <td>function <code>(value: any) -&gt; boolean</code></td>
-<td>A function which is invoked to type check the component aggregate after reduction.</td>
+<td>A function which is invoked to type check the reduced value after reduction.</td>
 <td></td>
 </tr>
 <tr>
@@ -617,13 +619,13 @@ Because systems are automatically deconstructed when none of their dependencies 
 <tr>
 <td>initialize</td>
 <td>method</td>
-<td>Called when the component class is instantiated</td>
+<td>Called when the Aggregate is instantiated</td>
 <td></td>
 </tr>
 <tr>
 <td>destroy</td>
 <td>method</td>
-<td>Called when the component class is destroyed</td>
+<td>Called when the Aggregate is destroyed</td>
 <td></td>
 </tr>
 <tr>
@@ -635,7 +637,7 @@ Because systems are automatically deconstructed when none of their dependencies 
 <tr>
 <td>onUpdated</td>
 <td>method</td>
-<td>Called when the component aggregate data is updated</td>
+<td>Called when the component&#39;s reduced value is updated</td>
 <td></td>
 </tr>
 <tr>
@@ -652,13 +654,15 @@ Because systems are automatically deconstructed when none of their dependencies 
 </tr>
 <tr>
 <td>shouldUpdate</td>
-<td>method</td>
+<td>function <code>(a: any, b: any) -&gt; boolean</code></td>
 <td>Called before onUpdated to decide if onUpdated should be called.</td>
 <td></td>
 </tr>
 </tbody></table>
-<h2 id='component-class-methods-and-fields'>Component class methods and fields</h2>
-<p>The following fields are inherited from the base component class and must not be present in registered components.</p>
+
+<p><small>All *method*s above are called with <code>self</code> as their only parameter.</small></p>
+<h2 id='aggregate-methods-and-fields'>Aggregate methods and fields</h2>
+<p>The following fields are inherited from the base Aggregate class and must not be present in registered components.</p>
 <h3 id='get'>get</h3>
 <p><code>component:get(...fields) -&gt; any</code></p>
 <pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">component</span> <span class="o">=</span> <span class="n">entity</span><span class="p">:</span><span class="n">getComponent</span><span class="p">(</span><span class="s2">"MyComponent"</span><span class="p">)</span>
@@ -666,8 +670,12 @@ Because systems are automatically deconstructed when none of their dependencies 
 <span class="kd">local</span> <span class="n">allData</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">get</span><span class="p">()</span>
 
 <span class="kd">local</span> <span class="n">field</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">get</span><span class="p">(</span><span class="s2">"field"</span><span class="p">)</span>
+
+<span class="kd">local</span> <span class="n">nested</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">get</span><span class="p">(</span><span class="s2">"very"</span><span class="p">,</span> <span class="s2">"nested"</span><span class="p">,</span> <span class="s2">"field"</span><span class="p">)</span>
 </code></pre>
-<p>Retrieves a field from the current aggregate data, or the entire thing if no parameters are given.</p>
+<p>Retrieves a field from the current reduced value, or the entire thing if no parameters are given.</p>
+
+<p>Short circuits and returns <code>nil</code> if any value in the path to the last field is <code>nil</code>.</p>
 <pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">nestedField</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">get</span><span class="p">(</span><span class="s2">"one"</span><span class="p">,</span> <span class="s2">"two"</span><span class="p">,</span> <span class="s2">"three"</span><span class="p">)</span>
 </code></pre>
 <p>You can also get nested values from sub-tables in the component.</p>
@@ -690,7 +698,7 @@ Because systems are automatically deconstructed when none of their dependencies 
 </code></pre>
 <p>Similar to <code>get</code>, except the retrieved field is fed through the given callback and its return value is returned from <code>getAnd</code> if the field is non-nil.</p>
 
-<p>If the field <em>is</em> nil, then <code>getAnd</code> always returns <code>nil</code> and the callback is never invoked. This function is useful for transforming a value before using it.</p>
+<p>If the field <em>is</em> <code>nil</code>, then <code>getAnd</code> always returns <code>nil</code> and the callback is never invoked. This function is useful for transforming a value before using it.</p>
 <h3 id='set'>set</h3>
 <p><code>component:set(...fields, value) -&gt; void</code></p>
 <pre class="highlight lua tab-lua"><code><span class="n">component</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="s2">"field"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -717,11 +725,11 @@ Because systems are automatically deconstructed when none of their dependencies 
 <h3 id='data'>data</h3>
 <p><code>data: any</code></p>
 
-<p>The current component aggregate data.</p>
+<p>The current reduced value from this component.</p>
 <h3 id='lastdata'>lastData</h3>
 <p><code>lastData: any</code></p>
 
-<p>The previous component aggregate data. This is only available during life cycle methods such as <code>onUpdated</code>.</p>
+<p>The previous reduced value from this component. This is only available during life cycle methods such as <code>onUpdated</code>.</p>
 <h1 id='built-in-operators'>Built-in Operators</h1>
 <p>Rocs provides a number of composable reducer and reducer utilities, so you only have to spend time writing a function for when you need something very specific.</p>
 
@@ -891,7 +899,7 @@ Because systems are automatically deconstructed when none of their dependencies 
 <h2 id='getcomponents'><code>getComponents</code></h2>
 <p><code>rocs:getComponents(component: componentResolvable): array&lt;Aggregate&gt;</code></p>
 
-<p>Returns an array of all component aggregates of the given type in the entire Rocs instance.</p>
+<p>Returns an array of all Aggregates of the given type in the entire Rocs instance.</p>
 
 <aside class="warning"><strong>Do not modify this array</strong>, as it is used internally. If you need to mutate, you must copy it first.</aside>
 <h1 id='entities-api'>Entities API</h1><pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">entity</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">:</span><span class="n">getEntity</span><span class="p">(</span><span class="n">workspace</span><span class="p">)</span>
@@ -902,7 +910,7 @@ Because systems are automatically deconstructed when none of their dependencies 
 
 <p>If <code>data</code> is nil then this is equivalent to <code>removeComponent</code>.</p>
 
-<p>Returns the associated aggregate class and a boolean indicating whether or not this component was new on this entity.</p>
+<p>Returns the associated Aggregate and a boolean indicating whether or not this component was new on this entity.</p>
 <h2 id='removecomponent'><code>removeComponent</code></h2>
 <p><code>entity:removeComponent(component: componentResolvable): void</code></p>
 
@@ -918,15 +926,15 @@ Because systems are automatically deconstructed when none of their dependencies 
 <h2 id='getcomponent'><code>getComponent</code></h2>
 <p><code>entity:getComponent(component: componentResolvable): Aggregate?</code></p>
 
-<p>Returns the aggregate class for the given component from this entity if it exists.</p>
+<p>Returns the Aggregate for the given component from this entity if it exists.</p>
 <h2 id='getallcomponents'><code>getAllComponents</code></h2>
 <p><code>entity:getAllComponents(): array&lt;Aggregate&gt;</code></p>
 
-<p>Returns all aggregates on this entity.</p>
+<p>Returns all Aggregates on this entity.</p>
 <h2 id='removeallcomponents'><code>removeAllComponents</code></h2>
 <p><code>entity:removeAllComponents(): void</code></p>
 
-<p>Removes all aggregates on this entity.</p>
+<p>Removes all Aggregates on this entity.</p>
 <h2 id='getscope'><code>getScope</code></h2>
 <p><code>entity:getScope(scope: any): Entity</code></p>
 
