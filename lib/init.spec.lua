@@ -35,8 +35,9 @@ local function makeTestCmp(rocs, callCounts)
 		check = t.interface({});
 		entityCheck = t.union(t.instance("Workspace"), t.instance("DataModel"));
 		tag = "Test";
-		onUpdated = function()
+		onUpdated = function(self)
 			callCounts:call("onUpdated")
+			self:dispatch("customUpdated")
 		end;
 	}
 end
@@ -102,6 +103,11 @@ return function()
 			expect(cmpAg:get("two")).to.equal(2)
 			expect(cmpAg:get("testDefault")).to.equal(5)
 
+			local listener = cmpAg:listen("customUpdated", function()
+				callCounts:call("customUpdated")
+
+				print'asdfasfsaf'
+			end)
 
 			local cmpAgEnt = rocs._aggregates._entities[cmpAg][mtTest]
 
@@ -112,16 +118,22 @@ return function()
 			expect(cmpAg:get("three")).to.never.be.ok()
 			cmpAg:set("three", 3)
 			expect(cmpAg:get("three")).to.equal(3)
+
+			cmpAg:removeListener("customUpdated", listener)
+
 			cmpAg:set("three", Rocs.None)
 			expect(cmpAg:get("three")).to.never.be.ok()
 
 			expect(tostring(cmpAg)).to.equal("Aggregate(Test)")
 
+			expect(cmpAg:get("one")).to.equal(1)
+
 			ent:removeComponent(testCmp)
 			ent:removeBaseComponent(testCmp)
 			expect(callCounts.testCmpDestroy).to.equal(1)
-			expect(callCounts.onUpdated).to.equal(3)
-			expect(callCounts.onParentUpdated).to.equal(3)
+			expect(callCounts.onUpdated).to.equal(5)
+			expect(callCounts.customUpdated).to.equal(1)
+			expect(callCounts.onParentUpdated).to.equal(5)
 		end)
 
 		it("should allow looping over components", function()

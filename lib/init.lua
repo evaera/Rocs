@@ -5,6 +5,7 @@ local t = require(script.t)
 local Constants = require(script.Constants)
 local Reducers = require(script.Operators.Reducers)
 local Comparators = require(script.Operators.Comparators)
+local inspect = require(script.Inspect).inspect
 
 local AggregateCollection = require(script.Collections.AggregateCollection)
 
@@ -140,9 +141,7 @@ function Rocs:_dispatchGlobalLifecycleHooks(aggregate, stagePool, stage)
 end
 
 function Rocs:_dispatchLifecycle(aggregate, stage)
-	if aggregate[stage] then
-		aggregate[stage](aggregate)
-	end
+	aggregate:dispatch(stage)
 
 	self:_dispatchComponentLifecycleHooks(aggregate, stage)
 	self:_dispatchComponentLifecycleHooks(aggregate, "global", stage)

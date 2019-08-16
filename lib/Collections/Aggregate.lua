@@ -72,6 +72,51 @@ function Aggregate:set(...)
 		return self.rocs._aggregates:addComponent(self.instance, getmetatable(self), Constants.SCOPE_BASE, currentValue)
 end
 
+function Aggregate:listen(eventName, callback)
+	if not self._listeners then
+		self._listeners = {}
+	end
+
+	if not self._listeners[eventName] then
+		self._listeners[eventName] = {}
+	end
+
+	table.insert(self._listeners[eventName], callback)
+
+	return callback
+end
+
+function Aggregate:removeListener(eventName, callback)
+	if self._listeners and self._listeners[eventName] then
+		for i, listener in ipairs(self._listeners[eventName]) do
+			if listener == callback then
+				table.remove(self._listeners[eventName], i)
+				break
+			end
+		end
+
+		if #self._listeners[eventName] == 0 then
+			self._listeners[eventName] = nil
+
+			if next(self._listeners) == nil then
+				self._listeners = nil
+			end
+		end
+	end
+end
+
+function Aggregate:dispatch(eventName, ...)
+	if self[eventName] then
+		self[eventName](self, ...)
+	end
+
+	if self._listeners and self._listeners[eventName] then
+		for _, listener in ipairs(self._listeners[eventName]) do
+			listener(...)
+		end
+	end
+end
+
 function Aggregate:__tostring()
 	return ("Aggregate(%s)"):format(self.name)
 end
