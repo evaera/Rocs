@@ -660,7 +660,7 @@ Because systems are automatically deconstructed when none of their dependencies 
 <h2 id='component-class-methods-and-fields'>Component class methods and fields</h2>
 <p>The following fields are inherited from the base component class and must not be present in registered components.</p>
 <h3 id='get'>get</h3>
-<p><code>get(...fields) -&gt; any</code></p>
+<p><code>component:get(...fields) -&gt; any</code></p>
 <pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">component</span> <span class="o">=</span> <span class="n">entity</span><span class="p">:</span><span class="n">getComponent</span><span class="p">(</span><span class="s2">"MyComponent"</span><span class="p">)</span>
 
 <span class="kd">local</span> <span class="n">allData</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">get</span><span class="p">()</span>
@@ -672,7 +672,7 @@ Because systems are automatically deconstructed when none of their dependencies 
 </code></pre>
 <p>You can also get nested values from sub-tables in the component.</p>
 <h3 id='getor'>getOr</h3>
-<p><code>getOr(...fields, default)</code></p>
+<p><code>component:getOr(...fields, default)</code></p>
 <pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">value</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">getOr</span><span class="p">(</span><span class="s2">"field"</span><span class="p">,</span> <span class="s2">"default value if nil"</span><span class="p">)</span>
 
 <span class="kd">local</span> <span class="n">value</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">getOr</span><span class="p">(</span><span class="s2">"field"</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
@@ -683,7 +683,7 @@ Because systems are automatically deconstructed when none of their dependencies 
 
 <p>If the last parameter is a function, the function will be called and its return value will be returned.</p>
 <h3 id='getand'>getAnd</h3>
-<p><code>getAnd(...fields, callback)</code></p>
+<p><code>component:getAnd(...fields, callback)</code></p>
 <pre class="highlight lua tab-lua"><code><span class="kd">local</span> <span class="n">value</span> <span class="o">=</span> <span class="n">component</span><span class="p">:</span><span class="n">getAnd</span><span class="p">(</span><span class="s2">"field"</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
   <span class="k">return</span> <span class="n">field</span> <span class="ow">or</span> <span class="s2">"default value"</span>
 <span class="k">end</span><span class="p">)</span>
@@ -692,12 +692,28 @@ Because systems are automatically deconstructed when none of their dependencies 
 
 <p>If the field <em>is</em> nil, then <code>getAnd</code> always returns <code>nil</code> and the callback is never invoked. This function is useful for transforming a value before using it.</p>
 <h3 id='set'>set</h3>
-<p><code>set(...fields, value) -&gt; void</code></p>
+<p><code>component:set(...fields, value) -&gt; void</code></p>
 <pre class="highlight lua tab-lua"><code><span class="n">component</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="s2">"field"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
 <span class="n">component</span><span class="p">:</span><span class="n">set</span><span class="p">(</span><span class="s2">"one"</span><span class="p">,</span> <span class="s2">"two"</span><span class="p">,</span> <span class="s2">"three"</span><span class="p">,</span> <span class="n">Rocs</span><span class="p">.</span><span class="n">None</span><span class="p">)</span>
 </code></pre>
 <p>Sets a field on the base scope within component. If you want to set a field to <code>nil</code>, you must use <code>Rocs.None</code> instead of <code>nil</code>.</p>
+<h3 id='dispatch'>dispatch</h3>
+<p><code>component:dispatch(eventName: string, ...params) -&gt; void</code></p>
+
+<p>Dispatch an event on this component. Invokes the callback of any listeners which are registered for this event name.</p>
+
+<p>If there is a method on this component sharing the same name as <code>eventName</code>, it is also invoked.</p>
+<h3 id='listen'>listen</h3>
+<p><code>component:listen(eventName: string, listener: callback) -&gt; listener</code></p>
+
+<p>Adds a listener for this specific event name. Works for custom events which are fired with <code>dispatch</code>, and built-ins such as <code>onAdded</code> and <code>onUpdated</code>.</p>
+
+<p>Returns the passed listener.</p>
+<h3 id='removelistener'>removeListener</h3>
+<p><code>component:removeListener(eventName: string, listener: callback) -&gt; void</code></p>
+
+<p>Removes a previously registered listener from this component. Send the same function that you registered previously as <code>listener</code> to unregister it.</p>
 <h3 id='data'>data</h3>
 <p><code>data: any</code></p>
 
@@ -705,7 +721,7 @@ Because systems are automatically deconstructed when none of their dependencies 
 <h3 id='lastdata'>lastData</h3>
 <p><code>lastData: any</code></p>
 
-<p>The previous component aggregate data.</p>
+<p>The previous component aggregate data. This is only available during life cycle methods such as <code>onUpdated</code>.</p>
 <h1 id='built-in-operators'>Built-in Operators</h1>
 <p>Rocs provides a number of composable reducer and reducer utilities, so you only have to spend time writing a function for when you need something very specific.</p>
 
@@ -759,6 +775,8 @@ Because systems are automatically deconstructed when none of their dependencies 
 <span class="p">});</span>
 </code></pre>
 <p>Reduces a dictionary with a separate reducer for each field.</p>
+
+<p>Accepts the default reducer to use for omitted properties as a secondary parameter. By default, <code>Reducers.last</code> is used for omitted properties.</p>
 <h3 id='map'>map</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">map</span><span class="p">(</span>
   <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">structure</span><span class="p">({</span>
     <span class="n">one</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">multiply</span><span class="p">;</span>
@@ -769,7 +787,7 @@ Because systems are automatically deconstructed when none of their dependencies 
   <span class="p">})</span>
 <span class="p">)</span>
 </code></pre>
-<p>Reduces a dictionary, using the same reducer for each field individually.</p>
+<p>Reduces a table, using the same reducer for each key.</p>
 <h3 id='concatstring'>concatString</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">concatString</span><span class="p">(</span><span class="s2">" - "</span><span class="p">)</span>
 </code></pre>
 <p>Concatenates strings with a given delimiter.</p>
@@ -785,6 +803,18 @@ Because systems are automatically deconstructed when none of their dependencies 
 <span class="p">)</span>
 </code></pre>
 <p>Tries a set of reducer functions until one of them returns a non-nil value.</p>
+<h3 id='compose'>compose</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">compose</span><span class="p">(</span>
+  <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">structure</span><span class="p">({</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">last</span><span class="p">;</span>
+    <span class="n">add</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">add</span><span class="p">;</span>
+    <span class="n">mult</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">multiply</span><span class="p">;</span>
+  <span class="p">}),</span>
+  <span class="k">function</span> <span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">.</span><span class="n">base</span> <span class="o">+</span> <span class="n">value</span><span class="p">.</span><span class="n">add</span> <span class="o">*</span> <span class="n">value</span><span class="p">.</span><span class="n">mult</span><span class="p">;</span>
+  <span class="k">end</span>
+<span class="p">)</span>
+</code></pre>
+<p>Composes a set of reducers together such that the return value from each is passed into the next. Uses the return value of the last reducer.</p>
 <h3 id='thisor'>thisOr</h3><pre class="highlight lua tab-lua"><code><span class="n">reducer</span> <span class="o">=</span> <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">thisOr</span><span class="p">(</span>
   <span class="n">rocs</span><span class="p">.</span><span class="n">reducers</span><span class="p">.</span><span class="n">truthy</span><span class="p">,</span>
   <span class="mi">1</span>
