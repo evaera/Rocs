@@ -148,6 +148,18 @@ function Reducers.try(...)
 	end
 end
 
+function Reducers.compose(...)
+	local reducers = {...}
+
+	return function (values)
+		for _, reducer in ipairs(reducers) do
+			values = reducer(values)
+		end
+
+		return values
+	end
+end
+
 --? Should this be removed in favor of Reducers.try?
 function Reducers.thisOr(reducer, defaultValue)
 	return function(values)
