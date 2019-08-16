@@ -298,7 +298,7 @@ shouldUpdate | method | Called before onUpdated to decide if onUpdated should be
 The following fields are inherited from the base component class and must not be present in registered components.
 
 ### get
-`get(...fields) -> any`
+`component:get(...fields) -> any`
 
 ```lua
 local component = entity:getComponent("MyComponent")
@@ -317,7 +317,7 @@ local nestedField = component:get("one", "two", "three")
 You can also get nested values from sub-tables in the component.
 
 ### getOr
-`getOr(...fields, default)`
+`component:getOr(...fields, default)`
 
 ```lua
 local value = component:getOr("field", "default value if nil")
@@ -332,7 +332,7 @@ Similar to `get`, except returns the last parameter if the given field happens t
 If the last parameter is a function, the function will be called and its return value will be returned.
 
 ### getAnd
-`getAnd(...fields, callback)`
+`component:getAnd(...fields, callback)`
 
 ```lua
 local value = component:getAnd("field", function(field)
@@ -345,7 +345,7 @@ Similar to `get`, except the retrieved field is fed through the given callback a
 If the field *is* nil, then `getAnd` always returns `nil` and the callback is never invoked. This function is useful for transforming a value before using it.
 
 ### set
-`set(...fields, value) -> void`
+`component:set(...fields, value) -> void`
 
 ```lua
 component:set("field", 1)
@@ -354,6 +354,25 @@ component:set("one", "two", "three", Rocs.None)
 ```
 
 Sets a field on the base scope within component. If you want to set a field to `nil`, you must use `Rocs.None` instead of `nil`.
+
+### dispatch
+`component:dispatch(eventName: string, ...params) -> void`
+
+Dispatch an event on this component. Invokes the callback of any listeners which are registered for this event name.
+
+If there is a method on this component sharing the same name as `eventName`, it is also invoked.
+
+### listen
+`component:listen(eventName: string, listener: callback) -> listener`
+
+Adds a listener for this specific event name. Works for custom events which are fired with `dispatch`, and built-ins such as `onAdded` and `onUpdated`.
+
+Returns the passed listener.
+
+### removeListener
+`component:removeListener(eventName: string, listener: callback) -> void`
+
+Removes a previously registered listener from this component. Send the same function that you registered previously as `listener` to unregister it.
 
 ### data
 `data: any`
@@ -449,6 +468,23 @@ reducer = rocs.reducers.try(
 ```
 
 Tries a set of reducer functions until one of them returns a non-nil value.
+
+### compose
+
+```lua
+reducer = rocs.reducers.compose(
+  rocs.reducers.structure({
+    base = rocs.reducers.last;
+    add = rocs.reducers.add;
+    mult = rocs.reducers.multiply;
+  }),
+  function (value)
+    return value.base + value.add * value.mult;
+  end
+)
+```
+
+Composes a set of reducers together such that the return value from each is passed into the next. Uses the return value of the last reducer.
 
 ### thisOr
 
