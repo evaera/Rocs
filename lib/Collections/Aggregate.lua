@@ -57,7 +57,7 @@ function Aggregate:set(...)
 			value = nil
 		end
 
-		local currentValue = self.data or {}
+		local currentValue = self.components[Constants.SCOPE_BASE] or {}
 
 		while #path > 1 do
 			currentValue = currentValue[table.remove(path, 1)]
