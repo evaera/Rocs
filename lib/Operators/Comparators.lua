@@ -20,7 +20,7 @@ end
 
 function Comparators.structure(propertyComparators)
 	return function (a, b)
-		for _, item in pairs({a, b}) do
+		for _, item in ipairs({a, b}) do
 			for key in pairs(item) do
 				if (propertyComparators[key] or Comparators.default)(a and a[key], b and b[key]) then
 					return true
