@@ -40,7 +40,9 @@ To get started with Rocs, sync in with [Rojo](https://rojo.space) or [download t
 ```lua
 rocs:registerComponent({
   name = "WalkSpeed";
-  reducer = rocs.reducers.lowest;
+  reducer = function (values)
+    return math.min(unpack(values))
+  end;
   check = t.number;
   entityCheck = t.instance("Humanoid");
   onUpdated = function (self)
@@ -165,17 +167,17 @@ In Rocs, components are a little different from a typical ECS library. In order 
 
 As discussed in the previous section, entity wrappers must be created with a scope. Multiple of the same component on one entity are distinguished by the scopes that you choose when adding the component. When you add or remove a component from an entity, you only affect components which are also branded with your scope.
 
+### Reduced values
+
+Every time you add, modify, or remove a component, all components of the same type are grouped and fed into a <dfn data-t="A function which you define that accepts an array of all values of components of the same type, and returns a single value. The function decides how the values should be combined to reach the final value.">**reducer function**</dfn>. The resultant value is now referred to as a **reduced value**.
+
 ### Component Aggregates
 
-Every time you add, modify, or remove a component, all components of the same type are grouped and fed into a <dfn data-t="A function which you define that accepts an array of all values of components of the same type, and returns a single value. The function decides how the values should be combined to reach the final value.">reducer function</dfn>. The resultant value is now referred to as a **component aggregate**.
+When you register a component type with Rocs, the table you register becomes the metatable of that component's **Aggregate**. Aggregates are essentially class instances which are used to represent all components of the same type on a single entity. They provide methods and have properties where you can access data from this component externally.
 
-### Component Classes
+Aggregates may have their own constructors and destructors, <dfn data-t="Functions which fire when the component is added, updated, and removed">life cycle hooks</dfn>, and custom methods if you wish.
 
-When you register a component type with Rocs, what you are actually registering is a **component class**. Component classes are used to represent a component of a specific type and are how you access the aggregate data.
-
-Component classes may have their own constructors and destructors, <dfn data-t="Functions which fire when the component is added, updated, and removed">life cycle hooks</dfn>, and custom methods if you wish.
-
-Only one instance of a component class will exist per entity per component type. So if you have an entity with two components of type `"MyComponent"`, there will only be one `MyComponent` component class for this entity.
+Only one instance of an Aggregate will exist per entity per component type. So if you have an entity with two components of type `"MyComponent"`, there will only be one `MyComponent` Aggregate for this entity.
 
 ### Tags and Base Scope Components
 
@@ -230,7 +232,7 @@ However, it can become tiresome to modify these components individually if you o
 
 Higher-order components allow you to do just this. A higher-order component is simply just a component that creates other components within their life cycle methods. In the code sample, we use the `onUpdated` life cycle method to add two components to the instance that this component is already attached to. 
 
-`getAnd` is a helper function on component classes which gets a field from the current component's data and then calls the callback only if that value is non-nil. If the value is nil, `getAnd` just returns `nil` immediately. Adding a component with the value of `nil` is the same as removing it.
+`getAnd` is a helper function on Aggregates which gets a field from the current component's data and then calls the callback only if that value is non-nil. If the value is nil, `getAnd` just returns `nil` immediately. Adding a component with the value of `nil` is the same as removing it.
 
 <aside class="notice">Higher-order components are not a Rocs feature per se. They are a pattern that emerges from Rocs' compositional nature.</aside>
 
@@ -249,11 +251,11 @@ local componentEntity = rocs:getEntity(component)
 componentEntity:addComponent("Replicated", true)
 ```
 
-Not only can components create other components, but components can actually be *on* other components. We refer to these components which are on other components as **meta-components**. Meta-components exist on the component class instance of another component.
+Not only can components create other components, but components can actually be *on* other components. We refer to these components which are on other components as **meta-components**. Meta-components exist on the Aggregate instance of another component.
 
 Meta-components are useful to store state about components themselves rather than whatever the component manages. For example, the optional built-in `Replication` component, when present on another component, will cause that parent component to automatically be replicated over the network to clients.
 
-A short hand exists in the `addComponent` method on entity wrappers to add meta-components quickly immediately after adding your main component. You can also define implicit meta-components upon component registration which will always be added to those specific components.
+A short hand exists in the `addComponent` method on entity wrappers to add meta-components quickly immediately after adding your main component. You can also define implicit meta-components upon component registration which will always be added to those specific components via the `components` field.
 
 # Components API
 
@@ -279,23 +281,25 @@ rocs:registerComponent({
 Field | Type | Description | Required
 ----- | ---- | ----------- | --------
 name | string | The name of the component. Must be unique across all registered components. | ✓
-reducer | function `(values: Array) -> any` | A function that reduces component data into a component aggregate. | 
-check | function `(value: any) -> boolean` | A function which is invoked to type check the component aggregate after reduction. |
+reducer | function `(values: Array) -> any` | A function that reduces component data into a reduced value. | 
+check | function `(value: any) -> boolean` | A function which is invoked to type check the reduced value after reduction. |
 entityCheck | function | A function which is invoked to ensure this component is allowed to be on this entity. |
 tag | string | A CollectionService tag. When added to an Instance, Rocs will automatically create this component on the Instance. |
 defaults | dict | Default values for fields within this component. |
 components | dict | Default meta-components for this component. |
-initialize | method | Called when the component class is instantiated
-destroy | method | Called when the component class is destroyed
+initialize | method | Called when the Aggregate is instantiated
+destroy | method | Called when the Aggregate is destroyed
 onAdded | method | Called when the component is added for the first time
-onUpdated | method | Called when the component aggregate data is updated
+onUpdated | method | Called when the component's reduced value is updated
 onParentUpdated | method | called when the component this meta-component is attached to is updated. (Only applies to meta-components).
 onRemoved | method | Called when the component is removed
-shouldUpdate | method | Called before onUpdated to decide if onUpdated should be called.
+shouldUpdate | function `(a: any, b: any) -> boolean` | Called before onUpdated to decide if onUpdated should be called.
 
-## Component class methods and fields
+<small>All *method*s above are called with `self` as their only parameter.</small>
 
-The following fields are inherited from the base component class and must not be present in registered components.
+## Aggregate methods and fields
+
+The following fields are inherited from the base Aggregate class and must not be present in registered components.
 
 ### get
 `component:get(...fields) -> any`
@@ -306,9 +310,13 @@ local component = entity:getComponent("MyComponent")
 local allData = component:get()
 
 local field = component:get("field")
+
+local nested = component:get("very", "nested", "field")
 ```
 
-Retrieves a field from the current aggregate data, or the entire thing if no parameters are given.
+Retrieves a field from the current reduced value, or the entire thing if no parameters are given.
+
+Short circuits and returns `nil` if any value in the path to the last field is `nil`.
 
 ```lua
 local nestedField = component:get("one", "two", "three")
@@ -342,7 +350,7 @@ end)
 
 Similar to `get`, except the retrieved field is fed through the given callback and its return value is returned from `getAnd` if the field is non-nil.
 
-If the field *is* nil, then `getAnd` always returns `nil` and the callback is never invoked. This function is useful for transforming a value before using it.
+If the field *is* `nil`, then `getAnd` always returns `nil` and the callback is never invoked. This function is useful for transforming a value before using it.
 
 ### set
 `component:set(...fields, value) -> void`
@@ -377,12 +385,12 @@ Removes a previously registered listener from this component. Send the same func
 ### data
 `data: any`
 
-The current component aggregate data.
+The current reduced value from this component.
 
 ### lastData
 `lastData: any`
 
-The previous component aggregate data. This is only available during life cycle methods such as `onUpdated`.
+The previous reduced value from this component. This is only available during life cycle methods such as `onUpdated`.
 
 # Built-in Operators 
 
@@ -588,7 +596,7 @@ Same as `registerLifecycleHook`, except only for a single component type.
 ## `getComponents`
 `rocs:getComponents(component: componentResolvable): array<Aggregate>`
 
-Returns an array of all component aggregates of the given type in the entire Rocs instance.
+Returns an array of all Aggregates of the given type in the entire Rocs instance.
 
 <aside class="warning"><strong>Do not modify this array</strong>, as it is used internally. If you need to mutate, you must copy it first.</aside>
 
@@ -605,7 +613,7 @@ Adds a new component to this entity under the entity's scope.
 
 If `data` is nil then this is equivalent to `removeComponent`.
 
-Returns the associated aggregate class and a boolean indicating whether or not this component was new on this entity.
+Returns the associated Aggregate and a boolean indicating whether or not this component was new on this entity.
 
 ## `removeComponent`
 `entity:removeComponent(component: componentResolvable): void`
@@ -625,17 +633,17 @@ Similar to `removeBaseComponent`, but with the special base scope.
 ## `getComponent`
 `entity:getComponent(component: componentResolvable): Aggregate?`
 
-Returns the aggregate class for the given component from this entity if it exists.
+Returns the Aggregate for the given component from this entity if it exists.
 
 ## `getAllComponents`
 `entity:getAllComponents(): array<Aggregate>`
 
-Returns all aggregates on this entity.
+Returns all Aggregates on this entity.
 
 ## `removeAllComponents`
 `entity:removeAllComponents(): void`
 
-Removes all aggregates on this entity.
+Removes all Aggregates on this entity.
 
 ## `getScope`
 `entity:getScope(scope: any): Entity`
