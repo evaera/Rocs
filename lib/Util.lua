@@ -1,11 +1,22 @@
 local Util = {}
 
-Util.easyIndex = {
-	__index = function(self, k)
-		self[k] = {}
-		return self[k]
+do
+	local metatables = {}
+	function Util.easyIndex(levels)
+		for i = 1, levels do
+			if metatables[i] == nil then
+				metatables[i] = {
+					__index = function(self, k)
+						self[k] = setmetatable({}, metatables[i - 1])
+						return self[k]
+					end
+				}
+			end
+		end
+
+		return metatables[levels]
 	end
-}
+end
 
 function Util.assign(toObj, ...)
 	for _, fromObj in ipairs({...}) do

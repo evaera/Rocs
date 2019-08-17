@@ -54,9 +54,7 @@ function AggregateCollection:construct(staticAggregate, instance)
 	aggregate.components = {}
 	aggregate.instance = instance
 
-	if aggregate.initialize then
-		aggregate:initialize()
-	end
+	aggregate:dispatch("initialize")
 
 	return aggregate
 end
@@ -199,8 +197,8 @@ function AggregateCollection:removeComponent(instance, staticAggregate, scope)
 		self:deconstruct(aggregate)
 	end
 
-	if shouldDestroy and aggregate.destroy then
-		aggregate:destroy()
+	if shouldDestroy then
+		aggregate:dispatch("destroy")
 	end
 end
 

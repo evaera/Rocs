@@ -22,14 +22,9 @@ function Rocs.new(name)
 	local self = setmetatable({
 		name = name or "global";
 		_lifecycleHooks = {
-			global = setmetatable({}, Util.easyIndex);
-			component = {
-				global = setmetatable({}, Util.easyIndex);
-				[Constants.LIFECYCLE_ADDED] = setmetatable({}, Util.easyIndex);
-				[Constants.LIFECYCLE_REMOVED] = setmetatable({}, Util.easyIndex);
-				[Constants.LIFECYCLE_UPDATED] = setmetatable({}, Util.easyIndex);
-				[Constants.LIFECYCLE_PARENT_UPDATED] = setmetatable({}, Util.easyIndex);
-			}
+			global = setmetatable({}, Util.easyIndex(1));
+			component = setmetatable({}, Util.easyIndex(2));
+			instance = setmetatable({}, Util.easyIndex(3));
 		}
 	}, Rocs)
 
@@ -63,6 +58,18 @@ function Rocs:registerComponentHook(componentResolvable, lifecycle, hook)
 			end
 		end
 	}
+end
+
+function Rocs:registerInstanceComponentHook(instance, componentResolvable, lifecycle, hook)
+	local staticAggregate = self._aggregates:getStatic(componentResolvable)
+
+	table.insert(self._lifecycleHooks.instance[instance][lifecycle][staticAggregate], hook)
+
+	instance.AncestryChanged:Connect(function()
+		if not instance:IsDescendantOf(game) then
+			self._lifecycleHooks.instance[instance] = nil
+		end
+	end)
 end
 
 function Rocs:registerComponent(...)
@@ -119,34 +126,40 @@ function Rocs:_dispatchComponentChange(aggregate)
 	aggregate.lastData = nil
 end
 
-function Rocs:_dispatchComponentLifecycleHooks(aggregate, stagePool, stage)
+function Rocs:_dispatchLifecycleHooks(aggregate, stagePool, stage)
 	stage = stage or stagePool
 	local staticAggregate = getmetatable(aggregate)
+
+	for _, hook in ipairs(self._lifecycleHooks.global[stagePool]) do
+		hook(aggregate, stage)
+	end
 
 	if rawget(self._lifecycleHooks.component[stagePool], staticAggregate) then
 		local hooks = self._lifecycleHooks.component[stagePool][staticAggregate]
 
-		for i = 1, #hooks do
-			hooks[i](aggregate, stage)
+		for _, hook in ipairs(hooks) do
+			hook(aggregate, stage)
 		end
 	end
-end
 
-function Rocs:_dispatchGlobalLifecycleHooks(aggregate, stagePool, stage)
-	stage = stage or stagePool
+	if
+		rawget(self._lifecycleHooks.instance, aggregate.instance)
+		and rawget(self._lifecycleHooks.instance[aggregate.instance], stagePool)
+		and rawget(self._lifecycleHooks.instance[aggregate.instance][stagePool], staticAggregate)
+	then
+		local hooks = self._lifecycleHooks.instance[aggregate.instance][stagePool][staticAggregate]
 
-	for i = 1, #self._lifecycleHooks.global[stagePool] do
-		self._lifecycleHooks.global[stagePool][i](aggregate, stage)
+		for _, hook in ipairs(hooks) do
+			hook(aggregate, stage)
+		end
 	end
 end
 
 function Rocs:_dispatchLifecycle(aggregate, stage)
 	aggregate:dispatch(stage)
 
-	self:_dispatchComponentLifecycleHooks(aggregate, stage)
-	self:_dispatchComponentLifecycleHooks(aggregate, "global", stage)
-	self:_dispatchGlobalLifecycleHooks(aggregate, stage)
-	self:_dispatchGlobalLifecycleHooks(aggregate, "global", stage)
+	self:_dispatchLifecycleHooks(aggregate, stage)
+	self:_dispatchLifecycleHooks(aggregate, "global", stage)
 end
 
 return Rocs
