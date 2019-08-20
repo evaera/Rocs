@@ -1,6 +1,8 @@
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local BuiltInSerializers = require(script.Parent.BuiltInSerializers)
+
 local IS_SERVER = RunService:IsServer()
 local EVENT_NAME = "RocsEvent"
 local EVENT_NAME_INIT = "RocsInitial"
@@ -28,8 +30,8 @@ end
 function Replicator.new(rocs)
 	local self = {
 		rocs = rocs;
-		_serializers = {};
-		_deserializers = {};
+		_serializers = setmetatable({}, BuiltInSerializers.serializers);
+		_deserializers = setmetatable({}, BuiltInSerializers.deserializers);
 	}
 
 	if IS_SERVER then
@@ -128,12 +130,12 @@ function Replicator:_deserialize(serializedTarget)
 		return serializedTarget
 	end
 
-	local deserializer = self._deserializers[serializedTarget.name]
+	local deserializer = self._deserializers[serializedTarget.type]
 	if not deserializer then
 		error("Unable to deserialize object") -- TODO: Dump inspect of object
 	end
 
-	local object = deserializer(serializedTarget)
+	local object = deserializer(serializedTarget, self.rocs)
 
 	return object or error("Deserialization failed for object")
 end
@@ -144,7 +146,9 @@ function Replicator:_serialize(object)
 			and identity
 			or self:findSerializer(object)
 
-	return serializer and serializer(object) or error(("Unable to serialize replicated component %s"):format(object))
+	return
+		serializer and serializer(object, self.rocs)
+		or error(("Unable to serialize replicated component %s"):format(object))
 end
 
 function Replicator:_replicate(player, component, target, data)
@@ -163,8 +167,9 @@ function Replicator:registerSerializer(class, callback)
 	self._serializers[class] = callback
 end
 
-function Replicator:registerDeserializer(class, callback)
-	self._deserializers[class] = callback
+function Replicator:registerDeserializer(name, callback)
+	assert(type(name) == "string", "Deserializer type must be a string")
+	self._deserializers[name] = callback
 end
 
 local function find(class, map)
@@ -173,7 +178,6 @@ local function find(class, map)
 	end
 
 	local metatable = getmetatable(class)
-
 
 	if metatable then
 		return find(metatable, map)
@@ -184,8 +188,8 @@ function Replicator:findSerializer(class)
 	return find(class, self._serializers)
 end
 
-function Replicator:findDeserializer(class)
-	return find(class, self._deserializers)
+function Replicator:findDeserializer(name)
+	return self._deserializers[name]
 end
 
 return Replicator
