@@ -25,6 +25,7 @@ function Rocs.new(name)
 			global = setmetatable({}, Util.easyIndex(1));
 			component = setmetatable({}, Util.easyIndex(2));
 			instance = setmetatable({}, Util.easyIndex(3));
+			registration = {};
 		}
 	}, Rocs)
 
@@ -72,8 +73,18 @@ function Rocs:registerInstanceComponentHook(instance, componentResolvable, lifec
 	end)
 end
 
+function Rocs:registerComponentRegistrationHook(hook)
+	table.insert(self._lifecycleHooks.registration, hook)
+end
+
 function Rocs:registerComponent(...)
-	return self._aggregates:register(...)
+	local staticAggregate = self._aggregates:register(...)
+
+	for _, hook in ipairs(self._lifecycleHooks.registration) do
+		hook(staticAggregate)
+	end
+
+	return staticAggregate
 end
 
 function Rocs:getComponents(componentResolvable)
