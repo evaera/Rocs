@@ -80,6 +80,10 @@ function Rocs:getComponents(componentResolvable)
 	return self._aggregates._aggregates[self._aggregates:getStatic(componentResolvable)] or {}
 end
 
+function Rocs:resolveAggregate(componentResolvable)
+	return self._aggregates:resolve(componentResolvable)
+end
+
 function Rocs:registerComponentsIn(instance)
 	return Util.requireAllInAnd(instance, self.registerComponent, self)
 end
@@ -160,6 +164,14 @@ function Rocs:_dispatchLifecycle(aggregate, stage)
 
 	self:_dispatchLifecycleHooks(aggregate, stage)
 	self:_dispatchLifecycleHooks(aggregate, "global", stage)
+end
+
+function Rocs:warn(text, ...)
+	return warn(("[Rocs %s]"):format(self.name), text:format(Util.mapTuple(function(obj)
+		return typeof(obj) == "Instance"
+			and obj:GetFullName()
+			or tostring(obj)
+	end, ...)))
 end
 
 return Rocs

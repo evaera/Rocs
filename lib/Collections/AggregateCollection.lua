@@ -54,7 +54,7 @@ function AggregateCollection:construct(staticAggregate, instance)
 	aggregate.components = {}
 	aggregate.instance = instance
 
-	aggregate:dispatch("initialize")
+	self.rocs:_dispatchLifecycle(aggregate, "initialize")
 
 	return aggregate
 end
@@ -172,9 +172,7 @@ function AggregateCollection:removeAllComponents(instance)
 
 		self.rocs:_dispatchComponentChange(aggregate)
 
-		if aggregate.destroy then
-			aggregate:destroy()
-		end
+		self.rocs:_dispatchLifecycle(aggregate, "destroy")
 	end
 end
 
@@ -198,8 +196,10 @@ function AggregateCollection:removeComponent(instance, staticAggregate, scope)
 	end
 
 	if shouldDestroy then
-		aggregate:dispatch("destroy")
+		self.rocs:_dispatchLifecycle(aggregate, "destroy")
 	end
+
+	-- TODO: Should destroy be deffered to end-of-frame?
 end
 
 function AggregateCollection:getComponent(instance, staticAggregate, scope)
@@ -233,9 +233,17 @@ end
 
 function AggregateCollection:getStatic(componentResolvable)
 	return
-		self._components[componentResolvable]
-		or (type(componentResolvable) == "table" and componentResolvable)
+		self:resolve(componentResolvable)
 		or error(("Cannot resolve component %s"):format(componentResolvable))
+end
+
+function AggregateCollection:resolve(componentResolvable)
+	return self._components[componentResolvable]
+		or (
+			type(componentResolvable) == "table"
+			and getmetatable(componentResolvable) == Aggregate
+			and componentResolvable
+		)
 end
 
 function AggregateCollection:reduce(aggregate)

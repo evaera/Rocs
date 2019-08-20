@@ -169,4 +169,24 @@ function Util.requireAllInAnd(instance, callback, self)
 	end
 end
 
+--- Maps values of an array through a callback and returns an array of mapped values
+function Util.mapArray(array, callback)
+	local results = {}
+
+	for i, v in ipairs(array) do
+		results[i] = callback(v, i)
+	end
+
+	return results
+end
+
+--- Maps arguments #2-n through callback and returns values as tuple
+function Util.mapTuple(callback, ...)
+	local results = {}
+	for i, value in ipairs({...}) do
+		results[i] = callback(value)
+	end
+	return unpack(results)
+end
+
 return Util

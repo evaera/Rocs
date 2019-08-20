@@ -1,4 +1,3 @@
 return {
-	TAG = "__ROCS_CHAINING";
-	LOG_PREFIX = "[Rocs] [Chaining] ";
+	TAG = "Rocs_Chaining_%s";
 }

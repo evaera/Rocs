@@ -285,7 +285,7 @@ reducer | function `(values: Array) -> any` | A function that reduces component 
 check | function `(value: any) -> boolean` | A function which is invoked to type check the reduced value after reduction. |
 entityCheck | function | A function which is invoked to ensure this component is allowed to be on this entity. |
 tag | string | A CollectionService tag. When added to an Instance, Rocs will automatically create this component on the Instance. |
-defaults | dict | Default values for fields within this component. |
+defaults | dict | Default values for fields within this component. Becomes the metatable of the `data` field if it is a table. Does nothing if `data` is not a table. |
 components | dict | Default meta-components for this component. |
 initialize | method | Called when the Aggregate is instantiated
 destroy | method | Called when the Aggregate is destroyed
