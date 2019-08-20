@@ -411,6 +411,8 @@ Reducer | Description
 `lowest` | Lowest value (for numbers)
 `highest` | Highest value (for numbers)
 `concatArray` | Concatenates arrays
+`mergeTable` | Merges tables together, with keys from later values overriding earlier.
+`collect` | Returns all values this property is set to in each component as an array
 
 ## Reducer Utilities
 

@@ -31,15 +31,13 @@ end
 function Util.runReducer(staticAggregate, values, defaultReducer)
 	local reducedValue = (staticAggregate.reducer or defaultReducer)(values)
 
-	if staticAggregate.check then
-		assert(staticAggregate.check(reducedValue))
-	end
-
 	local data = reducedValue
 	if staticAggregate.defaults and type(reducedValue) == "table" then
-		data = setmetatable(reducedValue, {
-			__index = staticAggregate.defaults
-		})
+		staticAggregate.defaults.__index = staticAggregate.defaults
+		data = setmetatable(
+			reducedValue,
+			staticAggregate.defaults
+		)
 	end
 
 	if staticAggregate.check then

@@ -2,6 +2,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local BuiltInSerializers = require(script.Parent.BuiltInSerializers)
+local Util = require(script.Parent.Util)
 
 local IS_SERVER = RunService:IsServer()
 local EVENT_NAME = "RocsEvent"
@@ -27,6 +28,17 @@ local function getOrCreate(parent, name, class)
 	return instance
 end
 
+local function getData(data, replicated, player)
+	return
+		replicated and (
+			replicated.playerMasks
+			and replicated.playerMasks[player]
+			and Util.clipMask(data, replicated.playerMasks[player])
+			or replicated.mask
+			and Util.clipMask(data, replicated.mask)
+		) or data
+end
+
 function Replicator.new(rocs)
 	local self = {
 		rocs = rocs;
@@ -49,27 +61,78 @@ function Replicator.new(rocs)
 
 		self._component = rocs:registerComponent({
 			name = "Replicated";
-			reducer = rocs.reducers.last;
-			onParentUpdated = function(replicated)
+			reducer = rocs.reducers.structure({
+				players = rocs.reducers.concatArray;
+				mask = rocs.reducers.mergeTable;
+				playerMasks = rocs.reducers.mergeTable;
+			});
+			check = function(value)
+				return type(value) == "table"
+			end;
+			onUpdated = function(replicated)
+				replicated:dispatch("onParentUpdated", true)
+			end;
+			onParentUpdated = function(replicated, fromSelf)
 				local aggregate = replicated.instance
 
 				local serializedTarget = self:_serialize(aggregate.instance)
 
-				if replicated.data == true then
-					for _, player in pairs(Players:GetPlayers()) do
-						self:_replicate(
-							player,
-							aggregate.name,
-							serializedTarget,
-							aggregate.data
-						)
+				local shouldBroadcast =
+					not fromSelf
+					or rocs.comparators.value(
+						replicated.data and replicated.data.mask,
+						replicated.lastData and replicated.lastData.mask
+					)
+					or rocs.comparators.value(
+						replicated.data and replicated.data.playerMasks,
+						replicated.lastData and replicated.lastData.playerMasks
+					)
+
+				local removedPlayers = {}
+				local players
+				if
+					replicated.data
+					and replicated.lastData
+					and replicated.data.players
+					and replicated.lastData.players
+				then
+					for _, player in ipairs(replicated.lastData.players) do
+						if Util.find(replicated.data.players, player) == nil then
+							removedPlayers = removedPlayers
+
+							table.insert(removedPlayers, player)
+						end
 					end
-				else
-					--[[
-						mask: Structure of parent with trues being replicated
-						players: List of players to replicate this to
-					]]
-					error("Replication masks are unimplmented")
+
+					if not shouldBroadcast then
+						for _, player in ipairs(replicated.data.players) do
+							if Util.find(replicated.lastData.players) == nil then
+								players = players or {}
+
+								table.insert(players, player)
+							end
+						end
+					end
+				end
+
+				players = players or (replicated.data and replicated.data.players) or Players:GetPlayers()
+
+				for _, player in ipairs(players) do
+					self:_replicate(
+						player,
+						aggregate.name,
+						serializedTarget,
+						getData(aggregate.data, replicated.data, player)
+					)
+				end
+
+				for _, player in ipairs(removedPlayers) do
+					self:_replicate(
+						player,
+						aggregate.name,
+						serializedTarget,
+						nil
+					)
 				end
 			end;
 
@@ -77,12 +140,16 @@ function Replicator.new(rocs)
 				local payload = {}
 
 				for _, replicated in ipairs(rocs:getComponents(self._component)) do
-					local aggregate = replicated.instance
-					table.insert(payload, {
-						target = self:_serialize(aggregate.instance);
-						data = aggregate.data;
-						component = aggregate.name;
-					})
+					-- Only do this because if the player is added to an exclusive
+					-- one, they'll be gotten in the onUpdated
+					if replicated.data.players == nil then
+						local aggregate = replicated.instance
+						table.insert(payload, {
+							target = self:_serialize(aggregate.instance);
+							data = getData(aggregate.data, replicated.data, player);
+							component = aggregate.name;
+						})
+					end
 				end
 
 				self:_replicatePayload(player, payload, self._eventInit)

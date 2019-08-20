@@ -9,7 +9,11 @@ Rocs:registerComponent({
 	end;
 
 	components = {
-		Replicated = true;
+		Replicated = {
+			mask = {
+				speed = true;
+			}
+		};
 	};
 
 	entityCheck = {"Humanoid"};
@@ -28,7 +32,8 @@ Players.PlayerAdded:Connect(function(player)
 				entity:removeComponent("WalkSpeed")
 			else
 				entity:addComponent("WalkSpeed", {
-					speed = math.random(2, 40)
+					speed = math.random(2, 40);
+					secret = "very secret";
 				})
 			end
 

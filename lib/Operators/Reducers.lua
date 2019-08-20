@@ -46,7 +46,13 @@ function Reducers.multiply(values)
 	return reducedValue
 end
 
-Reducers.concatArray = Util.concat
+function Reducers.concatArray(values)
+	return Util.concat(unpack(values))
+end
+
+function Reducers.collect(values)
+	return values
+end
 
 function Reducers.lowest(values)
 	if #values == 0 then
@@ -62,6 +68,10 @@ function Reducers.highest(values)
 	end
 
 	return math.max(unpack(values))
+end
+
+function Reducers.mergeTable(values)
+	return Util.assign({}, unpack(values))
 end
 
 -- Utilities

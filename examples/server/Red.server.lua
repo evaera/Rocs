@@ -7,7 +7,9 @@ Rocs:registerComponent({
 	entityCheck = {"BasePart"};
 
 	components = {
-		Replicated = true;
+		Replicated = {
+			players = {};
+		};
 	};
 
 	defaults = {
