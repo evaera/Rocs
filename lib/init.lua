@@ -45,8 +45,8 @@ function Rocs:registerComponentHook(componentResolvable, lifecycle, hook)
 	return {
 		disconnect = function()
 			local hooks = self._lifecycleHooks.component[lifecycle][staticAggregate]
-			for i = 1, #hooks do
-				if hooks[i] == hook then
+			for i, v in ipairs(hooks) do
+				if v == hook then
 					table.remove(hooks, i)
 
 					if #hooks == 0 then

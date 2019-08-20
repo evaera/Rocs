@@ -67,8 +67,8 @@ function AggregateCollection:deconstruct(aggregate)
 
 	local array = self._aggregates[staticAggregate]
 
-	for i = 1, #array do
-		if array[i] == aggregate then
+	for i, v in ipairs(array) do
+		if v == aggregate then
 			table.remove(array, i)
 			break
 		end
@@ -286,9 +286,7 @@ function AggregateCollection:_dispatchComponentChange(aggregate)
 		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_UPDATED)
 
 		local childAggregates = self:getAll(aggregate)
-		for i = 1, #childAggregates do
-			local childAggregate = childAggregates[i]
-
+		for _, childAggregate in ipairs(childAggregates) do
 			self:_dispatchLifecycle(
 				childAggregate,
 				Constants.LIFECYCLE_PARENT_UPDATED
