@@ -54,7 +54,7 @@ function AggregateCollection:construct(staticAggregate, instance)
 	aggregate.components = {}
 	aggregate.instance = instance
 
-	self.rocs:_dispatchLifecycle(aggregate, "initialize")
+	self:_dispatchLifecycle(aggregate, "initialize")
 
 	return aggregate
 end
@@ -113,7 +113,7 @@ function AggregateCollection:addComponent(instance, staticAggregate, scope, data
 
 	aggregate.components[scope] = data
 
-	self.rocs:_dispatchComponentChange(aggregate)
+	self:_dispatchComponentChange(aggregate)
 
 	local pendingParentUpdated = {}
 
@@ -151,7 +151,7 @@ function AggregateCollection:addComponent(instance, staticAggregate, scope, data
 
 	-- De-duplicate onParentUpdated calls in case both tables have same
 	for metacomponentAggregate in pairs(pendingParentUpdated) do
-		self.rocs:_dispatchLifecycle(
+		self:_dispatchLifecycle(
 			metacomponentAggregate,
 			Constants.LIFECYCLE_PARENT_UPDATED
 		)
@@ -170,9 +170,9 @@ function AggregateCollection:removeAllComponents(instance)
 
 		self:deconstruct(aggregate)
 
-		self.rocs:_dispatchComponentChange(aggregate)
+		self:_dispatchComponentChange(aggregate)
 
-		self.rocs:_dispatchLifecycle(aggregate, "destroy")
+		self:_dispatchLifecycle(aggregate, "destroy")
 	end
 end
 
@@ -188,7 +188,7 @@ function AggregateCollection:removeComponent(instance, staticAggregate, scope)
 
 	aggregate.components[scope] = nil
 
-	self.rocs:_dispatchComponentChange(aggregate)
+	self:_dispatchComponentChange(aggregate)
 
 	local shouldDestroy = next(aggregate.components) == nil
 	if shouldDestroy then
@@ -196,7 +196,7 @@ function AggregateCollection:removeComponent(instance, staticAggregate, scope)
 	end
 
 	if shouldDestroy then
-		self.rocs:_dispatchLifecycle(aggregate, "destroy")
+		self:_dispatchLifecycle(aggregate, "destroy")
 	end
 
 	-- TODO: Should destroy be deffered to end-of-frame?
@@ -261,6 +261,46 @@ function AggregateCollection:reduce(aggregate)
 	end
 
 	return Util.runReducer(getmetatable(aggregate), values, self.rocs.reducers.default)
+end
+
+function AggregateCollection:_dispatchLifecycle(aggregate, stage)
+	aggregate:dispatch(stage)
+
+	self.rocs:_dispatchLifecycle(aggregate, stage)
+end
+
+function AggregateCollection:_dispatchComponentChange(aggregate)
+	local lastData = aggregate.data
+	local newData = self:reduce(aggregate)
+
+	aggregate.data = newData
+	aggregate.lastData = lastData
+
+	if lastData == nil and newData ~= nil then
+		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_ADDED)
+	end
+
+	local staticAggregate = getmetatable(aggregate)
+
+	if (staticAggregate.shouldUpdate or self.rocs.comparators.default)(newData, lastData) then
+		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_UPDATED)
+
+		local childAggregates = self:getAll(aggregate)
+		for i = 1, #childAggregates do
+			local childAggregate = childAggregates[i]
+
+			self:_dispatchLifecycle(
+				childAggregate,
+				Constants.LIFECYCLE_PARENT_UPDATED
+			)
+		end
+	end
+
+	if newData == nil then
+		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_REMOVED)
+	end
+
+	aggregate.lastData = nil
 end
 
 function AggregateCollection:listenForTag(tag, staticAggregate)

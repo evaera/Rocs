@@ -7,7 +7,7 @@ local Reducers = require(script.Operators.Reducers)
 local Comparators = require(script.Operators.Comparators)
 local inspect = require(script.Inspect).inspect
 
-local AggregateCollection = require(script.Collections.AggregateCollection)
+local AggregateCollection = require(script.Aggregate.AggregateCollection)
 
 local Rocs = {
 	debug = false;
@@ -96,39 +96,6 @@ function Rocs:getEntity(instance, scope, override)
 	return Entity.new(self, instance, scope, override ~= nil)
 end
 
-function Rocs:_dispatchComponentChange(aggregate)
-	local lastData = aggregate.data
-	local newData = self._aggregates:reduce(aggregate)
-
-	aggregate.data = newData
-	aggregate.lastData = lastData
-
-	if lastData == nil and newData ~= nil then
-		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_ADDED)
-	end
-
-	local staticAggregate = getmetatable(aggregate)
-
-	if (staticAggregate.shouldUpdate or self.comparators.default)(newData, lastData) then
-		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_UPDATED)
-
-		local childAggregates = self._aggregates:getAll(aggregate)
-		for i = 1, #childAggregates do
-			local childAggregate = childAggregates[i]
-
-			self:_dispatchLifecycle(
-				childAggregate,
-				Constants.LIFECYCLE_PARENT_UPDATED
-			)
-		end
-	end
-
-	if newData == nil then
-		self:_dispatchLifecycle(aggregate, Constants.LIFECYCLE_REMOVED)
-	end
-
-	aggregate.lastData = nil
-end
 
 function Rocs:_dispatchLifecycleHooks(aggregate, stagePool, stage)
 	stage = stage or stagePool
@@ -160,8 +127,6 @@ function Rocs:_dispatchLifecycleHooks(aggregate, stagePool, stage)
 end
 
 function Rocs:_dispatchLifecycle(aggregate, stage)
-	aggregate:dispatch(stage)
-
 	self:_dispatchLifecycleHooks(aggregate, stage)
 	self:_dispatchLifecycleHooks(aggregate, "global", stage)
 end
