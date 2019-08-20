@@ -15,7 +15,6 @@ function AggregateCollection.new(rocs)
 		_components = {};
 		_entities = {};
 		_aggregates = {};
-		_tags = {};
 	}, AggregateCollection)
 end
 
@@ -35,10 +34,6 @@ function AggregateCollection:register(componentDefinition)
 
 	self._components[componentDefinition.name] = componentDefinition
 	self._components[componentDefinition] = componentDefinition
-
-	if componentDefinition.tag then
-		self:listenForTag(componentDefinition.tag, componentDefinition)
-	end
 
 	return componentDefinition
 end
@@ -299,33 +294,6 @@ function AggregateCollection:_dispatchComponentChange(aggregate)
 	end
 
 	aggregate.lastData = nil
-end
-
-function AggregateCollection:listenForTag(tag, staticAggregate)
-	assert(self._tags[tag] == nil, ("Tag %q is already in use!"):format(tag))
-	self._tags[tag] = true
-
-	local function addFromTag(instance)
-		local data = {}
-		if
-			instance:FindFirstChild(staticAggregate.name)
-			and instance[staticAggregate.name].ClassName == "ModuleScript"
-		then
-			data = require(instance[staticAggregate.name])
-		end
-
-		self:addComponent(instance, staticAggregate, Constants.SCOPE_BASE, data)
-	end
-
-	local function removeFromTag(instance)
-		self:removeComponent(instance, staticAggregate, Constants.SCOPE_BASE)
-	end
-
-	CollectionService:GetInstanceRemovedSignal(tag):Connect(removeFromTag)
-	CollectionService:GetInstanceAddedSignal(tag):Connect(addFromTag)
-	for _, instance in ipairs(CollectionService:GetTagged(tag)) do
-		addFromTag(instance)
-	end
 end
 
 return AggregateCollection

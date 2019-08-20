@@ -284,7 +284,6 @@ name | string | The name of the component. Must be unique across all registered 
 reducer | function `(values: Array) -> any` | A function that reduces component data into a reduced value. | 
 check | function `(value: any) -> boolean` | A function which is invoked to type check the reduced value after reduction. |
 entityCheck | function | A function which is invoked to ensure this component is allowed to be on this entity. |
-tag | string | A CollectionService tag. When added to an Instance, Rocs will automatically create this component on the Instance. |
 defaults | dict | Default values for fields within this component. Becomes the metatable of the `data` field if it is a table. Does nothing if `data` is not a table. |
 components | dict | Default meta-components for this component. |
 initialize | method | Called when the Aggregate is instantiated
@@ -294,6 +293,7 @@ onUpdated | method | Called when the component's reduced value is updated
 onParentUpdated | method | called when the component this meta-component is attached to is updated. (Only applies to meta-components).
 onRemoved | method | Called when the component is removed
 shouldUpdate | function `(a: any, b: any) -> boolean` | Called before onUpdated to decide if onUpdated should be called.
+tag | string | A CollectionService tag. When added to an Instance, Rocs will automatically create this component on the Instance when using the Tags middleware. |
 
 <small>All *method*s above are called with `self` as their only parameter.</small>
 
@@ -565,7 +565,14 @@ Allows an update only when the change is not within the given epsilon.
 ## `new`
 `Rocs.new(name: string = "global"): rocs`
 
-Creats a new Rocs instance. Use `name` if you are using Rocs within a library; for games the default of `"global"` is fine.
+Creates a new Rocs instance. Use `name` if you are using Rocs within a library; for games the default of `"global"` is fine.
+
+## `getEntity`
+`rocs:getEntity(instance: any, scope: any): Entity`
+
+Creates an Entity wrapper for this instance with the given scope. The scope can be any value that discriminates what is enacting this change (such as a menu or a weapon). 
+
+Multiple Entities for the same instance can exist at once, so do not rely on receiving the same object when given the same parameters.
 
 ## `registerComponent`
 `rocs:registerComponent(definition: dictionary): definition`
@@ -657,6 +664,10 @@ Returns a new Entity linked to the same instance as this entity but with a new s
 ## Replication
 
 - Todo
+
+## Chaining 
+
+## Tags
 
 ## Selectors
 
