@@ -1,4 +1,3 @@
-local I = require(script.Interfaces)
 local Entity = require(script.Entity)
 local Util = require(script.Util)
 local t = require(script.t)

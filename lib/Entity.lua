@@ -1,4 +1,4 @@
-local I = require(script.Parent.Interfaces)
+local I = require(script.Parent.Types)
 local t = require(script.Parent.t)
 local Constants = require(script.Parent.Constants)
 
