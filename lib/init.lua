@@ -60,16 +60,18 @@ function Rocs:registerComponentHook(componentResolvable, lifecycle, hook)
 	}
 end
 
-function Rocs:registerInstanceComponentHook(instance, componentResolvable, lifecycle, hook)
+function Rocs:registerEntityComponentHook(instance, componentResolvable, lifecycle, hook)
 	local staticAggregate = self._aggregates:getStatic(componentResolvable)
 
 	table.insert(self._lifecycleHooks.instance[instance][lifecycle][staticAggregate], hook)
 
-	instance.AncestryChanged:Connect(function()
-		if not instance:IsDescendantOf(game) then
-			self._lifecycleHooks.instance[instance] = nil
-		end
-	end)
+	if typeof(instance) == "Instance" then
+		instance.AncestryChanged:Connect(function()
+			if not instance:IsDescendantOf(game) then
+				self._lifecycleHooks.instance[instance] = nil
+			end
+		end)
+	end
 end
 
 function Rocs:registerComponentRegistrationHook(hook)

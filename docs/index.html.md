@@ -591,16 +591,28 @@ Calls registerComponent on the return value from all ModuleScripts inside the gi
 
 Registers a callback which is called whenever the given life cycle method is invoked on any component. Callback is called with `(componentAggregate, stageName)`.
 
+- `initialize`
 - `onAdded`
 - `onUpdated`
 - `onParentUpdated`
 - `onRemoved`
+- `destroy`
 - `global`
 
 ## `registerComponentHook`
-`rocs:registerComponentHook(component: componentResolvable, lifecycle: string, hook: callback): { disconnect: callback }`
+`rocs:registerComponentHook(component: componentResolvable, lifecycle: string, hook: callback): hook`
 
 Same as `registerLifecycleHook`, except only for a single component type.
+
+## `unregisterComponentHook`
+`rocs:registerComponentHook(component: componentResolvable, lifecycle: string, hook: callback): void`
+
+Unregisters this component hook.
+
+## `registerEntityComponentHook`
+`rocs:registerEntityComponentHook(entity: any, component: componentResolvable, lifecycle: string, hook: callback): hook`
+
+Registers a component hook for specific components on a specific entity. If the entity is a Roblox Instance, then this will be disconnected when the Instance is no longer a child of the DataModel.
 
 ## `getComponents`
 `rocs:getComponents(component: componentResolvable): array<Aggregate>`

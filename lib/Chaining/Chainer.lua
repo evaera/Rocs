@@ -84,7 +84,7 @@ function Chainer:_chainAggregate(sourceInstance, staticAggregate, entries)
 		self:_connect(currentAggregate, entries)
 	end
 
-	self.rocs:registerInstanceComponentHook(
+	self.rocs:registerEntityComponentHook(
 		sourceInstance,
 		staticAggregate,
 		"initialize",

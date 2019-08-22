@@ -6,6 +6,7 @@
 - Add chaining middleware
 - Add component registration hooks
 - Remove tags from core, make into middleware
+- Add registerEntityComponentHook
 
 # v0.1.0
 
