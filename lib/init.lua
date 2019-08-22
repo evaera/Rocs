@@ -42,22 +42,23 @@ function Rocs:registerComponentHook(componentResolvable, lifecycle, hook)
 
 	table.insert(self._lifecycleHooks.component[lifecycle][staticAggregate], hook)
 
-	return {
-		disconnect = function()
-			local hooks = self._lifecycleHooks.component[lifecycle][staticAggregate]
-			for i, v in ipairs(hooks) do
-				if v == hook then
-					table.remove(hooks, i)
+	return hook
+end
 
-					if #hooks == 0 then
-						self._lifecycleHooks.component[lifecycle][staticAggregate] = nil
-					end
+function Rocs:unregisterComponentHook(component, lifecycle, hook)
+	local staticAggregate = self._aggregates:getStatic(componentResolvable)
+	local hooks = self._lifecycleHooks.component[lifecycle][staticAggregate]
+	for i, v in ipairs(hooks) do
+		if v == hook then
+			table.remove(hooks, i)
 
-					break
-				end
+			if #hooks == 0 then
+				self._lifecycleHooks.component[lifecycle][staticAggregate] = nil
 			end
+
+			break
 		end
-	}
+	end
 end
 
 function Rocs:registerEntityComponentHook(instance, componentResolvable, lifecycle, hook)
