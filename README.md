@@ -7,7 +7,7 @@
 </p>
 <br><br>
 <p align="center">
-  <a href="https://freshlysqueezednerds.github.io/Rocs/"><b>Read the Docs</b></a>
+  <a href="https://rocs-rbx.github.io/Rocs/#rocs"><b>Read the Docs</b></a>
 </p>
 <p align="center">
   ⚠️ Unstable pre-release! ⚠️
