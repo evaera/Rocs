@@ -1,7 +1,5 @@
--- local inspect = require(script.Parent.Parent.Inspect).inspect
-
 local I = require(script.Parent.Parent.Types)
-local Util = require(script.Parent.Parent.Util)
+local Util = require(script.Parent.Parent.Parent.Shared.Util)
 local Aggregate = require(script.Parent.Aggregate)
 local Constants = require(script.Parent.Parent.Constants)
 
@@ -15,6 +13,33 @@ function AggregateCollection.new(rocs)
 		_entities = {};
 		_aggregates = {};
 	}, AggregateCollection)
+end
+
+local function makeArrayEntityCheck(array)
+	return function(instance)
+		for _, className in ipairs(array) do
+			if instance:IsA(className) then
+				return true
+			end
+		end
+
+		return
+			false,
+			("Instance type %q is not allowed to have this component!")
+				:format(instance.ClassName)
+	end
+end
+
+function AggregateCollection.runEntityCheck(staticAggregate, instance)
+	if staticAggregate.entityCheck == nil then
+		return true
+	end
+
+	if type(staticAggregate.entityCheck) == "table" then
+		staticAggregate.entityCheck = makeArrayEntityCheck(staticAggregate.entityCheck)
+	end
+
+	return staticAggregate.entityCheck(instance)
 end
 
 function AggregateCollection:register(componentDefinition)
@@ -84,7 +109,7 @@ function AggregateCollection:addComponent(instance, staticAggregate, scope, data
 		return self:removeComponent(instance, staticAggregate, scope), false
 	end
 
-	assert(Util.runEntityCheck(staticAggregate, instance))
+	assert(AggregateCollection.runEntityCheck(staticAggregate, instance))
 
 	if self._entities[instance] == nil then
 		self._entities[instance] = {}
@@ -254,7 +279,24 @@ function AggregateCollection:reduce(aggregate)
 		end
 	end
 
-	return Util.runReducer(getmetatable(aggregate), values, self.rocs.reducers.default)
+	local staticAggregate = getmetatable(aggregate)
+
+	local reducedValue = (staticAggregate.reducer or self.rocs.reducers.default)(values)
+
+	local data = reducedValue
+	if staticAggregate.defaults and type(reducedValue) == "table" then
+		staticAggregate.defaults.__index = staticAggregate.defaults
+		data = setmetatable(
+			reducedValue,
+			staticAggregate.defaults
+		)
+	end
+
+	if staticAggregate.check then
+		assert(staticAggregate.check(data))
+	end
+
+	return data
 end
 
 function AggregateCollection:_dispatchLifecycle(aggregate, stage)

@@ -1,4 +1,4 @@
-local Util = require(script.Parent.Parent.Util)
+local Util = require(script.Parent.Parent.Parent.Shared.Util)
 
 local Reducers = {}
 

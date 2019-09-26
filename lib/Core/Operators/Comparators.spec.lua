@@ -1,6 +1,6 @@
 local Comparators = require(script.Parent.Comparators)
 local Constants = require(script.Parent.Parent.Constants)
-local Util = require(script.Parent.Parent.Util)
+local Util = require(script.Parent.Parent.Parent.Shared.Util)
 
 return function ()
 	describe("Comparators", function()

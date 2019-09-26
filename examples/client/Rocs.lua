@@ -1,9 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RocsRoot = ReplicatedStorage:WaitForChild("Rocs")
-local Rocs = require(RocsRoot)
-local useReplication = require(RocsRoot.Replication)
+local Rocs = require(ReplicatedStorage:WaitForChild("Rocs"))
 
 local rocs = Rocs.new()
-useReplication(rocs)
+Rocs.useReplication(rocs)
 
 return rocs

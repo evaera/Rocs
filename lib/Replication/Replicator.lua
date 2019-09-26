@@ -7,7 +7,7 @@ local Util = require(script.Parent.Util)
 local IS_SERVER = RunService:IsServer()
 local EVENT_NAME = "RocsEvent"
 local EVENT_NAME_INIT = "RocsInitial"
-local inspect = require(script.Parent.Parent.Inspect).inspect
+local inspect = require(script.Parent.Parent.Shared.Inspect)
 
 local Replicator = {}
 Replicator.__index = Replicator

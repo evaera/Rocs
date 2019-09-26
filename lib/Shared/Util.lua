@@ -28,25 +28,6 @@ function Util.assign(toObj, ...)
 	return toObj
 end
 
-function Util.runReducer(staticAggregate, values, defaultReducer)
-	local reducedValue = (staticAggregate.reducer or defaultReducer)(values)
-
-	local data = reducedValue
-	if staticAggregate.defaults and type(reducedValue) == "table" then
-		staticAggregate.defaults.__index = staticAggregate.defaults
-		data = setmetatable(
-			reducedValue,
-			staticAggregate.defaults
-		)
-	end
-
-	if staticAggregate.check then
-		assert(staticAggregate.check(data))
-	end
-
-	return data
-end
-
 function Util.makeToString(staticName)
 	return function(self)
 		return ("%s(%s)"):format(staticName, getmetatable(self).name)
@@ -79,42 +60,6 @@ function Util.callCounter()
 			return 0
 		end
 	})
-end
-
-function Util.uniqueIdCounter(prefix)
-	prefix = prefix or ""
-	local count = 0
-
-	return function ()
-		count = count + 1
-		return prefix .. count
-	end
-end
-
-local function makeArrayEntityCheck(array)
-	return function(instance)
-		for _, className in ipairs(array) do
-			if instance:IsA(className) then
-				return true
-			end
-		end
-
-		return
-			false,
-			("Instance type %q is not allowed to have this component!")
-				:format(instance.ClassName)
-	end
-end
-function Util.runEntityCheck(staticAggregate, instance)
-	if staticAggregate.entityCheck == nil then
-		return true
-	end
-
-	if type(staticAggregate.entityCheck) == "table" then
-		staticAggregate.entityCheck = makeArrayEntityCheck(staticAggregate.entityCheck)
-	end
-
-	return staticAggregate.entityCheck(instance)
 end
 
 function Util.deepCopy(t)

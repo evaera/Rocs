@@ -1,6 +1,6 @@
-local t = require(script.Parent.t)
-local inspect = require(script.Parent.Inspect).inspect -- luacheck: ignore 211
-local Util = require(script.Parent.Util)
+local t = require(script.Parent.Parent.Shared.t)
+local inspect = require(script.Parent.Parent.Shared.Inspect) -- luacheck: ignore 211
+local Util = require(script.Parent.Parent.Shared.Util)
 local Rocs = require(script.Parent)
 local Constants = require(script.Parent.Constants)
 

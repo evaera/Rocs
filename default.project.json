@@ -1,6 +1,5 @@
 {
   "name": "Rocs",
-  "servePort": 8000,
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {

@@ -1,6 +1,5 @@
 local Constants = require(script.Parent.Parent.Constants)
-local Util = require(script.Parent.Parent.Util)
-local inspect = require(script.Parent.Parent.Inspect).inspect --luacheck: ignore 211
+local Util = require(script.Parent.Parent.Parent.Shared.Util)
 
 local Comparators = {}
 

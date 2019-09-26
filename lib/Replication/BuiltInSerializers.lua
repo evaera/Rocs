@@ -1,4 +1,4 @@
-local Aggregate = require(script.Parent.Parent.Aggregate.Aggregate)
+local Aggregate = require(script.Parent.Parent.Core.Aggregate.Aggregate)
 
 return {
 	serializers = {

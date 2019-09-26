@@ -1,5 +1,5 @@
-local AllSelector = require(script.Parent.AllSelector)
-local ComponentSelector = require(script.Parent.ComponentSelector)
+local AllSelector = require(script.Parent.Selectors.AllSelector)
+local ComponentSelector = require(script.Parent.Selectors.ComponentSelector)
 local Util = require(script.Parent.Selectors.Util)
 
 local intervalSignal = game:GetService("RunService").Stepped

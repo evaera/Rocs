@@ -1,5 +1,5 @@
 local I = require(script.Parent.Types)
-local t = require(script.Parent.t)
+local t = require(script.Parent.Parent.Shared.t)
 local Constants = require(script.Parent.Constants)
 
 local Entity = {}

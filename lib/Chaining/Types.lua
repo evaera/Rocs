@@ -1,4 +1,4 @@
-local t = require(script.Parent.Parent.t)
+local t = require(script.Parent.Parent.Shared.t)
 
 local section = t.map(
 	t.string,
