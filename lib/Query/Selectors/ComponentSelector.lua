@@ -11,12 +11,14 @@ function ComponentSelector.new(rocs, componentResolvable, properties, metaCompon
 	self._properties = properties or {}
 	self._metaComponents = metaComponents or {}
 
+	self._rocsHooks = {}
+
 	return self
 end
 
 function ComponentSelector:_listen()
 
-	self._rocs:registerComponentHook(
+	self._rocsHooks.onAdded = self._rocs:registerComponentHook(
 		self._componentResolvable,
 		"onAdded",
 		function(aggregate)
@@ -28,7 +30,7 @@ function ComponentSelector:_listen()
 		end
 	)
 
-	self._rocs:registerComponentHook(
+	self._rocsHooks.onRemoved = self._rocs:registerComponentHook(
 		self._componentResolvable,
 		"onRemoved",
 		function(aggregate)
@@ -40,7 +42,7 @@ function ComponentSelector:_listen()
 		end
 	)
 
-	self._rocs:registerComponentHook(
+	self._rocsHooks.onUpdated = self._rocs:registerComponentHook(
 		self._componentResolvable,
 		"onUpdated",
 		function(aggregate)
@@ -64,7 +66,7 @@ function ComponentSelector:_listen()
 	)
 
 	-- TODO: is this right?
-	self._rocs:registerComponentHook(
+	self._rocsHooks.onParentUpdated = self._rocs:registerComponentHook(
 		self._componentResolvable,
 		"onParentUpdated",
 		function(aggregate)
@@ -74,6 +76,25 @@ function ComponentSelector:_listen()
 		end
 	)
 
+end
+
+function BaseSelector:destroy() -- override
+	if not self._ready then
+		return
+	end
+	self._ready = nil
+
+	for category, _ in pairs(self._hooks) do
+		self._hooks[category] = {}
+	end
+
+	for lifecycle, hook in pairs(self._rocsHooks) do
+		self._rocs:unregisterComponentHook(self._componentResolvable, lifecycle, hook)
+	end
+
+	self._lookup = {}
+
+	return self
 end
 
 function ComponentSelector:instances()

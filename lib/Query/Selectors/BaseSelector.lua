@@ -56,6 +56,25 @@ function BaseSelector:setup()
 	return self
 end
 
+function BaseSelector:destroy()
+	if not self._ready then
+		return
+	end
+	self._ready = nil
+
+	for category, _ in pairs(self._hooks) do
+		self._hooks[category] = {}
+	end
+
+	for _, selector in pairs(self._selectors) do
+		selector:destroy()
+	end
+
+	self._lookup = {}
+
+	return self
+end
+
 function BaseSelector:onAdded(hook)
 	table.insert(self._hooks.onAdded, hook)
 	return self
