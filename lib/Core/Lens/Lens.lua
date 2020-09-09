@@ -1,9 +1,9 @@
 local Constants = require(script.Parent.Parent.Constants)
 
-local Aggregate = {}
-Aggregate.__index = Aggregate
+local Lens = {}
+Lens.__index = Lens
 
-function Aggregate:get(...)
+function Lens:get(...)
 	local object = self.data
 
 	if object == nil then
@@ -21,7 +21,7 @@ function Aggregate:get(...)
 	return object
 end
 
-function Aggregate:getOr(...)
+function Lens:getOr(...)
 	local path = {...}
 	local default = table.remove(path, #path)
 
@@ -36,7 +36,7 @@ function Aggregate:getOr(...)
 	end
 end
 
-function Aggregate:getAnd(...)
+function Lens:getAnd(...)
 	local path = {...}
 	local callback = table.remove(path, #path)
 
@@ -47,7 +47,7 @@ function Aggregate:getAnd(...)
 	end
 end
 
-function Aggregate:set(...)
+function Lens:set(...)
 		local path = {...}
 		local value = table.remove(path, #path)
 
@@ -69,10 +69,10 @@ function Aggregate:set(...)
 			currentValue = value
 		end
 
-		return self.rocs._aggregates:addComponent(self.instance, getmetatable(self), Constants.SCOPE_BASE, currentValue)
+		return self.rocs._lenses:addLayer(self.instance, getmetatable(self), Constants.SCOPE_BASE, currentValue)
 end
 
-function Aggregate:listen(eventName, callback)
+function Lens:listen(eventName, callback)
 	if not self._listeners then
 		self._listeners = {}
 	end
@@ -86,7 +86,7 @@ function Aggregate:listen(eventName, callback)
 	return callback
 end
 
-function Aggregate:removeListener(eventName, callback)
+function Lens:removeListener(eventName, callback)
 	if self._listeners and self._listeners[eventName] then
 		for i, listener in ipairs(self._listeners[eventName]) do
 			if listener == callback then
@@ -105,7 +105,7 @@ function Aggregate:removeListener(eventName, callback)
 	end
 end
 
-function Aggregate:dispatch(eventName, ...)
+function Lens:dispatch(eventName, ...)
 	if self[eventName] then
 		self[eventName](self, ...)
 	end
@@ -117,8 +117,8 @@ function Aggregate:dispatch(eventName, ...)
 	end
 end
 
-function Aggregate:__tostring()
-	return ("Aggregate(%s)"):format(self.name)
+function Lens:__tostring()
+	return ("Lens(%s)"):format(self.name)
 end
 
-return Aggregate
+return Lens

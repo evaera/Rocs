@@ -1,11 +1,11 @@
 local Rocs = require(script.Parent.Rocs)
 
-Rocs:registerComponent({
+Rocs:registerLayer({
 	name = "Red";
 
 	onUpdated = function(self)
 		self.instance.BrickColor = BrickColor.new(self:get("color"))
 	end;
 
-	entityCheck = {"BasePart"};
+	pipelineCheck = {"BasePart"};
 })

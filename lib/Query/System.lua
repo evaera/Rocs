@@ -1,5 +1,5 @@
 local AllSelector = require(script.Parent.Selectors.AllSelector)
-local ComponentSelector = require(script.Parent.Selectors.ComponentSelector)
+local LayerSelector = require(script.Parent.Selectors.LayerSelector)
 local Util = require(script.Parent.Selectors.Util)
 
 local intervalSignal = game:GetService("RunService").Stepped
@@ -7,7 +7,7 @@ local intervalSignal = game:GetService("RunService").Stepped
 local System = setmetatable({}, AllSelector)
 System.__index = System
 
--- TODO: look into logic of aggregate/component events
+-- TODO: look into logic of lens/component events
 
 function System.new(rocs, scope, ...)
 	local args = {...}
@@ -17,23 +17,23 @@ function System.new(rocs, scope, ...)
 		if Util.inheritsBase(args[1]) then
 			base = args[1]
 		elseif type(args[1]) == "string" then
-			base = ComponentSelector.new(rocs, args[1])
+			base = LayerSelector.new(rocs, args[1])
 		end
 	end
 
 	local self = setmetatable(base or AllSelector.new(rocs, ...), System)
 
 	self._entities = {} -- keeping track of what entities are in system
-						-- self._lookup: [instance] = entity
+						-- self._lookup: [instance] = pipeline
 
 	self._events = {} -- {Event = RbxScriptSignal, Hook = function, Connection = nil/RbxScriptConnection}
 	self._intervals = {} -- {Interval = num, Hook = function, LastInvoke = tick()}
 	self._intervalConnection = nil
 
-	self._hooks.onComponentAdded = {}
-	self._hooks.onComponentRemoved = {}
-	self._hooks.onComponentUpdated = {}
-	self._hooks.onComponentParentUpdated = {}
+	self._hooks.onLayerAdded = {}
+	self._hooks.onLayerRemoved = {}
+	self._hooks.onLayerUpdated = {}
+	self._hooks.onLayerParentUpdated = {}
 
 	self._scope = scope
 
@@ -83,32 +83,32 @@ end
 function System:_listen() -- override
 	for _, selector in pairs(self._selectors) do
 		selector:onAdded(
-			function(aggregate)
-				local instance = aggregate.instance
+			function(lens)
+				local instance = lens.instance
 				if self:check(instance, selector) then
 					if not self._lookup[instance] then
-						local entity = self._rocs:getEntity(instance, self._scope)
-						table.insert(self._entities, entity)
-						self._lookup[instance] = entity
+						local pipeline = self._rocs:getPipeline(instance, self._scope)
+						table.insert(self._entities, pipeline)
+						self._lookup[instance] = pipeline
 						if #self._entities == 1 then
 							self:_start()
 						end
-						self:_trigger("onAdded", entity)
+						self:_trigger("onAdded", pipeline)
 					end
-					self:_trigger("onComponentAdded", aggregate)
+					self:_trigger("onLayerAdded", lens)
 				end
 			end
 		)
 
 		selector:onRemoved(
-			function(aggregate)
-				local instance = aggregate.instance
+			function(lens)
+				local instance = lens.instance
 				if self._lookup[instance] then
 					if not self:check(instance) then
-						local entity = self._lookup[instance]
+						local pipeline = self._lookup[instance]
 						self._lookup[instance] = nil
 						for key, value in pairs(self._entities) do
-							if value == entity then
+							if value == pipeline then
 								table.remove(self._entities, key)
 								break
 							end
@@ -116,31 +116,31 @@ function System:_listen() -- override
 						if #self._entities == 0 then
 							self:_stop()
 						end
-						self:_trigger("onRemoved", entity)
+						self:_trigger("onRemoved", pipeline)
 					end
-					self:_trigger("onComponentRemoved", aggregate)
+					self:_trigger("onLayerRemoved", lens)
 				end
 			end
 		)
 
 		-- TODO: is this right?
 		selector:onUpdated(
-			function(aggregate)
-				local entity = self._lookup[aggregate.instance]
-				if entity then
-					self:_trigger("onUpdated", entity)
-					self:_trigger("onComponentUpdated", aggregate)
+			function(lens)
+				local pipeline = self._lookup[lens.instance]
+				if pipeline then
+					self:_trigger("onUpdated", pipeline)
+					self:_trigger("onLayerUpdated", lens)
 				end
 			end
 		)
 
 		-- TODO: is this right?
 		selector:onParentUpdated(
-			function(aggregate)
-				local entity = self._lookup[aggregate.instance]
-				if entity then
-					self:_trigger("onParentUpdated", entity)
-					self:_trigger("onComponentParentUpdated", aggregate)
+			function(lens)
+				local pipeline = self._lookup[lens.instance]
+				if pipeline then
+					self:_trigger("onParentUpdated", pipeline)
+					self:_trigger("onLayerParentUpdated", lens)
 				end
 			end
 		)
@@ -160,9 +160,9 @@ function System:setup() -- override
 	end
 
 	for _, instance in pairs(self:instances()) do
-		local entity = self._rocs:getEntity(instance, self._scope)
-		table.insert(self._entities, entity)
-		self._lookup[instance] = entity
+		local pipeline = self._rocs:getPipeline(instance, self._scope)
+		table.insert(self._entities, pipeline)
+		self._lookup[instance] = pipeline
 	end
 
 	if #self._entities > 0 then
@@ -173,8 +173,8 @@ function System:setup() -- override
 end
 
 function System:catchup()
-	for _, entity in pairs(self._entities) do
-		self:_trigger("onAdded", entity)
+	for _, pipeline in pairs(self._entities) do
+		self:_trigger("onAdded", pipeline)
 	end
 	return self
 end
@@ -209,23 +209,23 @@ function System:get()
 	return self._entities -- TODO: doc that user should not modify
 end
 
-function System:onComponentAdded(hook)
-	table.insert(self._hooks.onComponentAdded, hook)
+function System:onLayerAdded(hook)
+	table.insert(self._hooks.onLayerAdded, hook)
 	return self
 end
 
-function System:onComponentRemoved(hook)
-	table.insert(self._hooks.onComponentRemoved, hook)
+function System:onLayerRemoved(hook)
+	table.insert(self._hooks.onLayerRemoved, hook)
 	return self
 end
 
-function System:onComponentUpdated(hook)
-	table.insert(self._hooks.onComponentUpdated, hook)
+function System:onLayerUpdated(hook)
+	table.insert(self._hooks.onLayerUpdated, hook)
 	return self
 end
 
-function System:onComponentParentUpdated(hook)
-	table.insert(self._hooks.onComponentParentUpdated, hook)
+function System:onLayerParentUpdated(hook)
+	table.insert(self._hooks.onLayerParentUpdated, hook)
 	return self
 end
 

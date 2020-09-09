@@ -9,33 +9,33 @@ function TagWatcher.new(rocs)
 		_tags = {};
 	}, TagWatcher)
 
-	rocs:registerComponentRegistrationHook(function(staticAggregate)
-		if staticAggregate.tag then
-			self:listenForTag(staticAggregate.tag, staticAggregate)
+	rocs:registerLayerRegistrationHook(function(staticLens)
+		if staticLens.tag then
+			self:listenForTag(staticLens.tag, staticLens)
 		end
 	end)
 
 	return self
 end
 
-function TagWatcher:listenForTag(tag, staticAggregate)
+function TagWatcher:listenForTag(tag, staticLens)
 	assert(self._tags[tag] == nil, ("Tag %q is already in use!"):format(tag))
 	self._tags[tag] = true
 
 	local function addFromTag(instance)
 		local data = {}
 		if
-			instance:FindFirstChild(staticAggregate.name)
-			and instance[staticAggregate.name].ClassName == "ModuleScript"
+			instance:FindFirstChild(staticLens.name)
+			and instance[staticLens.name].ClassName == "ModuleScript"
 		then
-			data = require(instance[staticAggregate.name])
+			data = require(instance[staticLens.name])
 		end
 
-		self.rocs:getEntity(instance, "tags"):addBaseComponent(staticAggregate, data)
+		self.rocs:getPipeline(instance, "tags"):addBaseLayer(staticLens, data)
 	end
 
 	local function removeFromTag(instance)
-		self.rocs:getEntity(instance, "tags"):removeBaseComponent(staticAggregate)
+		self.rocs:getPipeline(instance, "tags"):removeBaseLayer(staticLens)
 	end
 
 	CollectionService:GetInstanceRemovedSignal(tag):Connect(removeFromTag)

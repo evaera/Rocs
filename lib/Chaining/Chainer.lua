@@ -58,16 +58,16 @@ function Chainer:_handleModule(module)
 	chain("shared")
 end
 
-function Chainer:_connect(aggregate, entries)
+function Chainer:_connect(lens, entries)
 	for _, entry in ipairs(entries) do
-		aggregate:listen(entry.event, function()
-			local targetAggregate = self.rocs:getEntity(entry.target, "chaining"):getComponent(entry.component)
+		lens:listen(entry.event, function()
+			local targetLens = self.rocs:getPipeline(entry.target, "chaining"):getLayer(entry.component)
 
-			if targetAggregate then
-				targetAggregate[entry.call](targetAggregate) -- TODO: Arguments
+			if targetLens then
+				targetLens[entry.call](targetLens) -- TODO: Arguments
 			else
 				self:warn(
-					"Component %s is missing from %s which is needed for a component chain!",
+					"Layer %s is missing from %s which is needed for a component chain!",
 					entry.component,
 					entry.target
 				)
@@ -76,34 +76,34 @@ function Chainer:_connect(aggregate, entries)
 	end
 end
 
-function Chainer:_chainAggregate(sourceInstance, staticAggregate, entries)
-	local entity = self.rocs:getEntity(sourceInstance, "chaining")
+function Chainer:_chainLens(sourceInstance, staticLens, entries)
+	local pipeline = self.rocs:getPipeline(sourceInstance, "chaining")
 
-	local currentAggregate = entity:getComponent(staticAggregate)
-	if currentAggregate then
-		self:_connect(currentAggregate, entries)
+	local currentLens = pipeline:getLayer(staticLens)
+	if currentLens then
+		self:_connect(currentLens, entries)
 	end
 
-	self.rocs:registerEntityComponentHook(
+	self.rocs:registerPipelineLayerHook(
 		sourceInstance,
-		staticAggregate,
+		staticLens,
 		"initialize",
-		function (aggregate)
-			self:_connect(aggregate, entries)
+		function (lens)
+			self:_connect(lens, entries)
 		end
 	)
 
-	if staticAggregate.chainingEvents == nil then
-		self:warn("chainingEvents array is missing from component %s! Please list all chainable events upon registration.", staticAggregate)
+	if staticLens.chainingEvents == nil then
+		self:warn("chainingEvents array is missing from component %s! Please list all chainable events upon registration.", staticLens)
 	end
 end
 
 function Chainer:chain(sourceInstance, structure)
 	for componentResolvable, entries in pairs(structure) do
-		local staticAggregate = self.rocs:resolveAggregate(componentResolvable)
+		local staticLens = self.rocs:resolveLens(componentResolvable)
 
-		if staticAggregate then
-			self:_chainAggregate(sourceInstance, staticAggregate, entries)
+		if staticLens then
+			self:_chainLens(sourceInstance, staticLens, entries)
 		else
 			self:warn("Could not resolve component %s in chaining configuration for %s", componentResolvable, sourceInstance)
 		end

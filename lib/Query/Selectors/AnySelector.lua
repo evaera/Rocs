@@ -22,42 +22,42 @@ end
 function AnySelector:_listen()
 	for _, selector in pairs(self._selectors) do
 		selector:onAdded(
-			function(aggregate)
-				local instance = aggregate.instance
+			function(lens)
+				local instance = lens.instance
 				if not self._lookup[instance] then
 					self._lookup[instance] = true
-					self:_trigger("onAdded", aggregate)
+					self:_trigger("onAdded", lens)
 				end
 			end
 		)
 
 		selector:onRemoved(
-			function(aggregate)
-				local instance = aggregate.instance
+			function(lens)
+				local instance = lens.instance
 				if self._lookup[instance] and not self:check(instance) then
 					self._lookup[instance] = nil
-					self:_trigger("onRemoved", aggregate)
+					self:_trigger("onRemoved", lens)
 				end
 			end
 		)
 
 		selector:onUpdated(
-			function(aggregate)
-				local instance = aggregate.instance
+			function(lens)
+				local instance = lens.instance
 				if self._lookup[instance] then
-					self:_trigger("onUpdated", aggregate)
+					self:_trigger("onUpdated", lens)
 				else
 					self._lookup[instance] = true
-					self:_trigger("onAdded", aggregate)
+					self:_trigger("onAdded", lens)
 				end
 			end
 		)
 
 		-- TODO: is this right?
 		selector:onParentUpdated(
-			function(aggregate)
-				if self._lookup[aggregate.instance] then
-					self:_trigger("onParentUpdated", aggregate)
+			function(lens)
+				if self._lookup[lens.instance] then
+					self:_trigger("onParentUpdated", lens)
 				end
 			end
 		)

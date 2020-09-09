@@ -1,10 +1,10 @@
 local Rocs = require(script.Parent.Rocs)
 
-Rocs:registerComponent({
+Rocs:registerLayer({
 	name = "Red";
 	tag = "Red";
 
-	entityCheck = {"BasePart"};
+	pipelineCheck = {"BasePart"};
 
 	components = {
 		Replicated = {

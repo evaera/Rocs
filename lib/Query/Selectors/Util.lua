@@ -1,6 +1,6 @@
 local Util = {}
 
-local ComponentSelector = require(script.Parent.ComponentSelector)
+local LayerSelector = require(script.Parent.LayerSelector)
 local BaseSelector = require(script.Parent.BaseSelector)
 
 function Util.inheritsBase(object)
@@ -17,7 +17,7 @@ end
 
 function Util.resolve(rocs, selectorResolvable)
 	if type(selectorResolvable) == "string" then
-		return ComponentSelector.new(rocs, selectorResolvable)
+		return LayerSelector.new(rocs, selectorResolvable)
 	end
 	assert(Util.inheritsBase(selectorResolvable))
 	return selectorResolvable

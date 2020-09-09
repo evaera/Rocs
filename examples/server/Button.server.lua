@@ -1,10 +1,10 @@
 local Rocs = require(script.Parent.Rocs)
 
-Rocs:registerComponent({
+Rocs:registerLayer({
 	name = "Button";
 	tag = "Button";
 
-	entityCheck = {"BasePart"};
+	pipelineCheck = {"BasePart"};
 
 	chainingEvents = {"click"};
 

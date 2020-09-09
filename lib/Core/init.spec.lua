@@ -33,7 +33,7 @@ local function makeTestCmp(rocs, callCounts)
 			shouldUpdateTest = function() return false end
 		});
 		check = t.interface({});
-		entityCheck = t.union(t.instance("Workspace"), t.instance("DataModel"));
+		pipelineCheck = t.union(t.instance("Workspace"), t.instance("DataModel"));
 		tag = "Test";
 		onUpdated = function(self)
 			callCounts:call("onUpdated")
@@ -45,14 +45,14 @@ end
 -- TODO: Test life cycle hooks
 
 return function()
-	describe("Components", function()
+	describe("Layers", function()
 		local rocs = Rocs.new()
 		local callCounts = Util.callCounter()
 		local testCmp = makeTestCmp(rocs, callCounts)
-		rocs:registerComponent(testCmp)
+		rocs:registerLayer(testCmp)
 
 		local reducers = rocs.reducers
-		local mtTest = rocs:registerComponent({
+		local mtTest = rocs:registerLayer({
 			name = "MtTest";
 			reducer = reducers.structure({
 				num = reducers.add;
@@ -66,10 +66,10 @@ return function()
 		})
 
 		it("should apply components", function()
-			local ent = rocs:getEntity(workspace, "foo")
+			local ent = rocs:getPipeline(workspace, "foo")
 
 			expect(callCounts.testCmpInit).to.equal(0)
-			ent:addComponent(testCmp, {
+			ent:addLayer(testCmp, {
 				one = 1;
 			}, {
 				MtTest = {
@@ -78,7 +78,7 @@ return function()
 			})
 			expect(callCounts.testCmpInit).to.equal(1)
 			expect(callCounts.onParentUpdated).to.equal(1)
-			ent:addBaseComponent("Test", {
+			ent:addBaseLayer("Test", {
 				two = 2;
 			}, {
 				MtTest = {
@@ -87,7 +87,7 @@ return function()
 			})
 			expect(callCounts.onParentUpdated).to.equal(2)
 
-			local cmpAg = rocs._aggregates._entities[workspace] and rocs._aggregates._entities[workspace][testCmp]
+			local cmpAg = rocs._lenses._entities[workspace] and rocs._lenses._entities[workspace][testCmp]
 
 			expect(cmpAg).to.be.ok()
 
@@ -109,7 +109,7 @@ return function()
 				print'asdfasfsaf'
 			end)
 
-			local cmpAgEnt = rocs._aggregates._entities[cmpAg][mtTest]
+			local cmpAgEnt = rocs._lenses._entities[cmpAg][mtTest]
 
 			expect(cmpAgEnt).to.be.ok()
 
@@ -124,12 +124,12 @@ return function()
 			cmpAg:set("three", Rocs.None)
 			expect(cmpAg:get("three")).to.never.be.ok()
 
-			expect(tostring(cmpAg)).to.equal("Aggregate(Test)")
+			expect(tostring(cmpAg)).to.equal("Lens(Test)")
 
 			expect(cmpAg:get("one")).to.equal(1)
 
-			ent:removeComponent(testCmp)
-			ent:removeBaseComponent(testCmp)
+			ent:removeLayer(testCmp)
+			ent:removeBaseLayer(testCmp)
 			expect(callCounts.testCmpDestroy).to.equal(1)
 			expect(callCounts.onUpdated).to.equal(5)
 			expect(callCounts.customUpdated).to.equal(1)
@@ -137,18 +137,18 @@ return function()
 		end)
 
 		it("should allow looping over components", function()
-			local entWorkspace = rocs:getEntity(workspace, "foo")
-			entWorkspace:addComponent(testCmp)
+			local entWorkspace = rocs:getPipeline(workspace, "foo")
+			entWorkspace:addLayer(testCmp)
 
-			local componentArray = rocs:getComponents(testCmp)
+			local componentArray = rocs:getLayers(testCmp)
 
 			expect(#componentArray).to.equal(1)
 
-			entWorkspace:addBaseComponent(testCmp, {num = 1})
+			entWorkspace:addBaseLayer(testCmp, {num = 1})
 			expect(#componentArray).to.equal(1)
 
-			local entGame = rocs:getEntity(game, "foo")
-			entGame:addComponent(testCmp)
+			local entGame = rocs:getPipeline(game, "foo")
+			entGame:addLayer(testCmp)
 
 			expect(#componentArray).to.equal(2)
 		end)
@@ -156,7 +156,7 @@ return function()
 
 	-- describe("Systems", function()
 	-- 	local rocs = Rocs.new()
-	-- 	rocs:registerComponent(makeTestCmp(rocs))
+	-- 	rocs:registerLayer(makeTestCmp(rocs))
 
 	-- 	it("should fire lifecycle methods", function()
 	-- 		local dep = rocs.dependencies:any(
@@ -181,7 +181,7 @@ return function()
 	-- 		}, {
 	-- 			dep:onAdded(function(self, e)
 	-- 				expect(getmetatable(self).name).to.equal("test")
-	-- 				expect(e.entity.scope).to.equal("system__test")
+	-- 				expect(e.pipeline.scope).to.equal("system__test")
 	-- 				expect(e.components.Test).to.be.ok()
 	-- 				expect(e.components.Test:get("one")).to.equal(1)
 
@@ -190,7 +190,7 @@ return function()
 
 	-- 			dep:onUpdated(function(self, e)
 	-- 				expect(getmetatable(self).name).to.equal("test")
-	-- 				expect(e.entity.scope).to.equal("system__test")
+	-- 				expect(e.pipeline.scope).to.equal("system__test")
 
 	-- 				expect(e.components.Test).to.be.ok()
 	-- 				if counter.updated == 0 then
@@ -202,7 +202,7 @@ return function()
 
 	-- 			dep:onRemoved(function(self, e)
 	-- 				expect(getmetatable(self).name).to.equal("test")
-	-- 				expect(e.entity.scope).to.equal("system__test")
+	-- 				expect(e.pipeline.scope).to.equal("system__test")
 	-- 				expect(e.components.Test).to.be.ok()
 	-- 				expect(e.components.Test:get("one")).to.equal(nil)
 
@@ -219,7 +219,7 @@ return function()
 	-- 				counter:call("event")
 	-- 			end)
 	-- 		})
-	-- 		local ent = rocs:getEntity(workspace, "foo")
+	-- 		local ent = rocs:getPipeline(workspace, "foo")
 
 	-- 		bindable:Fire("foo")
 	-- 		expect(counter.event).to.equal(0)
@@ -227,12 +227,12 @@ return function()
 	-- 		expect(dep:entities()()).to.equal(nil)
 
 	-- 		expect(counter.initialize).to.equal(0)
-	-- 		ent:addBaseComponent("Test", { one = 1 })
+	-- 		ent:addBaseLayer("Test", { one = 1 })
 	-- 		expect(counter.initialize).to.equal(1)
 	-- 		expect(counter.added).to.equal(1)
 	-- 		expect(counter.updated).to.equal(1)
 
-	-- 		ent:getComponent("Test"):set("shouldUpdateTest", 1)
+	-- 		ent:getLayer("Test"):set("shouldUpdateTest", 1)
 
 	-- 		-- TODO: Write more tests for entities
 	-- 		expect(dep:entities()()).to.equal(ent.instance)
@@ -242,7 +242,7 @@ return function()
 	-- 		expect(counter.event).to.equal(1)
 
 	-- 		expect(counter.destroy).to.equal(0)
-	-- 		ent:removeBaseComponent("Test")
+	-- 		ent:removeBaseLayer("Test")
 	-- 		expect(counter.destroy).to.equal(1)
 
 	-- 		expect(counter.updated).to.equal(2)
@@ -259,10 +259,10 @@ return function()
 	-- 	local rocs = Rocs.new()
 	-- 	local callCounts = Util.callCounter()
 	-- 	local testCmp = makeTestCmp(rocs, callCounts)
-	-- 	rocs:registerComponent(testCmp)
+	-- 	rocs:registerLayer(testCmp)
 
 	-- 	it("should add and remove components", function()
-	-- 		local ent = rocs:getEntity(workspace, "rawr")
+	-- 		local ent = rocs:getPipeline(workspace, "rawr")
 
 	-- 		local layerId = ent:addLayer({
 	-- 			[workspace] = {
@@ -272,12 +272,12 @@ return function()
 	-- 			}
 	-- 		})
 
-	-- 		local aggregate = ent:getComponent("Test")
-	-- 		expect(aggregate:get("one")).to.equal(1)
+	-- 		local lens = ent:getLayer("Test")
+	-- 		expect(lens:get("one")).to.equal(1)
 
 	-- 		ent:removeLayer(layerId)
 
-	-- 		expect(aggregate:get("one")).to.equal(nil)
+	-- 		expect(lens:get("one")).to.equal(nil)
 	-- 	end)
 	-- end)
 end

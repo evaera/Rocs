@@ -1,6 +1,6 @@
 local AllSelector = require(script.AllSelector)
 local AnySelector = require(script.AnySelector)
-local ComponentSelector = require(script.ComponentSelector)
+local LayerSelector = require(script.LayerSelector)
 
 return function(rocs)
 	local Selectors = {}
@@ -26,7 +26,7 @@ return function(rocs)
 		assert(properties == nil or type(properties) == "table")
 		assert(metacomponents == nil or type(metacomponents) == "table")
 
-		return ComponentSelector.new(rocs, name, properties, metacomponents)
+		return LayerSelector.new(rocs, name, properties, metacomponents)
 	end
 
 	return Selectors

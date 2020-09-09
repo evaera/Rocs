@@ -10,12 +10,12 @@ return function(rocs)
 		return System.new(rocs, scope, ...):setup()
 	end
 
-	rocs.get = function(scope, ...) -- single use entity list getter
+	rocs.get = function(scope, ...) -- single use pipeline list getter
 		assert(type(scope) == "string")
 
 		local entities = {}
 		for _, instance in pairs(System.new(rocs, ...):instances()) do
-			table.insert(entities, rocs:getEntity(instance, scope))
+			table.insert(entities, rocs:getPipeline(instance, scope))
 		end
 
 		return entities

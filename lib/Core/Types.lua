@@ -2,14 +2,14 @@ local t = require(script.Parent.Parent.Shared.t)
 
 local Types = {}
 
-Types.ComponentDefinition = t.interface({
+Types.LayerDefinition = t.interface({
 	name = t.string;
 	reducer = t.optional(t.callback);
 	check = t.optional(t.callback);
 	defaults = t.optional(t.map(t.string, t.any));
 	components = t.optional(t.map(t.string, t.any));
 	tag = t.optional(t.string);
-	entityCheck = t.optional(t.union(t.array(t.string), t.callback));
+	pipelineCheck = t.optional(t.union(t.array(t.string), t.callback));
 	chainingEvents = t.optional(t.array(t.string));
 
 	data = t.none;
@@ -33,16 +33,16 @@ Types.ComponentDefinition = t.interface({
 	destroy = t.optional(t.callback);
 })
 
-Types.StaticAggregate = t.intersection(t.ComponentDefinition, t.interface({
+Types.staticLens = t.intersection(t.LayerDefinition, t.interface({
 	new = t.callback;
 }))
 
-Types.ComponentAggregate = t.interface({
+Types.LayerLens = t.interface({
 	components = t.table;
 	data = t.table;
 	instance = t.Instance;
 })
 
-Types.ComponentResolvable = t.union(t.string, Types.StaticAggregate)
+Types.LayerResolvable = t.union(t.string, Types.staticLens)
 
 return Types

@@ -1,7 +1,7 @@
 local Rocs = require(script.Parent.Rocs)
 local Players = game:GetService("Players")
 
-Rocs:registerComponent({
+Rocs:registerLayer({
 	name = "WalkSpeed";
 
 	onUpdated = function(self)
@@ -16,7 +16,7 @@ Rocs:registerComponent({
 		};
 	};
 
-	entityCheck = {"Humanoid"};
+	pipelineCheck = {"Humanoid"};
 
 })
 
@@ -25,13 +25,13 @@ Players.PlayerAdded:Connect(function(player)
 		wait(1) -- magic wait always works
 		local humanoid = character:WaitForChild("Humanoid")
 
-		local entity = Rocs:getEntity(humanoid, "test")
+		local pipeline = Rocs:getPipeline(humanoid, "test")
 
 		while true do
 			if math.random(1, 10) == 1 then
-				entity:removeComponent("WalkSpeed")
+				pipeline:removeLayer("WalkSpeed")
 			else
-				entity:addComponent("WalkSpeed", {
+				pipeline:addLayer("WalkSpeed", {
 					speed = math.random(2, 40);
 					secret = "very secret";
 				})

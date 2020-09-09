@@ -1,6 +1,6 @@
 local Rocs = require(script.Parent.Rocs)
 
-Rocs:registerComponent({
+Rocs:registerLayer({
 	name = "WalkSpeed";
 
 	onUpdated = function(self)

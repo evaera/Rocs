@@ -12,7 +12,7 @@ local inspect = require(script.Parent.Parent.Shared.Inspect)
 local Replicator = {}
 Replicator.__index = Replicator
 
-local function identity(...)
+local function idpipeline(...)
 	return ...
 end
 
@@ -59,7 +59,7 @@ function Replicator.new(rocs)
 			"RemoteEvent"
 		)
 
-		self._component = rocs:registerComponent({
+		self._component = rocs:registerLayer({
 			name = "Replicated";
 			reducer = rocs.reducers.structure({
 				players = rocs.reducers.concatArray;
@@ -73,9 +73,9 @@ function Replicator.new(rocs)
 				replicated:dispatch("onParentUpdated", true)
 			end;
 			onParentUpdated = function(replicated, fromSelf)
-				local aggregate = replicated.instance
+				local lens = replicated.instance
 
-				local serializedTarget = self:_serialize(aggregate.instance)
+				local serializedTarget = self:_serialize(lens.instance)
 
 				local shouldBroadcast =
 					not fromSelf
@@ -120,16 +120,16 @@ function Replicator.new(rocs)
 				for _, player in ipairs(players) do
 					self:_replicate(
 						player,
-						aggregate.name,
+						lens.name,
 						serializedTarget,
-						getData(aggregate.data, replicated.data, player)
+						getData(lens.data, replicated.data, player)
 					)
 				end
 
 				for _, player in ipairs(removedPlayers) do
 					self:_replicate(
 						player,
-						aggregate.name,
+						lens.name,
 						serializedTarget,
 						nil
 					)
@@ -139,15 +139,15 @@ function Replicator.new(rocs)
 			Players.PlayerAdded:Connect(function(player)
 				local payload = {}
 
-				for _, replicated in ipairs(rocs:getComponents(self._component)) do
+				for _, replicated in ipairs(rocs:getLayers(self._component)) do
 					-- Only do this because if the player is added to an exclusive
 					-- one, they'll be gotten in the onUpdated
 					if replicated.data.players == nil then
-						local aggregate = replicated.instance
+						local lens = replicated.instance
 						table.insert(payload, {
-							target = self:_serialize(aggregate.instance);
-							data = getData(aggregate.data, replicated.data, player);
-							component = aggregate.name;
+							target = self:_serialize(lens.instance);
+							data = getData(lens.data, replicated.data, player);
+							component = lens.name;
 						})
 					end
 				end
@@ -183,9 +183,9 @@ function Replicator:_reifyPayload(payload)
 		if entry.target then
 			local instance = self:_deserialize(entry.target)
 
-			local entity = self.rocs:getEntity(instance, "_remote", self.rocs.Internal)
+			local pipeline = self.rocs:getPipeline(instance, "_remote", self.rocs.Internal)
 
-			entity:addComponent(entry.component, entry.data)
+			pipeline:addLayer(entry.component, entry.data)
 		else
 			warn(("Missing target from payload, does the client have access to this instance? \n\n %s"):format(inspect(entry)))
 		end
@@ -210,7 +210,7 @@ end
 function Replicator:_serialize(object)
 	local serializer =
 		typeof(object) == "Instance"
-			and identity
+			and idpipeline
 			or self:findSerializer(object)
 
 	return

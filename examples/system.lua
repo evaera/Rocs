@@ -4,13 +4,13 @@ local rocs = require(...)
 local system = rocs.system("Example", rocs.selectors.all("Health", "Regen"))
 
 local entities = system:get() -- all entities with "Health" AND "Regen"
-local aggregates = system:aggregates() -- all "Health" and all "Regen" aggregates that are on an entity that also has the other
+local lenses = system:lenses() -- all "Health" and all "Regen" lenses that are on an pipeline that also has the other
 
-for _, aggregate in pairs(aggregates) do
+for _, lens in pairs(lenses) do
 	-- use case?
-	if aggregate.type == "Health" then
+	if lens.type == "Health" then
 		-- what do
-	elseif aggregate.type == "Regen" then
+	elseif lens.type == "Regen" then
 
 	end
 end
@@ -20,7 +20,7 @@ end
 local system = rocs.system("Example", rocs.selectors.all(rocs.selectors.has("Health", {Value = 50}), "Regen"))
 
 local entities = system:get() -- all entities with "Health" (with Value = 50) AND "Regen"
-local aggregates = system:aggregates() --
+local lenses = system:lenses() --
 
 -------
 
@@ -30,34 +30,34 @@ local system = rocs.system("Example", rocs.selectors.any("Health", "Regen"))
 local data = system:get() -- all entities with "Health" (with Value = 50) AND "Regen"
 --[[
 	data = {
-		[aggregateName] = {
-			... aggregates ...
+		[lensName] = {
+			... lenses ...
 		},
 		...
 	}
 
 	data = {
-		[entity] = {
-			aggregateName = aggregates,
+		[pipeline] = {
+			lensName = lenses,
 			...
 		},
 		...
 	}
 
-	for entity in pairs(data) do
+	for pipeline in pairs(data) do
 
-	for entity, aggregates in pairs(data) do
+	for pipeline, lenses in pairs(data) do
 
 	end
 ]]
 
 local entities = system:getEntities() --> { ... entities ... }
-local aggregates = system:getAggregates() --> { ... aggregates ... }
-local entityMapping = system:get() --> data
+local lenses = system:getLenss() --> { ... lenses ... }
+local pipelineMapping = system:get() --> data
 
 --[[
-	rocs.selectors.all(X, Y) --> get the entities, return X and Y from each entity
-	rocs.selectors.any(X, Y) --> get the entities, return every single X and Y that occurs on whatever entity in that list
+	rocs.selectors.all(X, Y) --> get the entities, return X and Y from each pipeline
+	rocs.selectors.any(X, Y) --> get the entities, return every single X and Y that occurs on whatever pipeline in that list
 	rocs.selectors.has(X, props, metas) -->
 	<custom function> --> nothing
 ]]

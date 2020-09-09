@@ -1,22 +1,22 @@
-local Aggregate = require(script.Parent.Parent.Core.Aggregate.Aggregate)
+local Lens = require(script.Parent.Parent.Core.Lens.Lens)
 
 return {
 	serializers = {
-		[Aggregate] = function(aggregate, rocs)
+		[Lens] = function(lens, rocs)
 
 			return {
-				type = "_aggregate";
-				name = aggregate.name;
-				instance = rocs.replicator:_serialize(aggregate.instance);
+				type = "_lens";
+				name = lens.name;
+				instance = rocs.replicator:_serialize(lens.instance);
 			}
 		end
 	};
 
 	deserializers = {
-		_aggregate = function(data, rocs)
+		_lens = function(data, rocs)
 			local instance = rocs.replicator:_deserialize(data.instance)
 
-			return rocs:getEntity(instance, "replicator"):getComponent(data.name)
+			return rocs:getPipeline(instance, "replicator"):getLayer(data.name)
 		end
 	};
 }
