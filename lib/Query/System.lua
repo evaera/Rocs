@@ -172,6 +172,28 @@ function System:setup() -- override
 	return self
 end
 
+function System:destroy() -- override
+	if not self._ready then
+		return
+	end
+	self._ready = nil
+
+	for category, _ in pairs(self._hooks) do
+		self._hooks[category] = {}
+	end
+
+	for _, selector in pairs(self._selectors) do
+		selector:destroy()
+	end
+
+	self._entities = {}
+	self._lookup = {}
+
+	self:_stop()
+
+	return self
+end
+
 function System:catchup()
 	for _, pipeline in pairs(self._entities) do
 		self:_trigger("onAdded", pipeline)

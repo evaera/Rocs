@@ -1,0 +1,5 @@
+[package]
+name = "Rocs"
+author = "rocs-rbx"
+content_root = "lib"
+version = "0.2.0"
