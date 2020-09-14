@@ -10,5 +10,5 @@
   <a href="https://rocs-rbx.github.io/Rocs/#rocs"><b>Read the Docs</b></a>
 </p>
 <p align="center">
-  ⚠️ Unstable pre-release! ⚠️
+  Archived. Succeeded by <a href="https://github.com/evaera/Fabric">Fabric</a>
 </p>
